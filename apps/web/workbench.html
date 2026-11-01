@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>EmbodiedFlow 工作台</title>
+  <style>
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --surface: #ffffff;
+  --muted: #f5f7fa;
+  --muted-strong: #eef2f6;
+  --line: #e2e8f0;
+  --text: #0f172a;
+  --secondary: #64748b;
+  --accent: #15355b;
+  --accent-text: #ffffff;
+  --accent-soft: #eaf1f8;
+  --positive: #15803d;
+  --positive-bg: #edf9f0;
+  --warning: #a16207;
+  --warning-bg: #fff8e7;
+  --danger: #b91c1c;
+  --danger-bg: #fff0f0;
+  --shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  --sidebar-width: 248px;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0c1018;
+  --surface: #111722;
+  --muted: #171f2c;
+  --muted-strong: #202a3a;
+  --line: #293447;
+  --text: #edf2f9;
+  --secondary: #a1adc0;
+  --accent: #a9c8ef;
+  --accent-text: #101827;
+  --accent-soft: #1c2b3e;
+  --positive: #86dca1;
+  --positive-bg: #163023;
+  --warning: #f0c779;
+  --warning-bg: #352917;
+  --danger: #f5a0a0;
+  --danger-bg: #3b2025;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.16);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+button, input, select, textarea { font: inherit; }
+button, a, input, select, textarea { outline-offset: 3px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #5598e8;
+}
+button { cursor: pointer; }
+a { color: inherit; }
+.icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+.app-shell { min-height: 100vh; }
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  transition: transform 160ms ease, width 160ms ease;
+}
+.brand {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px;
+  text-decoration: none;
+}
+.brand-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 9px;
+  background: #11243e;
+  color: #fff;
+}
+.brand-mark .icon { width: 21px; height: 21px; stroke-width: 1.6; }
+.brand-title { display: block; font-size: 14px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.2; }
+.brand-caption { display: block; margin-top: 3px; color: var(--secondary); font-size: 11px; line-height: 1.2; }
+.sidebar-scroll { flex: 1; overflow: auto; padding: 5px 12px 20px; }
+.nav-label { margin: 16px 10px 7px; color: var(--secondary); font-size: 11px; font-weight: 600; }
+.wf-nav { display: grid; gap: 3px; }
+.wf-nav a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 37px;
+  padding: 8px 11px;
+  border-radius: 7px;
+  color: var(--secondary);
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 120ms ease, color 120ms ease;
+}
+.wf-nav a:hover { background: var(--muted); color: var(--text); }
+.wf-nav a[aria-current="page"] { color: var(--text); background: var(--muted-strong); font-weight: 600; }
+.wf-nav a[aria-current="page"] .icon { color: var(--accent); }
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 17px 18px;
+  border-top: 1px solid var(--line);
+}
+.footer-avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 9px; background: var(--muted-strong); color: var(--text); font-size: 11px; font-weight: 700; }
+.sidebar-footer strong { display: block; font-size: 12px; }
+.sidebar-footer span { display: block; color: var(--secondary); font-size: 11px; }
+.workspace { min-width: 0; margin-left: var(--sidebar-width); transition: margin-left 160ms ease; }
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.icon-button {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+}
+.icon-button:hover { background: var(--muted); }
+.breadcrumb { display: flex; align-items: center; gap: 9px; min-width: 0; color: var(--secondary); font-size: 13px; }
+.breadcrumb strong { color: var(--text); font-weight: 600; white-space: nowrap; }
+.breadcrumb-divider { color: var(--line); font-size: 17px; }
+.topbar-spacer { flex: 1; }
+.nav-search { position: relative; display: flex; align-items: center; width: min(224px, 22vw); }
+.nav-search .icon { position: absolute; left: 11px; width: 15px; height: 15px; color: var(--secondary); pointer-events: none; }
+.nav-search input {
+  width: 100%;
+  height: 36px;
+  padding: 0 41px 0 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--muted);
+  color: var(--text);
+  font-size: 12px;
+}
+.nav-search kbd { position: absolute; right: 8px; padding: 1px 4px; border: 1px solid var(--line); border-radius: 4px; color: var(--secondary); font: 10px/1.5 inherit; }
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.connection {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--secondary);
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.connection::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; }
+.connection[data-state="ok"]::before { background: #22a567; }
+.connection[data-state="error"]::before { background: #df5b5b; }
+
+main { max-width: 1600px; margin: 0 auto; padding: 30px 32px 64px; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 25px; }
+.page-eyebrow { display: flex; align-items: center; gap: 7px; margin: 0 0 8px; color: var(--secondary); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.page-eyebrow::before { content: ""; width: 18px; height: 2px; background: #3c78ae; }
+.page-header h1 { margin: 0; font-size: 27px; font-weight: 720; line-height: 1.2; letter-spacing: -0.035em; }
+.page-desc { margin: 8px 0 0; color: var(--secondary); font-size: 13px; }
+.content-stack { display: grid; gap: 18px; }
+.card { min-width: 0; padding: 22px 24px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+.card h2 { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 16px; color: var(--text); font-size: 16px; font-weight: 650; letter-spacing: -0.015em; }
+.hint { margin-top: 6px; color: var(--secondary); font-size: 12px; line-height: 1.6; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 175px), 1fr)); gap: 15px; }
+label { display: block; margin: 2px 0 7px; color: var(--text); font-size: 12px; font-weight: 600; }
+select, input:not([type="checkbox"]), textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+}
+input::placeholder, textarea::placeholder { color: #8b99ac; }
+textarea { resize: vertical; }
+button:not(.icon-button):not(.sidebar-backdrop) {
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 600;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+button:not(.icon-button):not(.sidebar-backdrop):hover:not(:disabled) { opacity: .9; }
+button.ghost { border-color: var(--line) !important; background: var(--surface) !important; color: var(--text) !important; }
+button.ghost:hover:not(:disabled) { background: var(--muted) !important; }
+button:disabled { opacity: .48; cursor: not-allowed; }
+pre {
+  max-height: 250px;
+  margin: 12px 0 0;
+  padding: 14px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--muted);
+  color: var(--text);
+  font: 12px/1.65 ui-monospace, SFMono-Regular, Consolas, "Microsoft YaHei", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.tag { flex: none; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--muted); color: var(--secondary); font-size: 11px; font-weight: 600; }
+.tag.ok { border-color: transparent; background: var(--positive-bg); color: var(--positive); }
+.tag.bad { border-color: transparent; background: var(--danger-bg); color: var(--danger); }
+.tag.run { border-color: transparent; background: var(--warning-bg); color: var(--warning); }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; margin-top: 12px; }
+.kv > div { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--secondary); font-size: 12px; }
+.kv b { display: block; margin-top: 5px; color: var(--text); font-size: 19px; font-weight: 700; letter-spacing: -0.03em; overflow-wrap: anywhere; }
+#preview svg { display: block; height: auto; max-height: 300px; background: var(--muted) !important; border-color: var(--line) !important; }
+#preview text { fill: var(--secondary); }
+
+.overview { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.overview-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 0 14px; }
+.overview-heading h2 { justify-content: flex-start; margin: 0; font-size: 14px; }
+.summary-primary, .summary-secondary { display: grid; gap: 14px; }
+.summary-primary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.summary-secondary { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 14px; }
+.stat {
+  min-width: 0;
+  padding: 17px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.stat-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--text); font-size: 12px; font-weight: 600; }
+.stat-label .icon { width: 15px; height: 15px; color: var(--secondary); }
+.stat b { display: block; margin: 19px 0 0; color: var(--text); font-size: 24px; line-height: 1.15; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.stat .stat-note { display: block; margin-top: 5px; color: var(--secondary); font-size: 11px; }
+.summary-secondary .stat { padding: 13px 15px; }
+.summary-secondary .stat b { margin-top: 11px; font-size: 18px; }
+.overview-lower { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(240px, 1fr); gap: 14px; margin-top: 18px; }
+.overview-panel { min-width: 0; padding: 20px 22px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+.overview-panel h3 { margin: 0; color: var(--text); font-size: 15px; letter-spacing: -.02em; }
+.overview-panel > p { margin: 5px 0 0; color: var(--secondary); font-size: 12px; }
+#ov-recent { max-height: 265px !important; min-height: 150px; margin-top: 16px; background: var(--surface); }
+.quick-links { display: grid; gap: 4px; margin-top: 15px; }
+.quick-link { display: flex; align-items: center; gap: 11px; min-height: 48px; padding: 8px; border-radius: 7px; text-decoration: none; }
+.quick-link:hover { background: var(--muted); }
+.quick-icon { display: grid; width: 34px; height: 34px; flex: none; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--muted); color: var(--accent); }
+.quick-icon .icon { width: 16px; height: 16px; }
+.quick-copy { flex: 1; min-width: 0; }
+.quick-copy strong { display: block; color: var(--text); font-size: 12px; }
+.quick-copy span { display: block; margin-top: 2px; color: var(--secondary); font-size: 11px; }
+.quick-arrow { width: 14px; height: 14px; color: var(--secondary); }
+.sidebar-backdrop { display: none; }
+
+body.sidebar-collapsed .sidebar { transform: translateX(-100%); }
+body.sidebar-collapsed .workspace { margin-left: 0; }
+
+@media (max-width: 1080px) {
+  .summary-primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .summary-secondary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .connection { display: none; }
+}
+@media (max-width: 760px) {
+  .sidebar { transform: translateX(-100%); box-shadow: none; }
+  .workspace, body.sidebar-collapsed .workspace { margin-left: 0; }
+  body.sidebar-open .sidebar { transform: translateX(0); box-shadow: 8px 0 32px rgb(0 0 0 / .15); }
+  body.sidebar-open .sidebar-backdrop { display: block; position: fixed; inset: 0; z-index: 25; width: 100%; height: 100%; border: 0; background: rgb(15 23 42 / .38); }
+  .topbar { height: 60px; padding: 0 16px; gap: 10px; }
+  .breadcrumb .breadcrumb-root, .breadcrumb-divider { display: none; }
+  .nav-search { width: 140px; }
+  .nav-search kbd { display: none; }
+  .nav-search input { padding-right: 8px; }
+  main { padding: 24px 16px 48px; }
+  .page-header { margin-bottom: 21px; }
+  .page-header h1 { font-size: 23px; }
+  .card, .overview-panel { padding: 18px; }
+  .overview { padding: 0; }
+  .summary-secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overview-lower { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .nav-search { display: none; }
+  .stat { padding: 14px; }
+  .stat b { font-size: 21px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+  #login-gate{position:fixed;inset:0;z-index:9999;display:none;align-items:center;
+ justify-content:center;background:#F7F8FA}
+#login-gate.show{display:flex}
+.login-card{background:#fff;border:1px solid var(--line);border-radius:14px;
+ padding:28px 26px;width:320px;box-shadow:0 8px 28px rgba(31,41,51,.08)}
+.login-card h2{margin:0 0 6px;font-size:18px}
+.login-card input{width:100%;margin-top:14px}
+.login-card button{width:100%;margin-top:12px}
+.login-card .hint{margin:6px 0 0}
+.who{margin-left:auto;font-size:12px;color:var(--dim);padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:#fff}
+</style>
+</head>
+<body>
+<div id="login-gate">
+  <div class="login-card">
+    <h2>EmbodiedFlow</h2>
+    <p class="hint">输入服务器上的用户名进入</p>
+    <input id="login-user" placeholder="用户名" autocomplete="username">
+    <datalist id="login-list"></datalist>
+    <button id="login-btn" type="button">进入</button>
+    <p class="hint" id="login-msg"></p>
+  </div>
+</div>
+
+<svg class="svg-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-brand" viewBox="0 0 24 24"><path d="M12 3 21 8v8l-9 5-9-5V8l9-5Z"/><path d="m3 8 9 5 9-5M12 13v8M8 5l8 5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 4h16l-6 7v7l-4 2v-9L4 4Z"/></symbol>
+  <symbol id="i-training" viewBox="0 0 24 24"><path d="M4 18h16M5 15l4-5 4 3 6-7M16 6h3v3"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3M8 15h8"/></symbol>
+  <symbol id="i-benchmark" viewBox="0 0 24 24"><path d="M4 4v16h16M8 16v-4M12 16V8M16 16v-6M20 16V5"/></symbol>
+  <symbol id="i-registry" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 4 9-4V8M12 13v8"/></symbol>
+  <symbol id="i-deploy" viewBox="0 0 24 24"><path d="M12 16V3M8 7l4-4 4 4M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></symbol>
+  <symbol id="i-chip" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+  <symbol id="i-robot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M10 4h4M8 13h.01M16 13h.01M8 17h8M2 12h2M20 12h2"/></symbol>
+  <symbol id="i-logs" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h4M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 15A8 8 0 0 1 9 4a8.5 8.5 0 1 0 11 11Z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9a7 7 0 0 1 12-2L20 12M4 12l2.5 5a7 7 0 0 0 12-2"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+</svg>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-label="主导航">
+    <a class="brand" href="#sec-overview" data-page="sec-overview">
+      <span class="brand-mark"><svg class="icon"><use href="#i-brand"/></svg></span>
+      <span><span class="brand-title">EmbodiedFlow</span><span class="brand-caption">具身智能研发工作台</span></span>
+    </a>
+    <div class="sidebar-scroll">
+      <p class="nav-label">工作空间</p>
+      <nav class="wf-nav" aria-label="工作空间">
+        <a href="#sec-overview" data-page="sec-overview"><svg class="icon"><use href="#i-grid"/></svg><span>系统总览</span></a>
+      </nav>
+      <p class="nav-label">研发流程</p>
+      <nav class="wf-nav" aria-label="研发流程">
+        <a href="#sec-dataset" data-page="sec-dataset"><svg class="icon"><use href="#i-database"/></svg><span>数据集</span></a>
+        <a href="#sec-process" data-page="sec-process"><svg class="icon"><use href="#i-filter"/></svg><span>数据处理</span></a>
+        <a href="#sec-train" data-page="sec-train"><svg class="icon"><use href="#i-training"/></svg><span>模型训练</span></a>
+        <a href="#sec-exp" data-page="sec-exp"><svg class="icon"><use href="#i-flask"/></svg><span>实验记录</span></a>
+        <a href="#sec-eval" data-page="sec-eval"><svg class="icon"><use href="#i-benchmark"/></svg><span>模型评测</span></a>
+        <a href="#sec-bench" data-page="sec-bench"><svg class="icon"><use href="#i-grid"/></svg><span>仿真基准</span></a>
+        <a href="#sec-registry" data-page="sec-registry"><svg class="icon"><use href="#i-registry"/></svg><span>模型仓库</span></a>
+        <a href="#sec-deploy" data-page="sec-deploy"><svg class="icon"><use href="#i-deploy"/></svg><span>模型部署</span></a>
+      </nav>
+      <p class="nav-label">基础设施</p>
+      <nav class="wf-nav" aria-label="基础设施">
+        <a href="#sec-gpu" data-page="sec-gpu"><svg class="icon"><use href="#i-chip"/></svg><span>算力资源</span></a>
+        <a href="#sec-robot" data-page="sec-robot"><svg class="icon"><use href="#i-robot"/></svg><span>机器人设备</span></a>
+        <a href="#sec-logs" data-page="sec-logs"><svg class="icon"><use href="#i-logs"/></svg><span>系统日志</span></a>
+      </nav>
+    </div>
+    <div class="sidebar-footer">
+      <div class="footer-avatar">EF</div>
+      <div><strong>EmbodiedFlow</strong><span>局域网研发环境</span></div>
+    </div>
+  </aside>
+  <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" aria-label="关闭导航"></button>
+  <div class="workspace">
+    <header class="topbar">
+      <button class="icon-button" id="sidebar-toggle" type="button" aria-label="切换导航" aria-controls="sidebar" aria-expanded="true"><svg class="icon"><use href="#i-menu"/></svg></button>
+      <div class="breadcrumb"><span class="breadcrumb-root">工作台</span><span class="breadcrumb-divider">/</span><strong id="breadcrumb-current">系统总览</strong></div>
+      <div class="topbar-spacer"></div>
+      <div class="nav-search" role="search">
+        <svg class="icon"><use href="#i-search"/></svg>
+        <input id="nav-search" type="search" aria-label="搜索功能导航" placeholder="搜索功能">
+        <kbd id="nav-shortcut">Ctrl K</kbd>
+      </div>
+      <div class="top-actions">
+        <span class="connection" id="status" aria-live="polite">正在连接…</span>
+        <button class="icon-button" id="refresh-current" type="button" aria-label="刷新当前页面" title="刷新当前页面"><svg class="icon"><use href="#i-refresh"/></svg></button>
+        <button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色主题" title="切换主题"><svg class="icon"><use id="theme-icon" href="#i-moon"/></svg></button>
+      </div>
+    
+      <span id="current-user" class="who" title="当前用户"></span></header>
+    <main id="main-content">
+      <div class="page-header">
+        <div>
+          <p class="page-eyebrow" id="page-eyebrow">WORKSPACE</p>
+          <h1 id="page-title">系统总览</h1>
+          <p class="page-desc" id="page-desc">查看数据、任务与算力资源的当前状态。</p>
+        </div>
+      </div>
+      <div class="content-stack">
+
+<section class="card" id="sec-overview">
+  <h2>系统总览 <span class="tag" id="ov-tag">加载中</span></h2>
+  <div class="overview-stats">
+    <div class="stat"><div class="stat-label">GPU 卡数</div><b id="ov-gpu">-</b></div>
+    <div class="stat"><div class="stat-label">空闲显存</div><b id="ov-free">-</b></div>
+    <div class="stat"><div class="stat-label">运行中作业</div><b id="ov-run">-</b></div>
+  </div>
+  <div class="overview-panel">
+    <h3>显卡</h3>
+    <pre id="ov-cards">正在加载…</pre>
+  </div>
+  <div class="overview-panel">
+    <h3>正在运行</h3>
+    <pre id="ov-jobs">正在加载…</pre>
+  </div>
+</section>
+
+<section hidden class="card" id="sec-data-picker">
+  <h2>选择数据版本 <span class="tag" id="ds-count"></span></h2>
+    <div class="row" style="margin-top:16px">
+    <div><label for="ds-q">搜索数据集</label><input id="ds-q" placeholder="输入关键词，如 libero"></div>
+    <div><label for="ds">数据版本</label><select id="ds"></select></div>
+  </div>
+  <div class="hint" id="ds-hint">选择数据版本</div>
+  <div class="row" style="margin-top:16px">
+    <div><label for="pv-dims">状态维度</label><input id="pv-dims" value="0,1,2" placeholder="如 0,1,2 或 0-5"></div>
+    <div><label for="pv-act-dims">动作维度</label><input id="pv-act-dims" value="0,1,2" placeholder="如 0,1,2 或 0-5"></div>
+  </div>
+  <div id="preview" style="margin-top:16px"></div>
+</section>
+
+<section hidden class="card" id="sec-train-config">
+  <h2>训练配置 <span class="tag">任务参数</span></h2>
+  <p class="hint">使用上方所选数据版本创建任务，运行状态将在下方更新。</p>
+  <div class="row" style="margin-top:16px">
+    <div><label for="epochs">训练轮数</label><input id="epochs" type="number" value="5" min="1" max="200"></div>
+      <div><label>批大小</label><input id="batch" type="number" value="256" min="1" max="8192"></div>
+    <div><label for="lr">学习率</label><input id="lr" type="number" value="0.001" step="0.0001"></div>
+    <div><label for="device">计算设备</label><select id="device"><option value="cpu">CPU</option><option value="cuda">GPU · CUDA</option></select></div>
+    <div><label for="backend">训练后端</label><select id="backend"><option value="bc">BC · 行为克隆</option><option value="openpi">π0.5 · OpenPI（调试配置）</option></select></div>
+  </div>
+  <p class="hint" id="backend-hint">BC 使用上方选择的数据版本进行训练。</p>
+  <div style="margin-top:18px"><button id="btn-train" onclick="startTraining()">开始训练</button></div>
+</section>
+
+<section hidden class="card" id="sec-train">
+    <h2>训练进度 <span class="tag" id="job-tag">未开始</span></h2>
+    <div class="kv" id="job-kv" style="display:none">
+      <div>任务 ID<b id="k-id">-</b></div>
+      <div>状态<b id="k-status">-</b></div>
+      <div>保存目录<b id="k-out" style="font-size:12px">-</b></div>
+    </div>
+    <pre id="job-log">无</pre>
+  </section>
+<section hidden class="card" id="sec-eval">
+    <h2>评测 <span class="tag" id="eval-tag">未开始</span></h2>
+    <div class="hint">使用本次训练完成的模型，比较留出集 MAE / RMSE 与基线。</div>
+    <div style="margin-top:12px"><button id="btn-eval" onclick="startEval()" disabled>③ 评测此版本</button></div>
+    <div class="kv" id="eval-kv" style="display:none">
+      <div>MAE<b id="e-mae">-</b></div>
+      <div>RMSE<b id="e-rmse">-</b></div>
+      <div>基线 MAE<b id="e-base">-</b></div>
+      <div>相对基线<b id="e-imp">-</b></div>
+    </div>
+    <pre id="eval-detail" style="display:none"></pre>
+  </section>
+<section hidden class="card" id="sec-deploy">
+    <h2>部署与调用 <span class="tag" id="dep-tag">未部署</span></h2>
+    <div class="hint">完成训练后可发布当前模型，并通过 HTTP 推理端点调用。</div>
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+      <button id="btn-deploy" onclick="startDeploy()" disabled>④ 发布为推理服务</button>
+      <button id="btn-stop" class="ghost" onclick="stopDeploy()" disabled>停止</button>
+    </div>
+    <div class="hint" id="dep-ep" style="word-break:break-all"></div>
+    <label for="state">状态 14 维</label>
+    <textarea id="state" rows="2" placeholder="0.01,-0.003,0.003,...,0"></textarea>
+    <div style="margin-top:10px"><button id="btn-predict" class="ghost" onclick="callPredict()" disabled>调用一次</button></div>
+    <pre id="pred-out" style="display:none"></pre>
+  </section>
+<section hidden class="card" id="sec-bench">
+    <h2>策略对比（MuJoCo 基准） <span class="tag" id="bm-tag">未运行</span></h2>
+    <div class="hint">固定种子对比两个策略</div>
+    <div class="row" style="margin-top:10px">
+      <div><label>任务</label>
+        <select id="bm-task">
+          <option value="arm_reach">arm_reach（2 关节够点）</option>
+          <option value="cartpole_balance">cartpole_balance（倒立摆）</option>
+        </select>
+      </div>
+      <div><label>种子数</label><input id="bm-seeds" type="number" value="8" min="2" max="32"></div>
+    </div>
+    <div style="margin-top:12px"><button onclick="runBenchmark()">运行对比</button></div>
+    <div class="kv" id="bm-kv" style="display:none">
+      <div>策略 A<b id="bm-a">-</b></div>
+      <div>策略 B<b id="bm-b">-</b></div>
+    </div>
+    <pre id="bm-out" style="display:none"></pre>
+  </section>
+<section hidden class="card" id="sec-dataset">
+    <h2>数据集详情 <span class="tag" id="dd-tag">选择数据版本后加载</span></h2>
+    <div class="kv" id="dd-kv" style="display:none">
+      <div>数据集<b id="dd-name">-</b></div>
+      <div>版本<b id="dd-ver">-</b></div>
+      <div>Episode<b id="dd-eps">-</b></div>
+      <div>大小<b id="dd-size">-</b></div>
+      <div>fps<b id="dd-fps">-</b></div>
+      <div>状态/动作维<b id="dd-dim">-</b></div>
+    </div>
+    <div class="hint" style="margin-top:12px">Episodes</div>
+    <pre id="dd-list" style="max-height:160px">-</pre>
+    <div class="hint" style="margin-top:8px">Manifest</div>
+    <pre id="dd-manifest" style="max-height:120px">-</pre>
+  </section>
+<section hidden class="card" id="sec-process">
+    <h2>数据处理 <span class="tag" id="pr-tag">未运行</span></h2>
+    <div class="hint">12 类质检规则</div>
+    <div class="row" style="margin-top:10px">
+      <div><label>检查 Episode 数</label><input id="pr-max" type="number" value="5" min="1" max="200"></div>
+      <div><label>&nbsp;</label><button onclick="runProcessing()">运行质检</button></div>
+    </div>
+    <div class="kv" id="pr-kv" style="display:none">
+      <div>检查数<b id="pr-eps">-</b></div>
+      <div>发现项<b id="pr-find">-</b></div>
+      <div>规则类数<b id="pr-kinds">-</b></div>
+    </div>
+    <pre id="pr-out" style="display:none;max-height:200px"></pre>
+    <div style="margin-top:18px">
+    <div class="hint">清洗方式</div>
+    <div id="clean-box" style="margin-top:8px">正在加载…</div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="ghost" onclick="cleanPlan(false)">预览计划</button>
+      <button onclick="cleanPlan(true)">执行清洗</button>
+    </div>
+    <pre id="clean-out" style="display:none;margin-top:10px"></pre>
+  </div>
+  <div style="margin-top:18px">
+    <div class="hint">时间戳与对齐</div>
+    <div class="row" style="margin-top:8px">
+      <div><label>目标帧率</label><input id="al-fps" type="number" value="30" step="1"></div>
+      <div><label>&nbsp;</label><button class="ghost" onclick="tsCheck()">时间戳检查</button></div>
+      <div><label>&nbsp;</label><button class="ghost" onclick="alignPlan()">对齐计划</button></div>
+    </div>
+    <pre id="ts-box" style="display:none;margin-top:10px"></pre>
+  </div>
+</section>
+<section hidden class="card" id="sec-exp">
+    <h2>实验记录 <span class="tag" id="ex-tag">加载中</span></h2>
+        <div style="margin-top:10px"><button class="ghost" onclick="loadExperiments()">刷新</button></div>
+    <pre id="ex-out" style="max-height:220px">-</pre>
+  </section>
+<section hidden class="card" id="sec-gpu">
+    <h2> 算力管理 <span class="tag" id="gpu-tag">加载中</span></h2>
+    <div class="kv" id="gpu-kv">
+      <div>卡数<b id="gpu-total">-</b></div>
+      <div>已租用<b id="gpu-leased">-</b></div>
+      <div>空闲显存<b id="gpu-free">-</b></div>
+    </div>
+    <pre id="gpu-out" style="max-height:230px;margin-top:10px">-</pre>
+  </section>
+<section hidden class="card" id="sec-registry">
+    <h2>模型仓库 <span class="tag" id="rg-tag">加载中</span></h2>
+    <div class="hint">版本、血缘与权重</div>
+    <div style="margin-top:10px"><button class="ghost" onclick="loadRegistry()">刷新</button></div>
+    <pre id="rg-out" style="max-height:220px">-</pre>
+  </section>
+<section hidden class="card" id="sec-robot">
+    <h2>机器人设备 <span class="tag" id="rb-tag">加载中</span></h2>
+    <div class="hint">设备与执行契约</div>
+    <div class="kv" id="rb-kv">
+      <div>设备数<b id="rb-count">-</b></div>
+      <div>适配器在线<b id="rb-online">-</b></div>
+      <div>急停<b id="rb-estop">-</b></div>
+      <div>看门狗<b id="rb-wd">-</b></div>
+    </div>
+    <pre id="rb-out" style="max-height:180px;margin-top:10px">-</pre>
+  </section>
+<section hidden class="card" id="sec-logs">
+    <h2>日志索引 <span class="tag" id="log-tag">加载中</span></h2>
+    <div class="hint">训练 / 评测 / 任务日志（只索引路径与摘要）</div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="ghost" onclick="loadLogs('')">全部</button>
+      <button class="ghost" onclick="loadLogs('train')">训练</button>
+      <button class="ghost" onclick="loadLogs('eval')">评测</button>
+      <button class="ghost" onclick="loadLogs('task')">任务</button>
+    </div>
+    <pre id="log-out" style="max-height:200px;margin-top:10px">-</pre>
+  </section>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+
+const $ = id => document.getElementById(id);
+// 被反向代理挂在 /ef/ 下时，绝对路径要带前缀；直连时为 ""
+const PREFIX = location.pathname.startsWith("/ef/") ? "/ef" : "";
+const base = location.pathname.replace(/\/+$/, "");
+let timer = null;
+let lastModelDir = null;
+let depId = null;
+
+async function j(path, opts) {
+  const r = await fetch(base + path, opts);
+  if (!r.ok) throw new Error(path + " -> " + r.status + " " + (await r.text()).slice(0,200));
+  return r.json();
+}
+
+function setStatus(t, cls) {
+  const status = $("status");
+  status.textContent = t;
+  status.dataset.state = t.startsWith("已连接") ? "ok" : t.startsWith("连接失败") ? "error" : "";
+}
+
+async function loadDatasets(q) {
+  try {
+    const ds = await j("/api/datasets?limit=50" + (q ? "&q=" + encodeURIComponent(q) : ""));
+    const selected = $("ds").value;
+    $("ds").innerHTML = ds.map(d =>
+      `<option value="${d.id}">${d.label} · ${d.episodes} ep · ${d.status}</option>`).join("");
+    if ([...$("ds").options].some(option => option.value === selected)) $("ds").value = selected;
+    $("ds-count").textContent = ds.length + " 个";
+    drawPreview();
+    if (location.hash === "#sec-dataset") loadDatasetDetail();
+    setStatus("已连接 · 可选数据 " + ds.length + " 个");
+  } catch (e) { setStatus("连接失败：" + e.message); }
+}
+
+async function startTraining() {
+  const btn = $("btn-train");
+  btn.disabled = true;
+  try {
+    const body = {
+      dataset_version_id: parseInt($("ds").value, 10),
+      epochs: parseInt($("epochs").value, 10),
+      lr: parseFloat($("lr").value),
+      batch_size: parseInt(($("batch") || {}).value || "256", 10),
+      device: ($("device") ? $("device").value : "cpu"),
+    };
+    $("job-log").textContent = "提交中…";
+    const backend = $("backend") ? $("backend").value : "bc";
+    const r = backend === "openpi"
+      ? await j("/api/training/openpi", {
+          method: "POST", headers: {"content-type": "application/json"},
+          body: JSON.stringify({config: "debug_pi05", exp_name: "wb-" + Date.now(), gpus: 1})
+        })
+      : await j("/api/training/jobs", {
+      method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(body)
+    });
+    $("job-kv").style.display = "grid";
+    $("k-id").textContent = r.job_id;
+    $("k-out").textContent = r.out_dir || "-";
+    lastModelDir = r.out_dir || null;
+    $("btn-eval").disabled = true;
+    $("btn-deploy").disabled = true;
+    $("job-tag").textContent = "运行中";
+    $("job-tag").className = "tag run";
+    poll(r.job_id);
+  } catch (e) {
+    $("job-log").textContent = "提交失败：" + e.message;
+    btn.disabled = false;
+  }
+}
+
+function poll(id) {
+  if (timer) clearInterval(timer);
+  timer = setInterval(async () => {
+    try {
+      const d = await j("/api/jobs/" + id);
+      $("k-status").textContent = d.status;
+      $("job-log").textContent = d.log_tail || "无";
+      if (["completed","failed","cancelled"].includes(d.status)) {
+        clearInterval(timer);
+        $("job-tag").textContent = d.status === "completed" ? "完成" : d.status;
+        $("job-tag").className = "tag " + (d.status === "completed" ? "ok" : "bad");
+        $("btn-train").disabled = false;
+        const modelReady = d.status === "completed" && Boolean(lastModelDir);
+        $("btn-eval").disabled = !modelReady;
+        $("btn-deploy").disabled = !modelReady;
+      }
+    } catch (e) { /* 轮询失败不打断 */ }
+  }, 2000);
+}
+
+async function startEval() {
+  if (!lastModelDir) return;
+  $("btn-eval").disabled = true;
+  $("eval-tag").textContent = "运行中";
+  $("eval-tag").className = "tag run";
+  try {
+    const r = await j("/api/evaluations", {
+      method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({model_dir: lastModelDir, dataset_version_id: parseInt($("ds").value,10)})
+    });
+    let st = "";
+    for (let i = 0; i < 90; i++) {
+      await new Promise(res => setTimeout(res, 1500));
+      const jd = await j("/api/jobs/" + r.job_id);
+      st = jd.status;
+      if (["completed","failed","cancelled"].includes(st)) break;
+    }
+    if (st !== "completed") throw new Error("评测任务状态 " + st);
+    const rep = await j("/api/evaluations/" + r.job_id + "/report");
+    $("eval-kv").style.display = "grid";
+    $("e-mae").textContent = rep.mae;
+    $("e-rmse").textContent = rep.rmse;
+    $("e-base").textContent = rep.baseline_mean_action_mae;
+    $("e-imp").textContent = Math.round(rep.improvement_vs_baseline * 100) + "%";
+    $("eval-tag").textContent = "完成";
+    $("eval-tag").className = "tag ok";
+    $("eval-detail").style.display = "block";
+    $("eval-detail").textContent = "留出 Episode: " + rep.holdout_episodes.join(", ") +
+      "\n样本数: " + rep.samples + "\n逐 Episode:\n" +
+      rep.per_episode.map(e => `  ep${e.episode_index}  samples=${e.samples}  mae=${e.mae}  rmse=${e.rmse}`).join("\n");
+  } catch (e) {
+    $("eval-tag").textContent = "失败";
+    $("eval-tag").className = "tag bad";
+    $("eval-detail").style.display = "block";
+    $("eval-detail").textContent = "评测失败：" + e.message;
+  } finally {
+    $("btn-eval").disabled = false;
+  }
+}
+
+async function startDeploy() {
+  if (!lastModelDir) return;
+  $("btn-deploy").disabled = true;
+  try {
+    const r = await j("/api/deployments", {
+      method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({model_dir: lastModelDir})
+    });
+    depId = r.deployment_id;
+    $("dep-tag").textContent = "运行中";
+    $("dep-tag").className = "tag ok";
+    const predictUrl = r.predict_url ? new URL(r.predict_url, location.origin).href : r.endpoint;
+    $("dep-ep").textContent = "推理地址：" + predictUrl;
+    $("btn-predict").disabled = false;
+    $("btn-stop").disabled = false;
+  } catch (e) {
+    $("dep-tag").textContent = "失败";
+    $("dep-tag").className = "tag bad";
+    $("dep-ep").textContent = "部署失败：" + e.message;
+    $("btn-deploy").disabled = false;
+  }
+}
+
+async function callPredict() {
+  if (!depId) return;
+  let st;
+  try {
+    st = JSON.parse("[" + $("state").value + "]");
+  } catch {
+    $("pred-out").style.display = "block";
+    $("pred-out").textContent = "状态向量格式不正确";
+    return;
+  }
+  try {
+    const r = await j("/api/deployments/" + depId + "/predict", {
+      method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({state: st})
+    });
+    $("pred-out").style.display = "block";
+    $("pred-out").textContent = "动作: [" + r.action.map(v => v.toFixed(4)).join(", ") + "]\n" +
+      "模型版本: " + r.model_version + "\n推理耗时: " + r.latency_ms + " ms";
+  } catch (e) {
+    $("pred-out").style.display = "block";
+    $("pred-out").textContent = "调用失败：" + e.message;
+  }
+}
+
+async function stopDeploy() {
+  if (!depId) return;
+  try {
+    await j("/api/deployments/" + depId + "/stop", {method: "POST"});
+  } catch (e) {
+    $("dep-ep").textContent = "停止失败：" + e.message;
+    return;
+  }
+  $("dep-tag").textContent = "已停止";
+  $("dep-tag").className = "tag";
+  $("btn-predict").disabled = true;
+  $("btn-stop").disabled = true;
+  depId = null;
+}
+
+function parseDims(text, maxDim) {
+  const out = [];
+  String(text || "").split(",").forEach(part => {
+    const s = part.trim();
+    if (!s) return;
+    const m = s.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (m) {
+      for (let i = +m[1]; i <= +m[2]; i++) out.push(i);
+    } else if (/^\d+$/.test(s)) {
+      out.push(+s);
+    }
+  });
+  const uniq = [...new Set(out)].filter(i => i >= 0 && i < maxDim);
+  return uniq.length ? uniq.slice(0, 8) : [0];
+}
+
+async function drawPreview() {
+  const vid = parseInt($("ds").value, 10);
+  if (!vid) return;
+  try {
+    const d = await j("/api/preview/" + vid + "?episode=0&frames=120");
+    const dims = d.dims || 0;
+    const sd = parseDims($("pv-dims") && $("pv-dims").value, dims);
+    const ad = parseDims($("pv-act-dims") && $("pv-act-dims").value, dims);
+    const palette = ["#2F6FED", "#1F9D55", "#C77700", "#D64545",
+                     "#7B61FF", "#0E9AA7", "#B8477C", "#5B6B7C"];
+    const W = 860, H = 150, PAD = 6;
+
+    function series(key, picked) {
+      return picked.map((k, ci) => {
+        const vals = d[key].map(r => r[k] ?? 0);
+        const mn = Math.min(...vals), mx = Math.max(...vals);
+        const span = (mx - mn) || 1e-6;
+        const pts = vals.map((v, i) =>
+          (PAD + i / (vals.length - 1 || 1) * (W - PAD * 2)).toFixed(1) + "," +
+          (H - PAD - (v - mn) / span * (H - PAD * 2)).toFixed(1)).join(" ");
+        const color = palette[ci % palette.length];
+        return '<polyline fill="none" stroke="' + color + '" stroke-width="1.6" points="' + pts + '"/>';
+      }).join("");
+    }
+
+    const legend = picked => picked.map((k, i) =>
+      '<span style="color:' + palette[i % palette.length] + '">■</span> ' + k).join("　");
+
+    $("preview").innerHTML =
+      '<div class="hint">Episode ' + d.episode + ' · ' + d.frames + ' 帧 · ' + dims + ' 维　' +
+        '状态: ' + legend(sd) + '　动作: ' + legend(ad) + '</div>' +
+      '<svg width="100%" height="' + (H * 2) + '" viewBox="0 0 ' + W + ' ' + (H * 2) +
+        '" style="background:#F2F4F7;border:1px solid var(--line);border-radius:8px">' +
+        '<text x="8" y="14" fill="#6B7785" font-size="11">observation.state</text>' +
+        '<g>' + series("state", sd) + '</g>' +
+        '<g transform="translate(0,' + H + ')">' +
+          '<text x="8" y="14" fill="#6B7785" font-size="11">action</text>' +
+          series("action", ad) +
+        '</g></svg>';
+  } catch (e) {
+    $("preview").innerHTML = '<div class="hint">预览失败：' + e.message + '</div>';
+  }
+}
+
+document.getElementById("ds").onchange = () => { drawPreview(); loadDatasetDetail(); };
+document.getElementById("ds-q").oninput = (e) => loadDatasets(e.target.value.trim());
+
+
+async function runBenchmark() {
+  const task = $("bm-task").value;
+  const n = Math.max(2, Math.min(32, parseInt($("bm-seeds").value, 10) || 8));
+  const seeds = Array.from({length: n}, (_, i) => i);
+  const policies = task === "arm_reach" ? ["proportional", "random"] : ["passive", "pd_balance"];
+  $("bm-tag").textContent = "运行中";
+  $("bm-tag").className = "tag run";
+  try {
+    const resp = await fetch(PREFIX + "/api/benchmarks/compare", {
+      method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({task: task, seeds: seeds, policies: policies})
+    });
+    if (!resp.ok) throw new Error("compare -> " + resp.status);
+    const r = await resp.json();
+    const pa = r.policies[policies[0]].success, pb = r.policies[policies[1]].success;
+    $("bm-kv").style.display = "grid";
+    $("bm-a").textContent = policies[0] + " " + pa.numerator + "/" + pa.denominator;
+    $("bm-b").textContent = policies[1] + " " + pb.numerator + "/" + pb.denominator;
+    $("bm-tag").textContent = "完成";
+    $("bm-tag").className = "tag ok";
+    const eps = r.episodes[policies[1]].filter(e => !e.success).length;
+    $("bm-out").style.display = "block";
+    $("bm-out").textContent = "任务: " + r.task + "  种子: [" + r.seeds.join(",") + "]\n" +
+      policies[0] + " 成功 " + pa.numerator + "/" + pa.denominator + "\n" +
+      policies[1] + " 成功 " + pb.numerator + "/" + pb.denominator + "\n" +
+      "失败 Episode 已落盘: " + eps + " 个";
+  } catch (e) {
+    $("bm-tag").textContent = "失败";
+    $("bm-tag").className = "tag bad";
+    $("bm-out").style.display = "block";
+    $("bm-out").textContent = "运行失败：" + e.message;
+  }
+}
+
+
+async function loadOverview() {
+  try {
+    const [g, run] = await Promise.all([
+      fetch("api/gpu").then(r => r.json()),
+      fetch("api/running").then(r => (r.ok ? r.json() : [])).catch(() => []),
+    ]);
+
+    $("ov-gpu").textContent = g.total ?? "-";
+    $("ov-free").textContent = Math.round((g.free_mb_total || 0) / 1024) + " GiB";
+    $("ov-run").textContent = Array.isArray(run) ? run.length : 0;
+
+    const cards = (g.cards || []).map(c => {
+      const free = c.memory_total_mb - c.memory_used_mb;
+      const lease = c.lease ? "  job#" + c.lease.job_id : "";
+      return "GPU" + String(c.index).padEnd(2) + " " + String(c.state || "").padEnd(8) +
+             " 空闲 " + String(free).padStart(6) + " MiB  " +
+             String(c.utilization).padStart(3) + "%" + lease;
+    });
+    $("ov-cards").textContent = cards.length ? cards.join("\n") : "无";
+
+    const jobs = Array.isArray(run) ? run : [];
+    $("ov-jobs").textContent = jobs.length
+      ? jobs.map(j => "#" + j.id + " " + (j.kind || "") + " " + (j.name || "") +
+          (j.gpus ? "  " + j.gpus + " 卡" : "")).join("\n")
+      : "当前没有运行中的作业";
+
+    $("ov-tag").textContent = "实时";
+    $("ov-tag").className = "tag ok";
+  } catch (e) {
+    $("ov-tag").textContent = "失败";
+    $("ov-tag").className = "tag bad";
+  }
+}
+
+loadOverview();
+
+async function loadDatasetDetail() {
+  const vid = parseInt($("ds").value, 10);
+  if (!vid) return;
+  try {
+    const d = await j("/api/datasets/" + vid);
+    $("dd-kv").style.display = "grid";
+    $("dd-name").textContent = d.dataset;
+    $("dd-ver").textContent = d.version + " [" + d.status + "]";
+    $("dd-eps").textContent = d.episodes;
+    $("dd-size").textContent = (d.bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
+    $("dd-fps").textContent = d.fps || "-";
+    $("dd-dim").textContent = (d.state_dim || "?") + " / " + (d.action_dim || "?");
+    const eps = await j("/api/datasets/" + vid + "/episodes?limit=20");
+    $("dd-list").textContent = eps.length
+      ? eps.map(e => "#" + e.index + "  frames=" + (e.frames ?? "-") +
+          "  " + (e.duration_s ?? "-") + "s  " + (e.task || "-")).join("\n")
+      : "（该版本无 Episode 记录）";
+    try {
+      const mf = await j("/api/datasets/" + vid + "/manifest");
+      $("dd-manifest").textContent = Object.keys(mf).slice(0, 12)
+        .map(k => k + " = " + JSON.stringify(mf[k])).join("\n");
+    } catch { $("dd-manifest").textContent = "（无 manifest）"; }
+    $("dd-tag").textContent = "已加载";
+    $("dd-tag").className = "tag ok";
+  } catch (e) {
+    $("dd-tag").textContent = "加载失败";
+    $("dd-tag").className = "tag bad";
+  }
+}
+
+
+async function runProcessing() {
+  const vid = parseInt($("ds").value, 10);
+  if (!vid) return;
+  const n = Math.max(1, Math.min(200, parseInt($("pr-max").value, 10) || 5));
+  $("pr-tag").textContent = "运行中";
+  $("pr-tag").className = "tag run";
+  try {
+    const r = await fetch(PREFIX + "/workbench/api/processing/jobs", {
+      method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({dataset_version_id: vid, max_episodes: n})
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    $("pr-kv").style.display = "grid";
+    $("pr-eps").textContent = d.episodes_checked;
+    $("pr-find").textContent = d.findings;
+    $("pr-kinds").textContent = Object.keys(d.by_kind || {}).length;
+    const lines = [];
+    const bk = d.by_kind || {};
+    if (Object.keys(bk).length) {
+      lines.push("按规则统计:");
+      Object.entries(bk).sort((a,b) => b[1]-a[1]).forEach(([k,v]) => lines.push("  " + k + ": " + v));
+    } else {
+      lines.push("未发现异常（12 类规则全部通过）");
+    }
+    const m = d.metrics || {};
+    if (Object.keys(m).length) {
+      lines.push("");
+      lines.push("质量指标（分子/分母）:");
+      Object.entries(m).forEach(([k,v]) => {
+        const val = (v && typeof v === "object") ? v.value : v;
+        const num = (v && typeof v === "object") ? v.numerator : "";
+        const den = (v && typeof v === "object") ? v.denominator : "";
+        lines.push("  " + k + ": " + val + (den !== "" ? "  (" + num + "/" + den + ")" : ""));
+      });
+    }
+    $("pr-out").style.display = "block";
+    $("pr-out").textContent = lines.join("\n");
+    $("pr-tag").textContent = "完成";
+    $("pr-tag").className = "tag ok";
+  } catch (e) {
+    $("pr-tag").textContent = "失败";
+    $("pr-tag").className = "tag bad";
+    $("pr-out").style.display = "block";
+    $("pr-out").textContent = "运行失败：" + e.message;
+  }
+}
+
+
+async function loadExperiments() {
+  $("ex-tag").textContent = "加载中";
+  $("ex-tag").className = "tag";
+  try {
+    const r = await fetch("/workbench/api/experiments?limit=15");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    const lines = [];
+    lines.push("MLflow: " + (d.mlflow_available ? "在线" : "离线（仅显示平台记录）"));
+    lines.push("");
+    if (!d.runs.length) {
+      lines.push("暂无实验记录");
+    } else {
+      d.runs.forEach(x => {
+        const params = Object.entries(x.params || {})
+          .filter(([, v]) => v !== null && v !== undefined)
+          .map(([k, v]) => k + "=" + v).join(" ");
+        lines.push("#" + x.job_id + "  " + (x.kind || "-") + "  [" + x.status + "]  " +
+                   (x.started_at || "-"));
+        lines.push("    run: " + (x.run_id || "-").slice(0, 16) +
+                   "   model: " + (x.model_version || "-") +
+                   (params ? "   " + params : ""));
+        if (x.metrics) {
+          lines.push("    metrics: " + Object.entries(x.metrics)
+            .map(([k, v]) => k + "=" + v).join("  "));
+        }
+      });
+    }
+    $("ex-out").textContent = lines.join("\n");
+    $("ex-tag").textContent = d.count + " 条";
+    $("ex-tag").className = "tag ok";
+  } catch (e) {
+    $("ex-tag").textContent = "失败";
+    $("ex-tag").className = "tag bad";
+    $("ex-out").textContent = "加载失败：" + e.message;
+  }
+}
+
+
+async function loadGpu() {
+  try {
+    const r = await fetch("/workbench/api/gpu");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    $("gpu-total").textContent = d.total;
+    $("gpu-leased").textContent = d.leased;
+    $("gpu-free").textContent = (d.free_mb_total / 1024).toFixed(0) + " GiB";
+    const lines = [];
+    d.cards.forEach(c => {
+      const used = (c.memory_total_mb - c.memory_used_mb);
+      lines.push("GPU" + String(c.index).padEnd(2) + " " +
+        (c.state || "").padEnd(8) +
+        " 空闲 " + String(used).padStart(6) + " MiB" +
+        " 利用率 " + String(c.utilization).padStart(3) + "%" +
+        (c.lease ? "  租给 job#" + c.lease.job_id + " " + (c.lease.job_name || "") : ""));
+    });
+    if (d.recent_jobs.length) {
+      lines.push("");
+      lines.push("最近需要 GPU 的任务:");
+      d.recent_jobs.forEach(j => lines.push(
+        "  #" + j.id + " " + (j.name || "") + " [" + j.status + "] " +
+        j.gpus + " 卡  " + j.created_at));
+    }
+    $("gpu-out").textContent = lines.join("\n");
+    $("gpu-tag").textContent = "实时";
+    $("gpu-tag").className = "tag ok";
+  } catch (e) {
+    $("gpu-tag").textContent = "失败";
+    $("gpu-tag").className = "tag bad";
+    $("gpu-out").textContent = "加载失败：" + e.message;
+  }
+}
+
+
+async function loadRegistry() {
+  try {
+    const r = await fetch("/workbench/api/registry");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    const lines = [];
+    let nver = 0;
+    d.models.forEach(m => {
+      lines.push("■ " + m.model + "  [" + (m.family || "-") + "]");
+      if (!m.versions.length) {
+        lines.push("    （无版本）");
+      }
+      m.versions.forEach(v => {
+        nver++;
+        const lg = v.lineage || {};
+        const ex = v.weights_exists === null ? "?" : (v.weights_exists ? "✓" : "✗");
+        lines.push("    " + v.version + "  sha=" + (v.sha256 || "-") +
+                   "  权重" + ex + "  " + (v.source || ""));
+        if (lg.job_id) {
+          lines.push("        血缘: " + (lg.dataset_version || "-") +
+                     " → job#" + lg.job_id + " " + (lg.job_name || ""));
+        }
+        if (v.weights_uri) lines.push("        " + v.weights_uri);
+      });
+    });
+    $("rg-out").textContent = lines.join("\n") || "（空）";
+    $("rg-tag").textContent = d.count + " 模型 / " + nver + " 版本";
+    $("rg-tag").className = "tag ok";
+  } catch (e) {
+    $("rg-tag").textContent = "失败";
+    $("rg-tag").className = "tag bad";
+    $("rg-out").textContent = "加载失败：" + e.message;
+  }
+}
+
+
+async function loadRobots() {
+  try {
+    const r = await fetch("/workbench/api/robots");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    $("rb-count").textContent = d.count;
+    $("rb-online").textContent = d.adapter.online ? "是" : "否";
+    $("rb-estop").textContent = d.adapter.estopped ? "已触发" : "正常";
+    $("rb-wd").textContent = d.adapter.watchdog_ok ? "正常" : "超时";
+    const lines = [];
+    if (d.devices.length) {
+      lines.push("设备台账:");
+      d.devices.forEach(x => lines.push(
+        "  #" + x.id + " " + (x.name || "-") + "  " + (x.robot_spec || "-") +
+        "  [" + (x.state || "-") + "]  来源=" + (x.source || "-") + "  DoF=" + (x.dof ?? "-")));
+    } else {
+      lines.push("设备台账: （空）");
+    }
+    const s = d.safety;
+    lines.push("");
+    lines.push("安全约束: DoF=" + s.dof + "  限位=±" + s.joint_limit +
+               " rad  单步≤" + s.max_step_delta + " rad  看门狗=" + s.watchdog_timeout_s + "s");
+    lines.push("累计执行动作: " + d.adapter.action_count);
+    if (s.recent_rejected.length) {
+      lines.push("最近拒绝: " + s.recent_rejected.slice(-3).join(" | "));
+    }
+    $("rb-out").textContent = lines.join("\n");
+    $("rb-tag").textContent = "实时";
+    $("rb-tag").className = "tag ok";
+  } catch (e) {
+    $("rb-tag").textContent = "失败";
+    $("rb-tag").className = "tag bad";
+    $("rb-out").textContent = "加载失败：" + e.message;
+  }
+}
+
+
+async function loadLogs(kind) {
+  try {
+    const r = await fetch("/workbench/api/logs?limit=20" + (kind ? "&kind=" + kind : ""));
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    const lines = [];
+    lines.push("总数 " + d.total + "　" + Object.entries(d.by_kind)
+      .map(([k, v]) => k + " " + v).join("　"));
+    lines.push("");
+    if (!d.items.length) lines.push("无记录");
+    d.items.forEach(x => {
+      const sz = x.size > 1048576 ? (x.size / 1048576).toFixed(1) + "M"
+               : Math.round(x.size / 1024) + "K";
+      lines.push("[" + x.kind + "] " + sz + " " + x.lines + "行  " +
+        x.path.split("/").slice(-2).join("/"));
+    });
+    $("log-out").textContent = lines.join("\n");
+    $("log-tag").textContent = kind || "全部";
+    $("log-tag").className = "tag ok";
+  } catch (e) {
+    $("log-tag").textContent = "失败";
+    $("log-tag").className = "tag bad";
+  }
+}
+
+loadDatasets();
+
+const pageViews = {
+  "sec-overview": {title:"系统总览", eyebrow:"OVERVIEW", description:"查看数据、任务与算力资源的当前状态。", sections:["sec-overview"]},
+  "sec-dataset": {title:"数据集", eyebrow:"DATASETS", description:"选择数据版本，查看 Episode 与数据结构。", sections:["sec-data-picker","sec-dataset"]},
+  "sec-process": {title:"数据处理", eyebrow:"DATA PROCESSING", description:"对选中的数据版本运行质量检查。", sections:["sec-data-picker","sec-process"]},
+  "sec-train": {title:"模型训练", eyebrow:"TRAINING", description:"配置训练任务并跟踪实时运行日志。", sections:["sec-data-picker","sec-train-config","sec-train"]},
+  "sec-exp": {title:"实验记录", eyebrow:"EXPERIMENTS", description:"查看训练任务与关联的 MLflow 指标。", sections:["sec-exp"]},
+  "sec-eval": {title:"模型评测", eyebrow:"EVALUATION", description:"使用当前训练产物计算留出集指标。", sections:["sec-eval"]},
+  "sec-bench": {title:"仿真基准", eyebrow:"BENCHMARK", description:"在相同种子条件下比较 MuJoCo 策略。", sections:["sec-bench"]},
+  "sec-registry": {title:"模型仓库", eyebrow:"MODEL REGISTRY", description:"查看模型版本、权重与训练来源。", sections:["sec-registry"]},
+  "sec-deploy": {title:"模型部署", eyebrow:"DEPLOYMENT", description:"发布当前训练产物，并调用推理接口。", sections:["sec-deploy"]},
+  "sec-gpu": {title:"算力资源", eyebrow:"COMPUTE RESOURCES", description:"查看 GPU 占用、租约与任务记录。", sections:["sec-gpu"]},
+  "sec-robot": {title:"机器人设备", eyebrow:"ROBOT HUB", description:"查看设备台账与适配器状态。", sections:["sec-robot"]},
+  "sec-logs": {title:"系统日志", eyebrow:"SYSTEM LOGS", description:"按类型查看训练、评测和任务日志索引。", sections:["sec-logs"]}
+};
+
+let activePage = "sec-overview";
+const mobileLayout = window.matchMedia("(max-width: 760px)");
+
+function updateSidebarButton() {
+  const open = mobileLayout.matches
+    ? document.body.classList.contains("sidebar-open")
+    : !document.body.classList.contains("sidebar-collapsed");
+  document.getElementById("sidebar-toggle").setAttribute("aria-expanded", String(open));
+}
+
+function closeMobileSidebar() {
+  document.body.classList.remove("sidebar-open");
+  updateSidebarButton();
+}
+
+function toggleSidebar() {
+  if (mobileLayout.matches) {
+    document.body.classList.toggle("sidebar-open");
+  } else {
+    document.body.classList.toggle("sidebar-collapsed");
+  }
+  updateSidebarButton();
+}
+
+function switchPage(key, loadData = true) {
+  if (!pageViews[key]) key = "sec-overview";
+  activePage = key;
+  const view = pageViews[key];
+  document.querySelectorAll(".content-stack > section").forEach(section => {
+    section.hidden = !view.sections.includes(section.id);
+  });
+  document.querySelectorAll(".wf-nav a[data-page]").forEach(link => {
+    if (link.dataset.page === key) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+  document.getElementById("page-title").textContent = view.title;
+  document.getElementById("breadcrumb-current").textContent = view.title;
+  document.getElementById("page-eyebrow").textContent = view.eyebrow;
+  document.getElementById("page-desc").textContent = view.description;
+  document.getElementById("refresh-current").hidden = ["sec-eval", "sec-bench", "sec-deploy"].includes(key);
+  document.title = view.title + " · EmbodiedFlow";
+  closeMobileSidebar();
+  if (loadData) refreshCurrent();
+}
+
+function refreshCurrent() {
+  if (activePage === "sec-overview") return loadOverview();
+  if (activePage === "sec-dataset") return loadDatasetDetail();
+  if (activePage === "sec-exp") return loadExperiments();
+  if (activePage === "sec-gpu") return loadGpu();
+  if (activePage === "sec-registry") return loadRegistry();
+  if (activePage === "sec-robot") return loadRobots();
+  if (activePage === "sec-logs") return loadLogs("");
+  if (["sec-train", "sec-process"].includes(activePage)) {
+    return loadDatasets(document.getElementById("ds-q").value.trim());
+  }
+}
+
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const dark = theme === "dark";
+  document.getElementById("theme-icon").setAttribute("href", dark ? "#i-sun" : "#i-moon");
+  document.getElementById("theme-toggle").setAttribute("aria-label", dark ? "切换浅色主题" : "切换深色主题");
+  try { localStorage.setItem("embodiedflow-theme", theme); } catch (e) { /* settings remain in this tab */ }
+}
+
+function toggleTheme() {
+  setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+}
+
+function updateNavigationFilter() {
+  const query = document.getElementById("nav-search").value.trim().toLocaleLowerCase();
+  document.querySelectorAll(".wf-nav a[data-page]").forEach(link => {
+    const view = pageViews[link.dataset.page];
+    link.hidden = Boolean(query) && !((view.title + " " + view.eyebrow).toLocaleLowerCase().includes(query));
+  });
+}
+
+document.addEventListener("click", event => {
+  const link = event.target.closest("a[data-page]");
+  if (!link) return;
+  event.preventDefault();
+  const key = link.dataset.page;
+  if (location.hash !== "#" + key) history.pushState(null, "", "#" + key);
+  document.getElementById("nav-search").value = "";
+  updateNavigationFilter();
+  switchPage(key);
+  window.scrollTo(0, 0);
+});
+
+document.addEventListener("keydown", event => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+    const search = document.getElementById("nav-search");
+    if (search.offsetParent !== null) {
+      event.preventDefault();
+      search.focus();
+    }
+  }
+  if (event.key === "Escape") closeMobileSidebar();
+});
+
+document.getElementById("sidebar-toggle").addEventListener("click", toggleSidebar);
+document.getElementById("sidebar-backdrop").addEventListener("click", closeMobileSidebar);
+document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+document.getElementById("refresh-current").addEventListener("click", refreshCurrent);
+document.getElementById("nav-search").addEventListener("input", updateNavigationFilter);
+document.getElementById("backend").addEventListener("change", event => {
+  document.getElementById("backend-hint").textContent = event.target.value === "openpi"
+    ? "OpenPI 使用服务器上的 debug_pi05 调试配置，数据来源由该配置决定。"
+    : "BC 使用上方选择的数据版本进行训练。";
+});
+document.getElementById("nav-search").addEventListener("keydown", event => {
+  if (event.key !== "Enter") return;
+  const first = document.querySelector(".wf-nav a[data-page]:not([hidden])");
+  if (first) first.click();
+});
+window.addEventListener("popstate", () => switchPage(location.hash.slice(1)));
+window.addEventListener("hashchange", () => switchPage(location.hash.slice(1)));
+window.addEventListener("resize", () => {
+  if (!mobileLayout.matches) document.body.classList.remove("sidebar-open");
+  updateSidebarButton();
+});
+let storedTheme = "light";
+document.getElementById("nav-shortcut").textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘ K" : "Ctrl K";
+try { storedTheme = localStorage.getItem("embodiedflow-theme") || "light"; } catch (e) { /* default theme */ }
+setTheme(storedTheme === "dark" ? "dark" : "light");
+switchPage(location.hash.slice(1) || "sec-overview", Boolean(location.hash));
+updateSidebarButton();
+
+
+const LOGIN_KEY = "ef_user";
+
+function currentUser() {
+  try { return localStorage.getItem(LOGIN_KEY) || ""; } catch { return ""; }
+}
+
+function applyLogin(name) {
+  const gate = $("login-gate");
+  if (name) {
+    gate.classList.remove("show");
+    const el = $("current-user");
+    if (el) el.textContent = name;
+  } else {
+    gate.classList.add("show");
+  }
+}
+
+async function doLogin() {
+  const name = ($("login-user").value || "").trim();
+  const msg = $("login-msg");
+  if (!name) { msg.textContent = "请输入用户名"; return; }
+  try {
+    const r = await fetch("api/login", {
+      method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({username: name})
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { msg.textContent = d.detail || ("登录失败 " + r.status); return; }
+    localStorage.setItem(LOGIN_KEY, d.username);
+    applyLogin(d.username);
+    if (typeof loadOverview === "function") loadOverview();
+  } catch (e) {
+    msg.textContent = "登录失败：" + e.message;
+  }
+}
+
+async function initLogin() {
+  const gate = $("login-gate");
+  const btn = $("login-btn");
+  btn.addEventListener("click", doLogin);
+  $("login-user").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+
+  const u = currentUser();
+  if (u) { applyLogin(u); return; }
+  gate.classList.add("show");
+  try {
+    const r = await fetch("api/users");
+    if (r.ok) {
+      const list = await r.json();
+      $("login-list").innerHTML = (list || []).map(x =>
+        `<option value="${x.name}">`).join("");
+      $("login-user").setAttribute("list", "login-list");
+    }
+  } catch (e) { /* 列表拿不到也能手输 */ }
+}
+
+["pv-dims", "pv-act-dims"].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("change", () => {
+    if (typeof drawPreview === "function") drawPreview();
+  });
+});
+const pvDimsBound = true;
+
+
+async function loadCleanOps() {
+  const box = $("clean-box");
+  if (!box) return;
+  try {
+    const r = await fetch("api/processing/clean-options");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const list = await r.json();
+    box.innerHTML = list.map((o, i) =>
+      '<label style="display:block;margin:4px 0;font-size:13px">' +
+      '<input type="checkbox" value="' + o.key + '"' + (i === 0 ? " checked" : "") +
+      ' style="width:auto;margin-right:8px">' + o.label + '</label>').join("");
+  } catch (e) {
+    box.textContent = "加载失败：" + e.message;
+  }
+}
+
+async function cleanPlan(apply) {
+  const vid = parseInt($("ds").value, 10);
+  const out = $("clean-out");
+  if (!vid) { out.style.display = "block"; out.textContent = "请先选择数据版本"; return; }
+  const ops = [...document.querySelectorAll("#clean-box input:checked")].map(x => x.value);
+  if (!ops.length) { out.style.display = "block"; out.textContent = "至少选择一种清洗方式"; return; }
+  try {
+    const r = await fetch("api/processing/clean", {
+      method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({dataset_version_id: vid, ops: ops, max_episodes: 200, apply: apply})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const lines = [
+      "检查 Episode: " + d.checked_episodes + "　发现项: " + d.findings,
+      "声明 Episode: " + d.declared_episodes,
+      "拟删除: " + d.dropped_episodes.length + "　保留: " + d.kept_episodes,
+    ];
+    if (d.dropped_episodes.length) lines.push("删除列表: " + d.dropped_episodes.join(", "));
+    if (apply) {
+      lines.push(d.new_version_id
+        ? "已生成派生版本: " + d.new_version + "（id=" + d.new_version_id + "）"
+        : "没有可保留的 Episode，未生成新版本");
+    }
+    out.style.display = "block";
+    out.textContent = lines.join("\n");
+  } catch (e) {
+    out.style.display = "block";
+    out.textContent = "失败：" + e.message;
+  }
+}
+
+loadCleanOps();
+
+
+async function tsCheck() {
+  const vid = parseInt($("ds").value, 10);
+  const out = $("ts-box");
+  if (!vid) { out.style.display = "block"; out.textContent = "请先选择数据版本"; return; }
+  out.style.display = "block";
+  out.textContent = "检查中…";
+  try {
+    const r = await fetch("api/processing/timestamps/" + vid + "?max_episodes=20");
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const m = d.metrics && d.metrics.timestamp_completeness;
+    const lines = [
+      "检查 Episode: " + d.episodes_checked + "　异常 Episode: " + d.bad_episodes +
+        "　发现项: " + d.total_findings,
+      m ? "时间戳完整度: " + m.value + "（" + m.numerator + "/" + m.denominator + "）" : "",
+    ].filter(Boolean);
+    (d.episodes || []).slice(0, 8).forEach(e => {
+      lines.push("  ep" + e.episode + "  缺失 " + e.missing_timestamp +
+                 "  间隔异常 " + e.irregular_gap + "  倒流 " + e.time_reversal);
+    });
+    out.textContent = lines.join("\n");
+  } catch (e) { out.textContent = "失败：" + e.message; }
+}
+
+async function alignPlan() {
+  const vid = parseInt($("ds").value, 10);
+  const out = $("ts-box");
+  if (!vid) { out.style.display = "block"; out.textContent = "请先选择数据版本"; return; }
+  const fps = parseFloat($("al-fps").value) || 30;
+  out.style.display = "block";
+  out.textContent = "计算中…";
+  try {
+    const r = await fetch("api/processing/align", {
+      method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({dataset_version_id: vid, target_fps: fps, max_episodes: 10})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const lines = ["源帧率 " + d.source_fps + " → 目标 " + d.target_fps +
+                   "（" + d.note + "）"];
+    (d.episodes || []).slice(0, 6).forEach(e =>
+      lines.push("  ep" + e.episode + "  " + e.frames + " 帧 / " + e.duration_s +
+                 "s → " + (e.target_frames ?? "-") + " 帧"));
+    out.textContent = lines.join("\n");
+  } catch (e) { out.textContent = "失败：" + e.message; }
+}
+
+initLogin();
+</script>
+</body>
+</html>

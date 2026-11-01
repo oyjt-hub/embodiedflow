@@ -1,0 +1,42 @@
+# EmbodiedFlow 平台配置（环境变量优先）
+paths:
+  root: ~/workspace/embodiedflow
+  data_root: ~/workspace/embodiedflow_data   # 待管理员分配"可写+配额"目录后替换
+  layout:
+    raw: raw/              # 只读原始批次、上传清单、摘要
+    derived: derived/      # 对齐视图、格式兼容副本、切分与质检结果
+    runs: runs/            # 按 job/attempt 隔离的日志与临时 Checkpoint
+    artifacts: artifacts/  # 已发布权重、配置、报告、MLflow 制品
+    cache: cache/          # 可重建的下载缓存
+    tmp: tmp/              # 有回收规则的暂存区
+    metadata: metadata/    # 平台与 MLflow 各自的 SQLite
+
+database:
+  url: sqlite:///{data_root}/metadata/platform.db
+  journal_mode: WAL
+  migrate: persistence.migrate.upgrade
+
+queue:
+  claim: optimistic_update            # UPDATE ... WHERE status='queued'
+  worker_poll_seconds: 2.0
+  heartbeat_seconds: 1.0
+  cancel: SIGTERM → SIGKILL(2s)
+
+gpu:
+  source: nvidia-smi
+  # 调度策略：只要「剩余显存 >= 需求 + 安全余量」就可调度，不要求整卡空闲
+  allow_partial: true                 # EF_GPU_ALLOW_PARTIAL
+  min_free_mb: 4096                   # EF_GPU_MIN_FREE_MB，最小空闲门槛
+  safety_margin_mb: 1024              # EF_GPU_SAFETY_MARGIN_MB
+  lease: per-attempt
+  states: [free, partial, leased, busy]
+
+api:
+  host: 127.0.0.1
+  port: 8080
+  docs: /docs
+
+web:
+  engine: streamlit
+  port: 8501
+  theme: dark / primary #4C8DFF
