@@ -3029,3 +3029,31 @@ def slam_rpe(payload: RpeIn):
         return rpe(payload.model, payload.estimate, payload.delta)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
+
+class MaskCompareIn(BaseModel):
+    a: dict
+    b: dict
+
+
+@router.post("/mask-annotations/compare")
+def mask_revision_compare(payload: MaskCompareIn):
+    """比较两份 Mask 修订：IoU、新增/消失像素与变化占比。"""
+    from services.mask_eval import mask_iou, rle_decode
+
+    A = rle_decode(payload.a)
+    B = rle_decode(payload.b)
+    if not A or not B:
+        raise HTTPException(400, "a/b 的 RLE 为空")
+    n = max(len(A), len(B))
+    A = list(A) + [0] * (n - len(A))
+    B = list(B) + [0] * (n - len(B))
+    added = sum(1 for x, y in zip(A, B) if not x and y)
+    removed = sum(1 for x, y in zip(A, B) if x and not y)
+    same = sum(1 for x, y in zip(A, B) if x == y)
+    out = mask_iou(A, B)
+    out.update({"pixels_a": sum(A), "pixels_b": sum(B),
+                "added": added, "removed": removed,
+                "changed": added + removed,
+                "changed_ratio": round((added + removed) / n, 6) if n else 0.0,
+                "unchanged_ratio": round(same / n, 6) if n else 0.0})
+    return out
