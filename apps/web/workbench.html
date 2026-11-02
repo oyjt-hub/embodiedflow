@@ -753,6 +753,14 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
     </div>
     <pre id="qg-out" style="display:none;margin-top:10px"></pre>
   </div>
+
+  <div style="margin-top:18px">
+    <div class="hint">观测画像</div>
+    <div class="row" style="margin-top:8px">
+      <div><label>&nbsp;</label><button type="button" class="ghost" onclick="loadProfiles()">读取</button></div>
+    </div>
+    <pre id="pf-out" style="display:none;margin-top:10px"></pre>
+  </div>
 </section>
 <section hidden class="card" id="sec-dataset">
     <h2>数据集详情 <span class="tag" id="dd-tag">未选择</span></h2>
@@ -909,6 +917,15 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <div><label>&nbsp;</label><button type="button" onclick="loadLinks()">查询关联</button></div>
     </div>
     <pre id="lk-out" style="display:none;margin-top:10px"></pre>
+  </div>
+
+  <div style="margin-top:18px">
+    <div class="hint">Agent 确认与 Workflow</div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="ag-wf">Workflow ID</label><input id="ag-wf" placeholder="可留空"></div>
+      <div><label>&nbsp;</label><button type="button" onclick="loadAgentFlow()">读取</button></div>
+    </div>
+    <pre id="ag-out" style="display:none;margin-top:10px"></pre>
   </div>
 </section>
 <section hidden class="card" id="sec-research">
@@ -3907,6 +3924,67 @@ async function loadSystemInfo() {
         lines.push("  GPU" + g.index + " " + g.name + " " + g.memory_mb + " MB  driver " + g.driver));
     } else { lines.push("硬件画像: 读取失败"); }
 
+    out.textContent = lines.join("
+");
+  } catch (e) {
+    out.textContent = "失败：" + e.message;
+  }
+}
+
+async function loadAgentFlow() {
+  const wf = ($("ag-wf") && $("ag-wf").value || "").trim();
+  const out = $("ag-out");
+  out.style.display = "block";
+  out.textContent = "读取中…";
+  const lines = [];
+  try {
+    if (wf) {
+      const r = await fetch("api/agent/workflows/" + encodeURIComponent(wf));
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || r.status);
+      const w = d.workflow || {};
+      lines.push("Workflow " + w.workflow_id + "  " + (w.kind || "") + "  " + (w.status || ""));
+      (d.steps || []).forEach(s => {
+        const j = s.job;
+        lines.push("  步骤 " + (s.name || s.step) + "  job=" + (s.job_id || "-") +
+                   (j ? "  " + j.status : "  （无关联）"));
+      });
+    } else {
+      const [c, w] = await Promise.all([
+        fetch("api/agent/confirmations?limit=8").then(r => r.ok ? r.json() : {items: []}).catch(() => ({items: []})),
+        fetch("api/agent/workflows?limit=8").then(r => r.ok ? r.json() : {items: []}).catch(() => ({items: []})),
+      ]);
+      lines.push("确认记录 " + (c.count || 0) + " 条");
+      (c.items || []).forEach(x => lines.push("  " + x.confirmation_id.slice(0, 12) + "  " +
+        (x.action || "") + "  " + (x.status || "")));
+      lines.push("");
+      lines.push("Workflow " + (w.count || 0) + " 条");
+      (w.items || []).forEach(x => lines.push("  " + x.workflow_id.slice(0, 12) + "  " +
+        (x.name || "") + "  " + (x.status || "")));
+    }
+    out.textContent = lines.join("
+");
+  } catch (e) {
+    out.textContent = "失败：" + e.message;
+  }
+}
+
+async function loadProfiles() {
+  const out = $("pf-out");
+  out.style.display = "block";
+  out.textContent = "读取中…";
+  try {
+    const r = await fetch("api/vision/profiles");
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const lines = ["默认画像: " + (d.default || "-")];
+    (d.profiles || []).forEach(x =>
+      lines.push("  " + (x.name || "") + " v" + (x.version || "") + "  " + x.dim + " 维"));
+    const def = (d.profiles || []).find(x => x.name === d.default);
+    if (def && def.keys && def.keys.length) {
+      lines.push("");
+      lines.push("字段顺序: " + def.keys.join(", "));
+    }
     out.textContent = lines.join("
 ");
   } catch (e) {
