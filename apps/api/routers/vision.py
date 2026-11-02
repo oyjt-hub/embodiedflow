@@ -2556,3 +2556,40 @@ def track_pts_csv(run_id: str):
     return Response(content=body, media_type="text/csv",
                     headers={"content-disposition":
                              f'attachment; filename="{run_id}-pts.csv"'})
+
+@router.get("/assets")
+def vision_assets():
+    """视觉资产目录：权重路径、体积、下载时间（与版本分开记录）。"""
+    import datetime as _dt
+    import hashlib as _hash
+
+    def describe(name: str, kind: str, path: Path) -> dict:
+        row = {"name": name, "kind": kind, "path": str(path),
+               "exists": path.exists(), "size_mb": None,
+               "downloaded_at": None, "sha256_12": None, "files": None}
+        if not path.exists():
+            return row
+        st = path.stat()
+        row["downloaded_at"] = _dt.datetime.fromtimestamp(
+            st.st_mtime, _dt.timezone.utc).isoformat(timespec="seconds")
+        if path.is_file():
+            row["size_mb"] = round(st.st_size / 1024 / 1024, 1)
+            h = _hash.sha256()
+            with path.open("rb") as fh:
+                for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+                    h.update(chunk)
+            row["sha256_12"] = h.hexdigest()[:12]
+        else:
+            files = [f for f in path.rglob("*") if f.is_file()]
+            row["files"] = len(files)
+            row["size_mb"] = round(sum(f.stat().st_size for f in files) / 1024 / 1024, 1)
+        return row
+
+    items = [
+        describe("sam2.1_hiera_small", "segmenter", CHECKPOINT),
+        describe("florence-2-large", "grounding", FLORENCE_DIR),
+        describe("grounding-dino-tiny", "grounding", DINO_DIR),
+    ]
+    total = sum(i["size_mb"] or 0 for i in items)
+    return {"root": str(CHECKPOINT.parent), "count": len(items),
+            "total_mb": round(total, 1), "assets": items}
