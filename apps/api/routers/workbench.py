@@ -2799,3 +2799,111 @@ def workflow_detail(workflow_id: str):
                 "steps": steps, "result": result, "jobs": list(jobs.values())}
     finally:
         conn.close()
+
+def _db_conn():
+    import sqlite3
+    conn = sqlite3.connect(settings.data_root / "metadata" / "platform.db", timeout=30)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def _cols(conn, table: str) -> list[str]:
+    try:
+        return [r[1] for r in conn.execute(f"PRAGMA table_info({table})")]
+    except Exception:
+        return []
+
+
+def _pick(cols: list[str], wanted: tuple[str, ...]) -> list[str]:
+    return [c for c in wanted if c in cols]
+
+
+@router.get("/api/links/job/{job_id}")
+def links_job(job_id: int):
+    """从任务入口互查：该 Job 关联的模型版本、评测与报告。"""
+    conn = _db_conn()
+    try:
+        jcols = _cols(conn, "jobs")
+        if not jcols:
+            raise HTTPException(404, "jobs 表不存在")
+        row = conn.execute(f"SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Job 不存在")
+        job = dict(row)
+
+        out = {"job": job, "models": [], "evaluations": [], "reports": []}
+
+        # 真实链路：jobs.id -> job_attempts.job_id -> model_versions.attempt_id
+        attempt_ids = [r[0] for r in conn.execute(
+            "SELECT id FROM job_attempts WHERE job_id=?", (job_id,)).fetchall()]
+        out["attempt_ids"] = attempt_ids
+        if attempt_ids:
+            marks = ",".join("?" * len(attempt_ids))
+            mv = _cols(conn, "model_versions")
+            if "attempt_id" in mv:
+                sel = _pick(mv, ("id", "model_id", "version", "source", "attempt_id", "created_at"))
+                out["models"] = [dict(r) for r in conn.execute(
+                    f"SELECT {','.join(sel)} FROM model_versions WHERE attempt_id IN ({marks}) "
+                    f"ORDER BY id DESC LIMIT 50", tuple(attempt_ids)).fetchall()]
+
+        mv_ids = [m["id"] for m in out["models"] if m.get("id")]
+        if mv_ids:
+            marks = ",".join("?" * len(mv_ids))
+            ev = _cols(conn, "evaluations")
+            if "model_version_id" in ev:
+                sel = _pick(ev, ("id", "model_version_id", "status", "report_uri", "created_at"))
+                out["evaluations"] = [dict(r) for r in conn.execute(
+                    f"SELECT {','.join(sel)} FROM evaluations WHERE model_version_id IN ({marks}) "
+                    f"ORDER BY id DESC LIMIT 50", tuple(mv_ids)).fetchall()]
+
+        if attempt_ids:
+            marks = ",".join("?" * len(attempt_ids))
+            ar = _cols(conn, "artifacts")
+            if "job_attempt_id" in ar:
+                sel = _pick(ar, ("id", "kind", "uri", "bytes", "job_attempt_id", "created_at"))
+                out["reports"] = [dict(r) for r in conn.execute(
+                    f"SELECT {','.join(sel)} FROM artifacts WHERE job_attempt_id IN ({marks}) "
+                    f"LIMIT 50", tuple(attempt_ids)).fetchall()]
+        return out
+    finally:
+        conn.close()
+
+
+@router.get("/api/links/model/{model_version_id}")
+def links_model(model_version_id: int):
+    """从模型入口互查：产生它的 Job、它的评测与部署。"""
+    conn = _db_conn()
+    try:
+        mv = _cols(conn, "model_versions")
+        row = conn.execute("SELECT * FROM model_versions WHERE id=?", (model_version_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "模型版本不存在")
+        mvrow = dict(row)
+
+        out = {"model_version": mvrow, "job": None, "evaluations": [], "deployments": []}
+        for col in ("job_id", "job", "source_job_id"):
+            if col in mv and mvrow.get(col):
+                jr = conn.execute("SELECT * FROM jobs WHERE id=?", (mvrow[col],)).fetchone()
+                out["job"] = dict(jr) if jr else None
+                break
+
+        ev = _cols(conn, "evaluations")
+        for col in ("model_version_id", "model_version"):
+            if col in ev:
+                sel = _pick(ev, ("id", "status", "created_at", col))
+                out["evaluations"] = [dict(r) for r in conn.execute(
+                    f"SELECT {','.join(sel)} FROM evaluations WHERE {col}=? LIMIT 50",
+                    (model_version_id,)).fetchall()]
+                break
+
+        dp = _cols(conn, "deployments")
+        for col in ("model_version_id", "model_version"):
+            if col in dp:
+                sel = _pick(dp, ("id", "status", "created_at", col))
+                out["deployments"] = [dict(r) for r in conn.execute(
+                    f"SELECT {','.join(sel)} FROM deployments WHERE {col}=? LIMIT 50",
+                    (model_version_id,)).fetchall()]
+                break
+        return out
+    finally:
+        conn.close()
