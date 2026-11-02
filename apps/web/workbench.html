@@ -605,7 +605,15 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <div>相对基线<b id="e-imp">-</b></div>
     </div>
     <pre id="eval-detail" style="display:none"></pre>
-  </section>
+  
+  <div style="margin-top:18px">
+    <div class="hint">视觉模型对比</div>
+    <div class="row" style="margin-top:8px">
+      <div><button type="button" onclick="loadVisionCompare()">对比</button></div>
+    </div>
+    <pre id="cmp-out" style="display:none;margin-top:10px"></pre>
+  </div>
+</section>
 <section hidden class="card" id="sec-deploy">
     <h2>部署与调用 <span class="tag" id="dep-tag">未部署</span></h2>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
@@ -732,6 +740,24 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
   </div>
   <div id="vision-track-results"></div>
   <div id="vision-batch-results" class="vision-batch-list"></div>
+
+  <div style="margin-top:18px">
+    <div class="hint">批量标注质量门槛</div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="qg-batch">批次 ID</label><input id="qg-batch"></div>
+      <div><label for="qg-score">最低分</label><input id="qg-score" type="number" step="0.05" value="0.3"></div>
+      <div><label>&nbsp;</label><button type="button" onclick="loadQualityGate()">评估</button></div>
+    </div>
+    <pre id="qg-out" style="display:none;margin-top:10px"></pre>
+  </div>
+
+  <div style="margin-top:18px">
+    <div class="hint">观测画像</div>
+    <div class="row" style="margin-top:8px">
+      <div><button type="button" onclick="loadProfiles()">读取</button></div>
+    </div>
+    <pre id="pf-out" style="display:none;margin-top:10px"></pre>
+  </div>
 </section>
 <section hidden class="card" id="sec-dataset">
     <h2>数据集详情 <span class="tag" id="dd-tag">未选择</span></h2>
@@ -837,7 +863,15 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <div>空闲显存<b id="gpu-free">-</b></div>
     </div>
     <pre id="gpu-out" style="max-height:230px;margin-top:10px">-</pre>
-  </section>
+  
+  <div style="margin-top:18px">
+    <div class="hint">系统信息</div>
+    <div class="row" style="margin-top:8px">
+      <div><button type="button" onclick="loadSystemInfo()">读取</button></div>
+    </div>
+    <pre id="sys-out" style="display:none;margin-top:10px"></pre>
+  </div>
+</section>
 <section hidden class="card" id="sec-registry">
     <h2>模型仓库 <span class="tag" id="rg-tag">加载中</span></h2>
     <h3 style="margin:18px 0 6px;font-size:14px">本机模型与训练环境</h3>
@@ -871,7 +905,26 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <button class="ghost" onclick="loadLogs('task')">任务</button>
     </div>
     <pre id="log-out" style="max-height:200px;margin-top:10px">-</pre>
-  </section>
+  
+  <div style="margin-top:18px">
+    <div class="hint">三入口互查</div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="lk-job">Job 号</label><input id="lk-job" type="number"></div>
+      <div><label for="lk-model">模型版本 ID</label><input id="lk-model" type="number"></div>
+      <div><label>&nbsp;</label><button type="button" onclick="loadLinks()">查询</button></div>
+    </div>
+    <pre id="lk-out" style="display:none;margin-top:10px"></pre>
+  </div>
+
+  <div style="margin-top:18px">
+    <div class="hint">Agent 确认与 Workflow</div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="ag-wf">Workflow ID</label><input id="ag-wf"></div>
+      <div><label>&nbsp;</label><button type="button" onclick="loadAgentFlow()">读取</button></div>
+    </div>
+    <pre id="ag-out" style="display:none;margin-top:10px"></pre>
+  </div>
+</section>
 <section hidden class="card" id="sec-research">
   <h2>研究来源 <span class="tag" id="rs-count"></span></h2>
   <div class="row" style="margin-top:12px">
@@ -3742,6 +3795,102 @@ function openResearchReport() {
   window.open("api/research/report?format=html", "_blank");
 }
 
+const NLCH = String.fromCharCode(10);
+function jl(a) { return a.join(NLCH); }
+function fv(id) { const e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; }
+function so(id, s) { const e = document.getElementById(id); if (e) { e.style.display = 'block'; e.textContent = s; } }
+async function loadLinks() {
+  const job = fv('lk-job'); const mv = fv('lk-model');
+  if (!job && !mv) { so('lk-out', '请填 Job 号或模型版本 ID'); return; }
+  so('lk-out', '查询中…');
+  try {
+    const r = await fetch(job ? ('api/links/job/' + job) : ('api/links/model/' + mv));
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const L = [];
+    if (d.job) L.push('Job #' + d.job.id + '  ' + (d.job.kind || '') + '  ' + (d.job.status || ''));
+    const ms = d.models || [], as = d.reports || [], es = d.evaluations || [];
+    L.push('关联模型: ' + (ms.length ? ms.map(function (x) { return x.version || x.id; }).join(', ') : '无'));
+    L.push('制品: ' + (as.length ? as.map(function (x) { return (x.kind || 'artifact') + '#' + x.id; }).join(', ') : '无'));
+    L.push('评测: ' + (es.length ? es.map(function (x) { return '#' + x.id + ' ' + (x.status || ''); }).join(', ') : '无'));
+    so('lk-out', jl(L));
+  } catch (e) { so('lk-out', '失败 ' + e.message); }
+}
+async function loadAgentFlow() {
+  const wf = fv('ag-wf');
+  so('ag-out', '读取中…');
+  const L = [];
+  try {
+    if (wf) {
+      const r = await fetch('api/agent/workflows/' + encodeURIComponent(wf));
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || r.status);
+      (d.steps || []).forEach(function (s) { L.push('步骤 ' + (s.name || s.step) + '  job=' + (s.job_id || '-')); });
+    } else {
+      const rs = await Promise.all([
+        fetch('api/agent/confirmations?limit=8').then(function (r) { return r.ok ? r.json() : { items: [] }; }),
+        fetch('api/agent/workflows?limit=8').then(function (r) { return r.ok ? r.json() : { items: [] }; })
+      ]);
+      L.push('确认记录 ' + (rs[0].count || 0) + ' 条');
+      (rs[0].items || []).forEach(function (x) { L.push('  ' + (x.action || '') + '  ' + (x.status || '')); });
+      L.push('Workflow ' + (rs[1].count || 0) + ' 条');
+    }
+    so('ag-out', jl(L));
+  } catch (e) { so('ag-out', '失败 ' + e.message); }
+}
+async function loadVisionCompare() {
+  so('cmp-out', '查询中…');
+  try {
+    const r = await fetch('api/vision/benchmarks/compare');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const rows = d.rows || [];
+    if (!rows.length) { so('cmp-out', '暂无记录'); return; }
+    const L = ['模型                   P     R    F1   mAP50   IoU'];
+    rows.forEach(function (x) {
+      const f = function (v) { return v === null || v === undefined ? '  - ' : Number(v).toFixed(2); };
+      L.push(String(x.model || '?').slice(0, 20).padEnd(20) + ' ' + f(x.precision) + ' ' + f(x.recall) + ' ' + f(x.f1) + ' ' + f(x.map50) + ' ' + f(x.mean_matched_iou));
+    });
+    so('cmp-out', jl(L));
+  } catch (e) { so('cmp-out', '失败 ' + e.message); }
+}
+async function loadQualityGate() {
+  const b = fv('qg-batch');
+  if (!b) { so('qg-out', '请填批次 ID'); return; }
+  const sc = parseFloat(fv('qg-score') || '0.3');
+  so('qg-out', '评估中…');
+  try {
+    const r = await fetch('api/vision/ground-batches/' + encodeURIComponent(b) + '/quality?min_score=' + sc);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    so('qg-out', jl(['检测总数 ' + d.total + '　通过 ' + d.passed + '　拒绝 ' + d.rejected]));
+  } catch (e) { so('qg-out', '失败 ' + e.message); }
+}
+async function loadProfiles() {
+  so('pf-out', '读取中…');
+  try {
+    const r = await fetch('api/vision/profiles');
+    const d = await r.json();
+    const L = ['默认: ' + (d.default || '-')];
+    (d.profiles || []).forEach(function (x) { L.push('  ' + x.name + ' v' + x.version + '  ' + x.dim + ' 维'); });
+    so('pf-out', jl(L));
+  } catch (e) { so('pf-out', '失败 ' + e.message); }
+}
+async function loadSystemInfo() {
+  so('sys-out', '读取中…');
+  try {
+    const rs = await Promise.all([
+      fetch('api/capabilities').then(function (r) { return r.ok ? r.json() : null; }),
+      fetch('api/agent/tools').then(function (r) { return r.ok ? r.json() : null; }),
+      fetch('api/vision/hardware').then(function (r) { return r.ok ? r.json() : null; })
+    ]);
+    const L = [];
+    if (rs[0]) { L.push('能力 ' + rs[0].schema + ' 就绪 ' + rs[0].ready + '/' + rs[0].total); }
+    if (rs[1]) { L.push('MCP 工具 ' + rs[1].tool_count + ' 个　指纹 ' + rs[1].tools_sha256_12); }
+    if (rs[2]) { L.push('主机 ' + rs[2].host + '　GPU ' + (rs[2].gpus || []).length + ' 张'); }
+    so('sys-out', jl(L));
+  } catch (e) { so('sys-out', '失败 ' + e.message); }
+}
 initLogin();
 </script>
 </body>
