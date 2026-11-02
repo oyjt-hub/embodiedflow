@@ -3391,3 +3391,62 @@ def research_experiment_list(limit: int = 50):
             continue
     rows.sort(key=lambda r: r.get("recorded_at") or "", reverse=True)
     return {"count": len(rows), "items": rows[: max(1, min(limit, 200))]}
+
+class FollowupIn(BaseModel):
+    project_id: int = 1
+    dataset_version_id: int = 5
+    epochs: int = 1
+    lr: float = 0.001
+    batch_size: int = 64
+    device: str = "cpu"
+    goal: str | None = None
+
+
+@router.post("/api/research/experiments/{exp_id}/followup", status_code=201)
+def research_experiment_followup(exp_id: str, payload: FollowupIn):
+    """由一条实验记录派生出新配方草稿（可直接交给 workflow_start）。"""
+    import hashlib
+    import json as _json
+    import secrets
+    import sqlite3
+
+    if not RESEARCH_EXP_FILE.exists():
+        raise HTTPException(404, "实验记录不存在")
+    rec = None
+    for line in RESEARCH_EXP_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = _json.loads(line)
+        except Exception:
+            continue
+        if obj.get("id") == exp_id:
+            rec = obj
+            break
+    if rec is None:
+        raise HTTPException(404, "实验记录不存在")
+
+    args = {"dataset_version_id": payload.dataset_version_id, "backend": "bc",
+            "epochs": payload.epochs, "lr": payload.lr,
+            "batch_size": payload.batch_size, "device": payload.device}
+    digest = hashlib.sha256(_json.dumps(args, ensure_ascii=False, sort_keys=True,
+                                       separators=(",", ":")).encode()).hexdigest()
+    steps = [{"step_id": "train", "tool": "workflow_training_submit",
+              "arguments": args, "arguments_digest": digest, "depends_on": []}]
+    draft_id = secrets.token_urlsafe(18)
+    goal = (payload.goal or f"由实验 {exp_id} 派生：{rec.get('hypothesis','')[:60]}")[:500]
+    now = __import__("time").time()
+    db = settings.data_root / "metadata" / "platform.db"
+    conn = sqlite3.connect(db, timeout=30)
+    try:
+        conn.execute("INSERT INTO agent_pipeline_drafts (draft_id, project_id, goal, revision, "
+                     "steps_json, created_at, updated_at) VALUES (?,?,?,1,?,?,?)",
+                     (draft_id, payload.project_id, goal,
+                      _json.dumps(steps, ensure_ascii=False), now, now))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"draft_id": draft_id, "project_id": payload.project_id,
+            "goal": goal, "revision": 1, "arguments": args,
+            "next_action": "workflow_start(project_id, workflow_id=draft_id)"}
