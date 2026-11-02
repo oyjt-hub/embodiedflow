@@ -605,7 +605,17 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <div>相对基线<b id="e-imp">-</b></div>
     </div>
     <pre id="eval-detail" style="display:none"></pre>
-  </section>
+  
+  <div style="margin-top:18px">
+    <div class="hint">视觉模型对比</div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="cmp-ds">数据版本</label><input id="cmp-ds" type="number" placeholder="可留空"></div>
+      <div><label for="cmp-run">真值集 ID</label><input id="cmp-run" type="number" placeholder="可留空"></div>
+      <div><label>&nbsp;</label><button type="button" onclick="loadVisionCompare()">对比</button></div>
+    </div>
+    <pre id="cmp-out" style="display:none;margin-top:10px"></pre>
+  </div>
+</section>
 <section hidden class="card" id="sec-deploy">
     <h2>部署与调用 <span class="tag" id="dep-tag">未部署</span></h2>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
@@ -3778,6 +3788,38 @@ async function loadLinks() {
     if (deps.length) lines.push("部署: " + deps.map(x => "#" + x.id + " " + (x.status || "")).join(", "));
     out.textContent = lines.join("
 ");
+  } catch (e) {
+    out.textContent = "失败：" + e.message;
+  }
+}
+
+async function loadVisionCompare() {
+  const ds = ($("cmp-ds") && $("cmp-ds").value || "").trim();
+  const run = ($("cmp-run") && $("cmp-run").value || "").trim();
+  const out = $("cmp-out");
+  out.style.display = "block";
+  out.textContent = "查询中…";
+  try {
+    const qs = [];
+    if (ds) qs.push("dataset_version_id=" + encodeURIComponent(ds));
+    if (run) qs.push("annotation_run_id=" + encodeURIComponent(run));
+    const r = await fetch("api/vision/benchmarks/compare" + (qs.length ? "?" + qs.join("&") : ""));
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const rows = d.rows || [];
+    if (!rows.length) { out.textContent = "暂无视觉评测记录"; return; }
+    const head = "模型                  P     R    F1   mAP50   IoU   最佳";
+    const body = rows.map(x => {
+      const f = v => (v === null || v === undefined ? "  - " : (+v).toFixed(2));
+      return (String(x.model || "?").slice(0, 20)).padEnd(20) + " " +
+             f(x.precision) + " " + f(x.recall) + " " + f(x.f1) + " " +
+             f(x.map50) + " " + f(x.mean_matched_iou) + "   " + (x.is_best_map50 ? "★" : "");
+    }).join("
+");
+    out.textContent = head + "
+" + body + "
+
+共 " + rows.length + " 条，best mAP50=" + (d.best_map50 ?? "-");
   } catch (e) {
     out.textContent = "失败：" + e.message;
   }
