@@ -3069,3 +3069,67 @@ def research_list_sources(q: str | None = None, kind: str | None = None,
         rows.append(rec)
     rows.sort(key=lambda r: r.get("recorded_at") or "", reverse=True)
     return {"count": len(rows), "items": rows[: max(1, min(limit, 200))]}
+
+@router.get("/api/research/report")
+def research_report(format: str = "md", topic: str | None = None):
+    """把已登记来源生成对比矩阵报告（Markdown 或 HTML）。"""
+    import html as _html
+    import json as _json
+
+    rows: list[dict] = []
+    if RESEARCH_FILE.exists():
+        for line in RESEARCH_FILE.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = _json.loads(line)
+            except Exception:
+                continue
+            if topic and rec.get("topic") != topic:
+                continue
+            rows.append(rec)
+
+    grouped: dict[str, list[dict]] = {}
+    for r in rows:
+        grouped.setdefault(r.get("topic") or "(未分类)", []).append(r)
+
+    fmt = (format or "md").lower()
+    if fmt not in {"md", "html"}:
+        raise HTTPException(400, "format 需为 md 或 html")
+
+    def esc(v) -> str:
+        return _html.escape(str(v or ""))
+
+    if fmt == "md":
+        out = ["# 研究来源对比矩阵", "",
+               f"共 {len(rows)} 条，{len(grouped)} 个课题。", ""]
+        for tp in sorted(grouped):
+            out.append(f"## {tp}")
+            out.append("")
+            out.append("| 标题 | 类型 | 版本 | 发表时间 | 链接 |")
+            out.append("| --- | --- | --- | --- | --- |")
+            for r in sorted(grouped[tp], key=lambda x: x.get("title") or ""):
+                out.append("| {} | {} | {} | {} | {} |".format(
+                    r.get("title") or "-", r.get("kind") or "-",
+                    r.get("version") or "-", r.get("published_at") or "-",
+                    r.get("url") or "-"))
+            out.append("")
+        body = chr(10).join(out)
+        return Response(content=body, media_type="text/markdown; charset=utf-8")
+
+    parts = ["<h1>研究来源对比矩阵</h1>",
+             f"<p>共 {len(rows)} 条，{len(grouped)} 个课题。</p>"]
+    for tp in sorted(grouped):
+        parts.append(f"<h2>{esc(tp)}</h2>")
+        parts.append("<table border=1 cellpadding=4 cellspacing=0>"
+                     "<tr><th>标题</th><th>类型</th><th>版本</th>"
+                     "<th>发表时间</th><th>链接</th></tr>")
+        for r in sorted(grouped[tp], key=lambda x: x.get("title") or ""):
+            link = (f'<a href="{esc(r.get("url"))}">{esc(r.get("url"))}</a>'
+                    if r.get("url") else "-")
+            parts.append("<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                esc(r.get("title")), esc(r.get("kind")), esc(r.get("version")),
+                esc(r.get("published_at")), link))
+        parts.append("</table>")
+    return Response(content="".join(parts), media_type="text/html; charset=utf-8")
