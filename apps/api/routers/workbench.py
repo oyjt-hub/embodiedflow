@@ -3450,3 +3450,14 @@ def research_experiment_followup(exp_id: str, payload: FollowupIn):
     return {"draft_id": draft_id, "project_id": payload.project_id,
             "goal": goal, "revision": 1, "arguments": args,
             "next_action": "workflow_start(project_id, workflow_id=draft_id)"}
+
+@router.get("/api/agent/plugin")
+def agent_plugin():
+    """Codex Plugin 清单（工具与 Skills 打包声明）。"""
+    import json as _json
+
+    root = Path(__file__).resolve().parents[3]
+    f = root / "plugin" / "plugin.json"
+    if not f.is_file():
+        raise HTTPException(404, "plugin 清单不存在")
+    return _json.loads(f.read_text(encoding="utf-8"))
