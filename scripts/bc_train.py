@@ -19,6 +19,30 @@ import torch
 import torch.nn as nn
 
 
+def _load_sidecar(data_dir: str) -> dict:
+    for rel in ("derived/sidecar.jsonl", "sidecar.jsonl"):
+        path = os.path.join(data_dir, rel)
+        if not os.path.exists(path):
+            continue
+        table = {}
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except Exception:
+                    continue
+                ep = rec.get("episode", rec.get("episode_index"))
+                fr = rec.get("frame", rec.get("frame_index"))
+                if ep is None or fr is None:
+                    continue
+                table[(int(ep), int(fr))] = rec
+        return table
+    return {}
+
+
 def load(data_dir: str, episode_indices: set[int] | None = None,
          profile_name: str | None = None):
     import pyarrow.parquet as pq
@@ -32,10 +56,15 @@ def load(data_dir: str, episode_indices: set[int] | None = None,
     states, actions, eps = [], [], []
     for f in files:
         t = pq.read_table(f, columns=["episode_index", "observation.state", "action"]).to_pydict()
-        for s, a, e in zip(t["observation.state"], t["action"], t["episode_index"]):
+        for i, (s, a, e) in enumerate(zip(t["observation.state"], t["action"], t["episode_index"])):
             if episode_indices is not None and int(e) not in episode_indices:
                 continue
-            states.append(np.asarray(s, dtype=np.float32))
+            vec = np.asarray(s, dtype=np.float32)
+            if prof and prof.fields:
+                rec = sidecar.get((int(e), i), {})
+                extra = np.asarray(vectorize(prof, rec)["values"], dtype=np.float32)
+                vec = np.concatenate([vec, extra])
+            states.append(vec)
             actions.append(np.asarray(a, dtype=np.float32))
             eps.append(int(e))
     return np.stack(states), np.stack(actions), np.asarray(eps)
