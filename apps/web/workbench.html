@@ -605,17 +605,7 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <div>相对基线<b id="e-imp">-</b></div>
     </div>
     <pre id="eval-detail" style="display:none"></pre>
-  
-  <div style="margin-top:18px">
-    <div class="hint">视觉模型对比</div>
-    <div class="row" style="margin-top:8px">
-      <div><label for="cmp-ds">数据版本</label><input id="cmp-ds" type="number" placeholder="可留空"></div>
-      <div><label for="cmp-run">真值集 ID</label><input id="cmp-run" type="number" placeholder="可留空"></div>
-      <div><label>&nbsp;</label><button type="button" onclick="loadVisionCompare()">对比</button></div>
-    </div>
-    <pre id="cmp-out" style="display:none;margin-top:10px"></pre>
-  </div>
-</section>
+  </section>
 <section hidden class="card" id="sec-deploy">
     <h2>部署与调用 <span class="tag" id="dep-tag">未部署</span></h2>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
@@ -742,25 +732,6 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
   </div>
   <div id="vision-track-results"></div>
   <div id="vision-batch-results" class="vision-batch-list"></div>
-
-  <div style="margin-top:18px">
-    <div class="hint">批量标注质量门槛</div>
-    <div class="row" style="margin-top:8px">
-      <div><label for="qg-batch">批次 ID</label><input id="qg-batch" placeholder="ground-batches 的 id"></div>
-      <div><label for="qg-score">最低分</label><input id="qg-score" type="number" step="0.05" value="0.3"></div>
-      <div><label for="qg-area">最小面积(px²)</label><input id="qg-area" type="number" value="0"></div>
-      <div><label>&nbsp;</label><button type="button" onclick="loadQualityGate()">评估</button></div>
-    </div>
-    <pre id="qg-out" style="display:none;margin-top:10px"></pre>
-  </div>
-
-  <div style="margin-top:18px">
-    <div class="hint">观测画像</div>
-    <div class="row" style="margin-top:8px">
-      <div><label>&nbsp;</label><button type="button" class="ghost" onclick="loadProfiles()">读取</button></div>
-    </div>
-    <pre id="pf-out" style="display:none;margin-top:10px"></pre>
-  </div>
 </section>
 <section hidden class="card" id="sec-dataset">
     <h2>数据集详情 <span class="tag" id="dd-tag">未选择</span></h2>
@@ -866,15 +837,7 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <div>空闲显存<b id="gpu-free">-</b></div>
     </div>
     <pre id="gpu-out" style="max-height:230px;margin-top:10px">-</pre>
-  
-  <div style="margin-top:18px">
-    <div class="hint">系统信息</div>
-    <div class="row" style="margin-top:8px">
-      <div><label>&nbsp;</label><button type="button" class="ghost" onclick="loadSystemInfo()">读取</button></div>
-    </div>
-    <pre id="sys-out" style="display:none;margin-top:10px"></pre>
-  </div>
-</section>
+  </section>
 <section hidden class="card" id="sec-registry">
     <h2>模型仓库 <span class="tag" id="rg-tag">加载中</span></h2>
     <h3 style="margin:18px 0 6px;font-size:14px">本机模型与训练环境</h3>
@@ -908,26 +871,7 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <button class="ghost" onclick="loadLogs('task')">任务</button>
     </div>
     <pre id="log-out" style="max-height:200px;margin-top:10px">-</pre>
-  
-  <div style="margin-top:18px">
-    <div class="hint">三入口互查</div>
-    <div class="row" style="margin-top:8px">
-      <div><label for="lk-job">Job 号</label><input id="lk-job" type="number" placeholder="如 43"></div>
-      <div><label for="lk-model">或模型版本 ID</label><input id="lk-model" type="number" placeholder="如 12"></div>
-      <div><label>&nbsp;</label><button type="button" onclick="loadLinks()">查询关联</button></div>
-    </div>
-    <pre id="lk-out" style="display:none;margin-top:10px"></pre>
-  </div>
-
-  <div style="margin-top:18px">
-    <div class="hint">Agent 确认与 Workflow</div>
-    <div class="row" style="margin-top:8px">
-      <div><label for="ag-wf">Workflow ID</label><input id="ag-wf" placeholder="可留空"></div>
-      <div><label>&nbsp;</label><button type="button" onclick="loadAgentFlow()">读取</button></div>
-    </div>
-    <pre id="ag-out" style="display:none;margin-top:10px"></pre>
-  </div>
-</section>
+  </section>
 <section hidden class="card" id="sec-research">
   <h2>研究来源 <span class="tag" id="rs-count"></span></h2>
   <div class="row" style="margin-top:12px">
@@ -3798,199 +3742,6 @@ function openResearchReport() {
   window.open("api/research/report?format=html", "_blank");
 }
 
-
-async function loadLinks() {
-  const job = ($("lk-job") && $("lk-job").value || "").trim();
-  const mv = ($("lk-model") && $("lk-model").value || "").trim();
-  const out = $("lk-out");
-  if (!job && !mv) { out.style.display = "block"; out.textContent = "请填 Job 号或模型版本 ID"; return; }
-  out.style.display = "block";
-  out.textContent = "查询中…";
-  try {
-    const url = job ? "api/links/job/" + job : "api/links/model/" + mv;
-    const r = await fetch(url);
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.detail || r.status);
-    const lines = [];
-    if (d.job) lines.push("Job #" + d.job.id + "  " + (d.job.kind || "") + "  " + (d.job.status || ""));
-    if (d.model_version) lines.push("模型版本 " + d.model_version.version + "（id=" + d.model_version.id + "）");
-    const models = d.models || [];
-    const arts = d.reports || [];
-    const evs = d.evaluations || [];
-    const deps = d.deployments || [];
-    lines.push("关联模型: " + (models.length ? models.map(x => x.version || x.id).join(", ") : "无"));
-    lines.push("制品: " + (arts.length ? arts.map(x => (x.kind || "artifact") + "#" + x.id).join(", ") : "无"));
-    lines.push("评测: " + (evs.length ? evs.map(x => "#" + x.id + " " + (x.status || "")).join(", ") : "无"));
-    if (deps.length) lines.push("部署: " + deps.map(x => "#" + x.id + " " + (x.status || "")).join(", "));
-    out.textContent = lines.join("
-");
-  } catch (e) {
-    out.textContent = "失败：" + e.message;
-  }
-}
-
-async function loadVisionCompare() {
-  const ds = ($("cmp-ds") && $("cmp-ds").value || "").trim();
-  const run = ($("cmp-run") && $("cmp-run").value || "").trim();
-  const out = $("cmp-out");
-  out.style.display = "block";
-  out.textContent = "查询中…";
-  try {
-    const qs = [];
-    if (ds) qs.push("dataset_version_id=" + encodeURIComponent(ds));
-    if (run) qs.push("annotation_run_id=" + encodeURIComponent(run));
-    const r = await fetch("api/vision/benchmarks/compare" + (qs.length ? "?" + qs.join("&") : ""));
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.detail || r.status);
-    const rows = d.rows || [];
-    if (!rows.length) { out.textContent = "暂无视觉评测记录"; return; }
-    const head = "模型                  P     R    F1   mAP50   IoU   最佳";
-    const body = rows.map(x => {
-      const f = v => (v === null || v === undefined ? "  - " : (+v).toFixed(2));
-      return (String(x.model || "?").slice(0, 20)).padEnd(20) + " " +
-             f(x.precision) + " " + f(x.recall) + " " + f(x.f1) + " " +
-             f(x.map50) + " " + f(x.mean_matched_iou) + "   " + (x.is_best_map50 ? "★" : "");
-    }).join("
-");
-    out.textContent = head + "
-" + body + "
-
-共 " + rows.length + " 条，best mAP50=" + (d.best_map50 ?? "-");
-  } catch (e) {
-    out.textContent = "失败：" + e.message;
-  }
-}
-
-async function loadQualityGate() {
-  const batch = ($("qg-batch") && $("qg-batch").value || "").trim();
-  const out = $("qg-out");
-  if (!batch) { out.style.display = "block"; out.textContent = "请填写批次 ID"; return; }
-  const score = parseFloat(($("qg-score") || {}).value || "0.3");
-  const area = parseFloat(($("qg-area") || {}).value || "0");
-  out.style.display = "block";
-  out.textContent = "评估中…";
-  try {
-    const r = await fetch("api/vision/ground-batches/" + encodeURIComponent(batch) +
-      "/quality?min_score=" + score + "&min_area=" + area);
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.detail || r.status);
-    const lines = [
-      "检测总数: " + d.total + "　通过: " + d.passed + "　拒绝: " + d.rejected,
-      "通过率: " + (d.pass_rate === null ? "-" : (d.pass_rate * 100).toFixed(1) + "%"),
-    ];
-    (d.rejected_sample || []).slice(0, 5).forEach(x => {
-      lines.push("  拒绝 score=" + x.score + " area=" + x.area + " label=" + (x.label || "-"));
-    });
-    out.textContent = lines.join("
-");
-  } catch (e) {
-    out.textContent = "失败：" + e.message;
-  }
-}
-
-async function loadSystemInfo() {
-  const out = $("sys-out");
-  out.style.display = "block";
-  out.textContent = "读取中…";
-  const lines = [];
-  try {
-    const [cap, tools, hw] = await Promise.all([
-      fetch("api/capabilities").then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch("api/agent/tools").then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch("api/vision/hardware").then(r => r.ok ? r.json() : null).catch(() => null),
-    ]);
-
-    if (cap) {
-      lines.push("能力描述 " + cap.schema + " v" + cap.version +
-                 "　就绪 " + cap.ready + "/" + cap.total);
-      (cap.services || []).forEach(s =>
-        lines.push("  " + (s.id || "").padEnd(11) + " " + (s.ok ? "OK " : "NG ") +
-                   (s.summary || "")));
-    } else { lines.push("能力描述: 读取失败"); }
-
-    if (tools) {
-      lines.push("");
-      lines.push("MCP 工具 " + tools.tool_count + " 个　指纹 " + tools.tools_sha256_12);
-      lines.push("  " + (tools.tools || []).slice(0, 8).join(", ") + " …");
-    } else { lines.push("MCP 工具: 读取失败"); }
-
-    if (hw) {
-      const cpu = hw.cpu || {};
-      lines.push("");
-      lines.push("主机 " + (hw.host || "-") + "　CPU " + (cpu.model || "-") +
-                 " x" + (cpu.cores || "-") + "　内存 " +
-                 Math.round((hw.memory_mb || 0) / 1024) + " GiB");
-      (hw.gpus || []).forEach(g =>
-        lines.push("  GPU" + g.index + " " + g.name + " " + g.memory_mb + " MB  driver " + g.driver));
-    } else { lines.push("硬件画像: 读取失败"); }
-
-    out.textContent = lines.join("
-");
-  } catch (e) {
-    out.textContent = "失败：" + e.message;
-  }
-}
-
-async function loadAgentFlow() {
-  const wf = ($("ag-wf") && $("ag-wf").value || "").trim();
-  const out = $("ag-out");
-  out.style.display = "block";
-  out.textContent = "读取中…";
-  const lines = [];
-  try {
-    if (wf) {
-      const r = await fetch("api/agent/workflows/" + encodeURIComponent(wf));
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.detail || r.status);
-      const w = d.workflow || {};
-      lines.push("Workflow " + w.workflow_id + "  " + (w.kind || "") + "  " + (w.status || ""));
-      (d.steps || []).forEach(s => {
-        const j = s.job;
-        lines.push("  步骤 " + (s.name || s.step) + "  job=" + (s.job_id || "-") +
-                   (j ? "  " + j.status : "  （无关联）"));
-      });
-    } else {
-      const [c, w] = await Promise.all([
-        fetch("api/agent/confirmations?limit=8").then(r => r.ok ? r.json() : {items: []}).catch(() => ({items: []})),
-        fetch("api/agent/workflows?limit=8").then(r => r.ok ? r.json() : {items: []}).catch(() => ({items: []})),
-      ]);
-      lines.push("确认记录 " + (c.count || 0) + " 条");
-      (c.items || []).forEach(x => lines.push("  " + x.confirmation_id.slice(0, 12) + "  " +
-        (x.action || "") + "  " + (x.status || "")));
-      lines.push("");
-      lines.push("Workflow " + (w.count || 0) + " 条");
-      (w.items || []).forEach(x => lines.push("  " + x.workflow_id.slice(0, 12) + "  " +
-        (x.name || "") + "  " + (x.status || "")));
-    }
-    out.textContent = lines.join("
-");
-  } catch (e) {
-    out.textContent = "失败：" + e.message;
-  }
-}
-
-async function loadProfiles() {
-  const out = $("pf-out");
-  out.style.display = "block";
-  out.textContent = "读取中…";
-  try {
-    const r = await fetch("api/vision/profiles");
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.detail || r.status);
-    const lines = ["默认画像: " + (d.default || "-")];
-    (d.profiles || []).forEach(x =>
-      lines.push("  " + (x.name || "") + " v" + (x.version || "") + "  " + x.dim + " 维"));
-    const def = (d.profiles || []).find(x => x.name === d.default);
-    if (def && def.keys && def.keys.length) {
-      lines.push("");
-      lines.push("字段顺序: " + def.keys.join(", "));
-    }
-    out.textContent = lines.join("
-");
-  } catch (e) {
-    out.textContent = "失败：" + e.message;
-  }
-}
 initLogin();
 </script>
 </body>
