@@ -1919,8 +1919,14 @@ def retry_training_job(job_id: int):
         job = s.get(Job, job_id)
         if job is None:
             raise HTTPException(404, f"任务 {job_id} 不存在")
-        if job.kind not in {"train", "train_openpi", "train_act"} or job.created_by != "workbench":
-            raise HTTPException(409, "只支持重试工作台训练任务")
+        retryable = (
+            (job.kind in {"train", "train_openpi", "train_act", "materialize"}
+             and job.created_by == "workbench")
+            or (job.kind in {"vision_ground", "vision_track", "vision_flora"}
+                and job.created_by in {"vision_ground_batch", "vision_runtime", "workbench"})
+        )
+        if not retryable:
+            raise HTTPException(409, f"任务类型 {job.kind}/{job.created_by} 不支持重试")
         if job.status != "failed":
             raise HTTPException(409, "只有失败的训练任务可以重试")
         used = jobsvc.attempts_used(s, job.id)
