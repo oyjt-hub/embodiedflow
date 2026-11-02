@@ -3227,3 +3227,70 @@ def agent_skills():
     data = _json.loads(manifest.read_text(encoding="utf-8"))
     data["count"] = len(data.get("skills") or [])
     return data
+
+ASSET_DIR = settings.data_root / "assets"
+ASSET_KINDS = {"depth", "rgbd", "calibration", "board_model", "sdk", "other"}
+
+
+class AssetIn(BaseModel):
+    kind: str
+    name: str
+    path: str | None = None
+    version: str | None = None
+    notes: str | None = None
+    meta: dict | None = None
+
+
+@router.post("/api/assets", status_code=201)
+def asset_register(payload: AssetIn):
+    """登记 RGB-D / 标定 / 板卡模型 / SDK 等资产（含路径与版本）。
+
+    资产本体不入库，只登记引用；缺资产时登记表为空即为事实记录。
+    """
+    import json as _json
+    import uuid as _uuid
+
+    if payload.kind not in ASSET_KINDS:
+        raise HTTPException(400, f"kind 需为 {sorted(ASSET_KINDS)} 之一")
+    if not payload.name.strip():
+        raise HTTPException(400, "name 不能为空")
+    ASSET_DIR.mkdir(parents=True, exist_ok=True)
+    rec = {
+        "id": _uuid.uuid4().hex[:12],
+        "kind": payload.kind,
+        "name": payload.name.strip(),
+        "path": payload.path,
+        "version": payload.version,
+        "notes": payload.notes,
+        "meta": payload.meta or {},
+        "exists": bool(payload.path) and Path(payload.path).exists(),
+        "recorded_at": __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc).isoformat(timespec="seconds"),
+    }
+    with (ASSET_DIR / "registry.jsonl").open("a", encoding="utf-8") as fh:
+        fh.write(_json.dumps(rec, ensure_ascii=False) + chr(10))
+    return rec
+
+
+@router.get("/api/assets")
+def asset_list(kind: str | None = None, limit: int = 100):
+    import json as _json
+
+    f = ASSET_DIR / "registry.jsonl"
+    if not f.exists():
+        return {"count": 0, "items": [], "kinds": sorted(ASSET_KINDS)}
+    rows = []
+    for line in f.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = _json.loads(line)
+        except Exception:
+            continue
+        if kind and rec.get("kind") != kind:
+            continue
+        rows.append(rec)
+    rows.sort(key=lambda r: r.get("recorded_at") or "", reverse=True)
+    return {"count": len(rows), "items": rows[: max(1, min(limit, 500))],
+            "kinds": sorted(ASSET_KINDS)}
