@@ -2745,3 +2745,57 @@ def list_workflows_history(project_id: int | None = None, limit: int = 20):
         return {"count": len(rows), "items": rows}
     finally:
         conn.close()
+
+@router.get("/api/agent/workflows/{workflow_id}")
+def workflow_detail(workflow_id: str):
+    """Workflow 多步结果编排：步骤定义 + 各步对应 Job 的当前状态与结果。"""
+    import json as _json
+    import sqlite3
+
+    db = settings.data_root / "metadata" / "platform.db"
+    conn = sqlite3.connect(db, timeout=30)
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute(
+            "SELECT * FROM agent_workflows WHERE workflow_id=?", (workflow_id,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "Workflow 不存在")
+        wf = dict(row)
+        try:
+            steps = _json.loads(wf.get("steps_json") or "[]")
+        except Exception:
+            steps = []
+        try:
+            result = _json.loads(wf.get("result_json") or "{}")
+        except Exception:
+            result = {}
+
+        job_ids = []
+        for st in steps if isinstance(steps, list) else []:
+            jid = (st or {}).get("job_id") if isinstance(st, dict) else None
+            if jid:
+                job_ids.append(jid)
+        if isinstance(result, dict) and result.get("job_id"):
+            job_ids.append(result["job_id"])
+        job_ids = list(dict.fromkeys(int(j) for j in job_ids if str(j).isdigit()))
+
+        jobs = {}
+        if job_ids:
+            marks = ",".join("?" * len(job_ids))
+            for j in conn.execute(
+                f"SELECT id, kind, name, status, created_at, started_at, finished_at "
+                f"FROM jobs WHERE id IN ({marks})", tuple(job_ids)
+            ).fetchall():
+                jobs[j["id"]] = dict(j)
+
+        for st in steps if isinstance(steps, list) else []:
+            if isinstance(st, dict) and str(st.get("job_id", "")).isdigit():
+                st["job"] = jobs.get(int(st["job_id"]))
+        wf.pop("payload_json", None)
+        return {"workflow": {k: wf[k] for k in
+                             ("workflow_id", "project_id", "kind", "name",
+                              "status", "created_at", "updated_at")},
+                "steps": steps, "result": result, "jobs": list(jobs.values())}
+    finally:
+        conn.close()
