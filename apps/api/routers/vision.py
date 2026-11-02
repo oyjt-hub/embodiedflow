@@ -2884,7 +2884,7 @@ def mask_annotations_list(run_id: int, limit: int = 200):
 
 
 @router.get("/mask-annotations/{run_id}/export")
-def mask_annotations_export(run_id: int):
+def mask_annotations_export(run_id: int, format: str = "json"):
     """导出 mask 标注集：JSON（含 RLE），可直接用于 Mask IoU 评测。"""
     from sqlalchemy import select
     from persistence.models import Annotation, AnnotationRun
@@ -2894,9 +2894,57 @@ def mask_annotations_export(run_id: int):
             raise HTTPException(404, "mask 标注集不存在")
         rows = s.scalars(select(Annotation).where(Annotation.run_id == run_id)).all()
         items = [{"episode": r.episode_index, **(r.payload or {})} for r in rows]
-        return {"schema": "embodiedflow.mask_gt/1", "run_id": run_id,
-                "dataset_version_id": run.dataset_version_id,
-                "count": len(items), "items": items}
+        fmt = (format or "json").lower()
+        if fmt not in {"json", "coco", "yolo"}:
+            raise HTTPException(400, "format 需为 json / coco / yolo")
+
+        if fmt == "json":
+            return {"schema": "embodiedflow.mask_gt/1", "run_id": run_id,
+                    "dataset_version_id": run.dataset_version_id,
+                    "count": len(items), "items": items}
+
+        if fmt == "coco":
+            cats = {}
+            images, anns = [], []
+            for i, it in enumerate(items, start=1):
+                lab = it.get("label") or "object"
+                cats.setdefault(lab, len(cats) + 1)
+                rle = it.get("rle") or {}
+                images.append({"id": i, "file_name":
+                               f"ep{it.get('episode',0)}_{it.get('camera','front')}_f{it.get('frame_index',0)}.png",
+                               "width": 0, "height": 0})
+                anns.append({"id": i, "image_id": i, "category_id": cats[lab],
+                             "segmentation": rle, "iscrowd": 0})
+            return {"info": {"description": "EmbodiedFlow mask_gt export"},
+                    "images": images, "annotations": anns,
+                    "categories": [{"id": v, "name": k} for k, v in cats.items()]}
+
+        # yolo：由 RLE 还原估算外接框，归一化到占位边长（真实尺寸未知时按 640 归一）
+        lines = []
+        SIDE = 640.0
+        for it in items:
+            rle = it.get("rle") or {}
+            size = int(rle.get("size") or 0)
+            if not size:
+                continue
+            side = int(round(size ** 0.5)) or 1
+            bits = []
+            val = 0
+            for c in (rle.get("counts") or []):
+                bits.extend([val] * int(c)); val = 1 - val
+            xs = [i % side for i, b in enumerate(bits) if b]
+            ys = [i // side for i, b in enumerate(bits) if b]
+            if not xs:
+                continue
+            x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+            cx = (x0 + x1 + 1) / 2 / SIDE
+            cy = (y0 + y1 + 1) / 2 / SIDE
+            w = (x1 - x0 + 1) / SIDE
+            h = (y1 - y0 + 1) / SIDE
+            lines.append(f"0 {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}")
+        return {"schema": "embodiedflow.yolo/1", "count": len(lines),
+                "note": "外接框按 side=ceil(sqrt(size))、归一化 SIDE=640 估算，仅用于占位导出",
+                "lines": lines}
 
 class PoseIn(BaseModel):
     translation: list[float] = [0.0, 0.0, 0.0]
