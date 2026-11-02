@@ -12,7 +12,7 @@ import uuid
 import zipfile
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from pydantic import ValidationError
@@ -2524,3 +2524,35 @@ def profile_vector(payload: dict):
     except KeyError as exc:
         raise HTTPException(400, str(exc)) from exc
     return vectorize(prof, sidecar)
+
+@router.get("/tracks/{run_id}/pts.csv")
+def track_pts_csv(run_id: str):
+    """导出逐帧 PTS 轨迹（含遮挡/丢失状态），可直接给时间轴编辑用。"""
+    import csv as _csv
+    import io as _io
+    import json as _json
+
+    out_dir = _track_dir(run_id)
+    meta_p = out_dir / "metadata.json"
+    if not meta_p.exists():
+        raise HTTPException(404, "跟踪记录不存在")
+    meta = _json.loads(meta_p.read_text(encoding="utf-8"))
+    fps = float(meta.get("fps") or 0) or None
+    frames = meta.get("frames") or []
+
+    buf = _io.StringIO()
+    w = _csv.writer(buf)
+    w.writerow(["frame_index", "timestamp_s", "pts_s", "status",
+                "visibility_status", "visibility_reason",
+                "foreground_pixels", "review_suggested", "review_reason"])
+    for f in frames:
+        idx = f.get("index")
+        ts = f.get("timestamp_s")
+        w.writerow([idx, ts, ts, f.get("status"),
+                    f.get("visibility_status"), f.get("visibility_reason"),
+                    f.get("foreground_pixels"),
+                    f.get("review_suggested"), f.get("review_reason")])
+    body = buf.getvalue()
+    return Response(content=body, media_type="text/csv",
+                    headers={"content-disposition":
+                             f'attachment; filename="{run_id}-pts.csv"'})
