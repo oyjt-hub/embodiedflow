@@ -3318,14 +3318,30 @@ def _workflow_metrics(workflow_id: str) -> dict:
             return {}
         steps = _json.loads(row["steps_json"] or "[]")
         metrics = {}
+        KEYS = ("val_mae", "val_rmse", "train_loss", "val_loss", "baseline_mae")
         for s in steps:
-            r = (s or {}).get("result") if isinstance(s, dict) else None
-            if isinstance(r, dict):
-                tr = r.get("training") or r.get("metrics")
-                if isinstance(tr, dict):
-                    for k in ("val_mae", "val_rmse", "train_loss", "val_loss", "model_version_id"):
-                        if tr.get(k) is not None:
-                            metrics[k] = tr[k]
+            if not isinstance(s, dict):
+                continue
+            r = s.get("result")
+            if not isinstance(r, dict):
+                continue
+            # 训练步无 result；指标在 experiment_report.runs 里
+            runs = r.get("runs")
+            if isinstance(runs, list):
+                for run in runs:
+                    if not isinstance(run, dict):
+                        continue
+                    for k in KEYS:
+                        if run.get(k) is not None and k not in metrics:
+                            metrics[k] = run[k]
+                    m2 = run.get("metrics")
+                    if isinstance(m2, dict):
+                        for k in KEYS:
+                            if m2.get(k) is not None and k not in metrics:
+                                metrics[k] = m2[k]
+            for k in KEYS:
+                if r.get(k) is not None and k not in metrics:
+                    metrics[k] = r[k]
         mv = conn.execute("SELECT id, version FROM model_versions ORDER BY id DESC LIMIT 1").fetchone()
         return {"workflow_status": row["status"], "metrics": metrics,
                 "latest_model_version": dict(mv) if mv else None}
