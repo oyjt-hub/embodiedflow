@@ -154,7 +154,7 @@ elif page == "Evaluation":
 
 elif page == "Annotations":
     st.title("Annotations · FLORA 自动标注")
-    st.caption("作业 → 标注 → 分层抽检 → 派生版本；模型未接入时 model_version=mock")
+    st.caption("NVIDIA FLORA")
     versions = api("/api/annotation/versions")
     opts = {}
     if not err(versions) and versions:
@@ -167,14 +167,38 @@ elif page == "Annotations":
         chosen = c1.selectbox("数据集版本", list(opts.keys()))
         vid = opts[chosen]
         eps = c2.text_input("Episode 索引（逗号分隔）", value="0,1,2,3,4,5,6,7")
+        camera = st.text_input("相机", value="front")
+        profile = st.selectbox("动作配置", ["yam", "dex", "tianji", "human"])
         if st.form_submit_button("运行自动标注", type="primary"):
-            idx = [int(x) for x in eps.replace("，", ",").split(",") if x.strip()]
-            r = api("/api/annotation/run", "POST",
-                    json={"dataset_version_id": int(vid), "episode_indices": idx})
-            if not err(r):
-                st.success(f"run #{r['run_id']} · {r['model']} · {r['annotations']} 条标注")
-    if st.button("刷新统计"):
-        pass
+            try:
+                idx = [int(x) for x in eps.replace("，", ",").split(",") if x.strip()]
+                r = api("/api/annotation/run", "POST",
+                        json={"dataset_version_id": int(vid), "episode_indices": idx,
+                              "camera": camera, "profile": profile})
+                if not err(r):
+                    st.session_state["flora_job_id"] = r["job_id"]
+                    st.success(f"Job #{r['job_id']} · {r['status']}")
+            except ValueError:
+                st.error("Episode 索引应为整数")
+    history = api(f"/workbench/api/vision/flora/jobs?dataset_version_id={vid}")
+    if not err(history) and history.get("jobs"):
+        job_map = {f"#{row['job_id']} · {row['status']}": row["job_id"] for row in history["jobs"]}
+        selected_job = st.selectbox("FLORA 任务", list(job_map))
+        job_id = job_map[selected_job]
+        st.button("刷新任务")
+        job = api(f"/api/jobs/{job_id}")
+        if not err(job):
+            st.write(f"Job #{job_id} · {job['status']}")
+            if job["status"] == "completed":
+                result = api(f"/workbench/api/vision/flora/jobs/{job_id}/result")
+                if not err(result):
+                    for item in result.get("annotations", []):
+                        st.write(f"Episode {item['episode']}")
+                        st.dataframe(item.get("annotation", {}).get("segments", []), use_container_width=True)
+                st.markdown(f"[审核与导出](http://172.19.5.252:18080/workbench/#sec-vision)")
+            elif job.get("error"):
+                st.error(job["error"])
+    st.subheader("历史 AnnotationRun 统计")
     stats = api(f"/api/annotation/stats/{vid}")
     if not err(stats):
         st.json(stats)

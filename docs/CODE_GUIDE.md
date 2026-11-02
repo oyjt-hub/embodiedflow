@@ -110,3 +110,25 @@ bash ops/doctor.sh         # 20 项自检
 ## 八、当前状态
 
 schema v10 · 128 条路由 · 75 项测试 · 自检 20/20 · 工作台 12 个区块
+
+
+## ??OpenPI ???????
+
+- ???????? `apps/web/workbench.html`???? OpenPI ???????? batch??????????SigLIP LoRA rank??????GPU ????????????????/?????????????
+- OpenPI ?????????? `apps/api/routers/workbench.py` ? `OpenPIIn`?`openpi_configs()`?`train_openpi()`???? Worker ?????????? metrics?? MLflow ???????
+- `scripts/openpi_workbench_train.py` ? UI ????? OpenPI `TrainConfig`?W&B ???loss ??? MLflow metrics?SigLIP rank ???PaliGemma/Action Expert rank ??????
+- Agilex ??????? ROS?MJPEG ?? `/home/agilex/embodiedflow_camera/camera_mjpeg_bridge.py`???? `http://172.19.11.47:8765/front.mjpg`???? `/left.mjpg`???????? Piper ? `Device.config.camera_url`??????????
+
+## 本机模型目录
+
+模型仓库页通过 `GET /workbench/api/registry` 返回 `available_models`。服务端在 `apps/api/routers/workbench.py::_local_model_catalog()` 中只检查目录、Python 解释器和候选权重路径，不导入模型框架，也不启动 GPU 任务；页面由 `apps/web/workbench.html::renderModelCatalog()` 渲染。
+
+服务器当前找到 OpenPI π0.5、LingBot-VLA V2 6B、NVIDIA GR00T N1.7 3B、OpenWAM、DreamZero、NVIDIA GEAR-SONIC，以及 SuperMimic 非官方复现的源码/环境/部分 checkpoint。`training_adapter` 是训练能力的准入标记：目前只有 OpenPI 为 `workbench-train`，其他模型只是已发现本机资产，训练、评测和部署适配仍需分别实现。模型页面应以该字段显示训练就绪状态，不能仅凭权重文件存在就显示可运行。
+
+SONIC 的本机目录为 `/home/oyjt/workspace/GR00T-WholeBodyControl`；HF 缓存有 encoder/decoder ONNX，但 planner 下载不完整，专用环境和工作台适配未接入。SuperMimic 是 `/mnt/20e266f0-6466-4ef3-a875-5959cd1015d7/oyjt/supermimic_vibed` 的非官方复现，包含 MuJoCo-Warp 环境、LAFAN1 与训练 checkpoint；工作台 RL 训练链仍未接入。
+
+## 相机按需推流
+
+机器人设备页打开时才为当前设备设置 MJPEG `<img src>`；`switchPage()` 离开 `sec-robot` 会清除 `src` 并终止浏览器请求。Agilex 桥接进程可常驻，但 `/front.mjpg` 或 `/left.mjpg` 没有 HTTP 客户端时不订阅 ROS 图像；第一个客户端连接时订阅，最后一个客户端退出后退订并清空当前帧。`/health` 只返回订阅/客户端状态，不触发相机读取。
+
+相关实现：`apps/web/workbench.html::switchPage()` / `disconnectRobotCamera()`；`/home/agilex/embodiedflow_camera/camera_mjpeg_bridge.py::FrameStore.attach()` / `detach()`。

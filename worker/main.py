@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shlex
 import signal
+import shutil
 import socket
 import subprocess
 import sys
 import time
+from pathlib import Path
+
+from sqlalchemy import select
 
 from core.enums import AttemptStatus, JobStatus
 from core.config import ensure_dirs
@@ -20,6 +25,69 @@ from services import training_autolog
 from services import resources as ressvc
 
 TERMINAL = {JobStatus.COMPLETED.value, JobStatus.FAILED.value, JobStatus.CANCELLED.value}
+
+
+def finalize_materialization(session, job: Job, exit_code: int) -> None:
+    """Register a materialized dataset only after its files are complete."""
+    from persistence.models import DatasetVersion, Episode, PipelineTask, utcnow
+
+    spec = dict(job.spec or {})
+    task = session.scalar(select(PipelineTask).where(PipelineTask.job_id == job.id))
+    if task is None:
+        raise RuntimeError(f"pipeline task missing for materialization job {job.id}")
+    output = Path(spec["output_path"])
+    if exit_code != 0:
+        task.status = "cancelled" if job.status == JobStatus.CANCELLED.value else "failed"
+        task.steps = {**(task.steps or {}), "result": task.status, "error": job.error}
+        partial = output.with_name(output.name + ".partial")
+        if partial.is_dir():
+            shutil.rmtree(partial, ignore_errors=True)
+        return
+
+    report_path = Path(spec["report_path"])
+    info_path = output / "meta" / "info.json"
+    if not report_path.is_file() or not info_path.is_file():
+        raise RuntimeError("物化作业结束，但输出版本或处理报告不完整")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    source_version = session.get(DatasetVersion, int(spec["source_version_id"]))
+    if source_version is None:
+        raise RuntimeError("源数据版本已不存在")
+    stamp = int(utcnow().timestamp())
+    version = DatasetVersion(
+        dataset_id=int(spec["source_dataset_id"]),
+        version=f"m{job.id}-{stamp:x}",
+        status="derived",
+        episode_count=int(report["episode_count"]),
+        total_bytes=int(report["total_bytes"]),
+        manifest_uri=str(info_path),
+        episode_indices=json.dumps(list(range(int(report["episode_count"]))), separators=(",", ":")),
+    )
+    session.add(version)
+    session.flush()
+    for row in report.get("episodes", []):
+        session.add(Episode(
+            dataset_version_id=version.id,
+            episode_index=int(row["output_episode"]),
+            task=row.get("task"),
+            n_frames=int(row["frames"]),
+            duration_s=float(row["duration_s"]),
+            fps=float(spec["target_fps"]),
+            storage_prefix=str(output),
+        ))
+    task.output_version_id = version.id
+    task.status = "completed"
+    task.report_uri = str(report_path)
+    task.steps = {
+        **(task.steps or {}),
+        "result": "completed",
+        "output_version_id": version.id,
+        "episode_count": int(report["episode_count"]),
+        "frame_count": int(report["frame_count"]),
+        "total_bytes": int(report["total_bytes"]),
+        "source_fps": report.get("source_fps"),
+    }
+    spec["output_dataset_version_id"] = version.id
+    job.spec = spec
 
 
 def build_command(job: Job) -> list[str] | None:
@@ -64,6 +132,11 @@ def run_job(worker_id: str) -> bool:
             )
             return True
         job_id, attempt_id = job.id, attempt.id
+        if job.kind == "materialize":
+            from persistence.models import PipelineTask
+            task = s.scalar(select(PipelineTask).where(PipelineTask.job_id == job.id))
+            if task is not None:
+                task.status = "running"
         job_spec = dict(job.spec or {})
         log_file = jobsvc.log_path(attempt)
 
@@ -71,12 +144,16 @@ def run_job(worker_id: str) -> bool:
     env["EF_JOB_ID"] = str(job_id)
     env["EF_ATTEMPT_ID"] = str(attempt_id)
     env["PYTHONUNBUFFERED"] = "1"
+    for k, v in (job_spec.get("env") or {}).items():
+        env[str(k)] = str(v)
     if take:
         # 用租约里的 GPU UUID，而不是重新编号的 0..n-1：
         # 重新编号会让"申请物理卡 3"的任务实际跑在卡 0 上。
+        # 此值必须在作业自定义环境之后写入，保证子进程只能看见已租用的卡。
         env["CUDA_VISIBLE_DEVICES"] = ",".join(take)
-    for k, v in (job_spec.get("env") or {}).items():
-        env[str(k)] = str(v)
+    else:
+        # CPU 作业不继承 Worker 的整机 GPU 可见性。
+        env["CUDA_VISIBLE_DEVICES"] = ""
     run_cwd = job_spec.get("cwd") or None
 
     log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -126,18 +203,34 @@ def run_job(worker_id: str) -> bool:
         att = s.get(JobAttempt, attempt_id)
         job_row = s.get(Job, att.job_id)
         auto = {}
-        if code == 0 and job_row is not None:
+        final_status = status
+        final_code = code
+        final_error = None if code == 0 else f"exit code {code}"
+        if job_row is not None and job_row.kind == "materialize":
+            try:
+                finalize_materialization(s, job_row, code)
+            except Exception as exc:  # noqa: BLE001
+                print(f"[worker] materialization finalize failed: {exc!r}", flush=True)
+                final_status = AttemptStatus.FAILED.value
+                final_code = code or 1
+                final_error = f"materialization finalize failed: {exc!r}"
+                from persistence.models import PipelineTask
+                task = s.scalar(select(PipelineTask).where(PipelineTask.job_id == job_row.id))
+                if task is not None:
+                    task.status = "failed"
+                    task.steps = {**(task.steps or {}), "result": "failed", "error": str(exc)}
+        elif code == 0 and job_row is not None:
             try:
                 auto = training_autolog.finalize(s, job_row, att, code)
             except Exception as exc:  # noqa: BLE001
                 print(f"[worker] autolog failed: {exc!r}", flush=True)
         jobsvc.finish_attempt(
-            s, att, status=status, exit_code=code,
-            error=None if code == 0 else f"exit code {code}",
+            s, att, status=final_status, exit_code=final_code,
+            error=final_error,
         )
         if auto:
             print(f"[worker] autolog: {auto}", flush=True)
-    print(f"[worker] job={job_id} finished status={status} exit={code}", flush=True)
+    print(f"[worker] job={job_id} finished status={final_status} exit={final_code}", flush=True)
     return True
 
 

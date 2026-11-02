@@ -14,6 +14,9 @@ class RunIn(BaseModel):
     episode_indices: list[int]
     kind: str = "episode"
     spec_version: str = "v1"
+    camera: str = "front"
+    profile: str = "yam"
+    instruction: str = ""
 
 
 class ReviewIn(BaseModel):
@@ -39,11 +42,18 @@ def list_versions():
 
 @router.post("/run", status_code=201)
 def run(payload: RunIn):
-    with session_scope() as s:
-        r = ann.run_annotation(s, payload.dataset_version_id, payload.episode_indices,
-                               payload.kind, payload.spec_version)
-        return {"run_id": r.id, "model": f"{r.model_name}:{r.model_version}",
-                "status": r.status, "episodes": r.episode_count, "annotations": r.annotation_count}
+    from apps.api.routers.vision import FloraJobIn, create_flora_job
+    if not payload.episode_indices:
+        raise HTTPException(422, "select at least one Episode")
+    if payload.kind != "episode":
+        raise HTTPException(422, "FLORA supports episode temporal annotations")
+    result = create_flora_job(FloraJobIn(
+        dataset_version_id=payload.dataset_version_id,
+        episode=payload.episode_indices[0], episodes=payload.episode_indices,
+        camera=payload.camera, profile=payload.profile, instruction=payload.instruction,
+    ))
+    return {**result, "model": "NVIDIA FLORA", "execution": "gpu_worker",
+            "result_url": f"/workbench/api/vision/flora/jobs/{result['job_id']}/result"}
 
 
 @router.get("/sampling/{dataset_version_id}")

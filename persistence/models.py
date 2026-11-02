@@ -39,6 +39,23 @@ class User(Base):
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=utcnow)
 
 
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[float] = mapped_column(Float)
+    expires_at: Mapped[float] = mapped_column(Float, index=True)
+    last_seen_at: Mapped[float] = mapped_column(Float)
+
+
+class Project(Base):
+    __tablename__ = "projects"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), unique=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=utcnow)
+
+
 class Dataset(Base):
     __tablename__ = "datasets"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -89,6 +106,7 @@ class PipelineTask(Base):
     output_version_id: Mapped[int | None] = mapped_column(
         ForeignKey("dataset_versions.id")
     )
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("projects.id"))
     steps: Mapped[dict | None] = mapped_column(JSON)
     report_uri: Mapped[str | None] = mapped_column(String(512))
     status: Mapped[str] = mapped_column(String(16), default="pending")

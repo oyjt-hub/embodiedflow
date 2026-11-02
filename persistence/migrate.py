@@ -20,6 +20,11 @@ MIGRATIONS: list[tuple[int, str]] = [
     (8, "dataset version episode indices"),
     (9, "workbench deployment records"),
     (10, "log index"),
+    (11, "projects + project linkage for processing pipelines"),
+    (12, "persistent agent confirmation records"),
+    (13, "persistent agent execution events"),
+    (14, "persistent agent workflow plans and step state"),
+    (15, "username login sessions"),
 ]
 
 INDEXES_V2 = [
@@ -65,6 +70,76 @@ def upgrade(verbose: bool = True) -> int:
                             "ALTER TABLE dataset_versions ADD COLUMN episode_indices TEXT"))
                     except Exception:
                         pass
+            elif version == 11:
+                with engine.begin() as conn:
+                    try:
+                        conn.execute(text(
+                            "ALTER TABLE pipeline_tasks ADD COLUMN project_id INTEGER "
+                            "REFERENCES projects(id)"))
+                    except Exception:
+                        pass
+            elif version == 12:
+                with engine.begin() as conn:
+                    conn.execute(text(
+                        "CREATE TABLE IF NOT EXISTS agent_confirmations ("
+                        "confirmation_id TEXT PRIMARY KEY, "
+                        "project_id INTEGER NOT NULL, "
+                        "action TEXT NOT NULL, "
+                        "payload_digest TEXT NOT NULL, "
+                        "payload_json TEXT NOT NULL, "
+                        "status TEXT NOT NULL, "
+                        "created_at REAL NOT NULL, "
+                        "expires_at REAL NOT NULL, "
+                        "updated_at REAL NOT NULL, "
+                        "result_json TEXT, "
+                        "error_json TEXT)"
+                    ))
+                    conn.execute(text(
+                        "CREATE INDEX IF NOT EXISTS ix_agent_confirmations_status_expiry "
+                        "ON agent_confirmations(status, expires_at)"
+                    ))
+            elif version == 13:
+                with engine.begin() as conn:
+                    conn.execute(text(
+                        "CREATE TABLE IF NOT EXISTS agent_confirmation_events ("
+                        "event_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        "project_id INTEGER NOT NULL, "
+                        "confirmation_id TEXT NOT NULL, "
+                        "action TEXT NOT NULL, "
+                        "event_type TEXT NOT NULL, "
+                        "created_at REAL NOT NULL, "
+                        "detail_json TEXT NOT NULL DEFAULT '{}')"
+                    ))
+                    conn.execute(text(
+                        "CREATE INDEX IF NOT EXISTS ix_agent_confirmation_events_project_cursor "
+                        "ON agent_confirmation_events(project_id, event_id)"
+                    ))
+            elif version == 14:
+                with engine.begin() as conn:
+                    conn.execute(text(
+                        "CREATE TABLE IF NOT EXISTS agent_workflows ("
+                        "workflow_id TEXT PRIMARY KEY, "
+                        "project_id INTEGER NOT NULL, "
+                        "kind TEXT NOT NULL, "
+                        "name TEXT NOT NULL, "
+                        "status TEXT NOT NULL, "
+                        "payload_json TEXT NOT NULL, "
+                        "steps_json TEXT NOT NULL, "
+                        "result_json TEXT NOT NULL DEFAULT '{}', "
+                        "error_json TEXT, "
+                        "created_at REAL NOT NULL, "
+                        "updated_at REAL NOT NULL)"
+                    ))
+                    conn.execute(text(
+                        "CREATE INDEX IF NOT EXISTS ix_agent_workflows_project_status "
+                        "ON agent_workflows(project_id, status, updated_at)"
+                    ))
+            elif version == 15:
+                with engine.begin() as conn:
+                    conn.execute(text(
+                        "CREATE INDEX IF NOT EXISTS ix_user_sessions_expiry "
+                        "ON user_sessions(expires_at)"
+                    ))
             elif version == 5:
                 with engine.begin() as conn:
                     try:

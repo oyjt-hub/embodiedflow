@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EmbodiedFlow Agent</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090b10;--panel:#10131b;--line:#242938;--text:#edf0f7;--muted:#8f98aa;--accent:#a78bfa;--user:#25243a}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#1e1a34 0,transparent 48%),var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;height:100vh}
+    .app{height:100%;max-width:1000px;margin:auto;padding:0 24px;display:flex;flex-direction:column}.top{height:66px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);flex:none}.brand{font-weight:650;letter-spacing:.01em}.status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.dot{width:7px;height:7px;border-radius:50%;background:#5ee0ae}.dot.off{background:#f59e0b}.actions{display:flex;gap:8px}.button{border:1px solid var(--line);background:#141722;color:var(--text);border-radius:8px;padding:7px 10px;cursor:pointer}.button:hover{border-color:#5e547d}
+    .thread{flex:1;overflow:auto;padding:28px 0}.welcome{max-width:720px;margin:10vh auto 0;text-align:center}.welcome h1{font-size:29px;letter-spacing:-.03em;margin:0 0 10px}.welcome p{color:var(--muted);margin:0}.messages{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}.message{max-width:88%;white-space:pre-wrap;overflow-wrap:anywhere;border-radius:14px;padding:13px 16px}.message.user{align-self:flex-end;background:var(--user);border:1px solid #393651}.message.assistant{align-self:flex-start;background:var(--panel);border:1px solid var(--line)}.message.error{color:#ffb4b4;border-color:#5c3038}.job-watch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#0c0f16;font-size:12px}.job-watch-state{color:var(--muted)}.job-watch-state[data-state=completed],.job-watch-state[data-state=running]{color:#5ee0ae}.job-watch-state[data-state=failed],.job-watch-state[data-state=cancelled]{color:#ff9a9a}.job-watch-state[data-state=stopped]{color:#fbbf24}.job-watch a{color:#c8b7ff;text-decoration:none;white-space:nowrap}.job-watch a:hover{text-decoration:underline}.composer-wrap{padding:10px 0 24px}.composer{max-width:760px;margin:auto;background:var(--panel);border:1px solid #34394a;border-radius:14px;padding:10px;box-shadow:0 12px 40px #0005}.composer:focus-within{border-color:#7764ae}.composer textarea{display:block;width:100%;resize:none;min-height:54px;max-height:180px;border:0;outline:0;background:transparent;color:var(--text);font:inherit;padding:8px}.compose-bottom{display:flex;align-items:center;justify-content:space-between;padding:4px 5px 1px;color:var(--muted);font-size:11px}.send{background:#8b70da;border:0;color:#fff;border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer}.send:disabled{opacity:.45;cursor:wait}.spinner{display:none;color:var(--accent);font-size:12px}.busy .spinner{display:block}.busy .welcome{display:none}
+    .job-watch{flex-wrap:wrap}.job-watch-details{flex-basis:100%;display:flex;flex-direction:column;gap:5px;color:var(--muted);font-size:11px}.job-watch-links{display:flex;gap:12px}.job-watch-details a{color:#c8b7ff}
+    .event-panel{border-bottom:1px solid var(--line);padding:8px 0;flex:none}.event-panel summary{cursor:pointer;color:var(--muted);font-size:12px}.event-panel summary span{margin-left:8px}.event-panel ol{margin:7px 0 0;padding-left:22px;max-height:140px;overflow:auto;color:var(--muted);font-size:11px}.event-panel li{padding:2px 0}
+    @media(max-width:600px){.app{padding:0 14px}.message{max-width:96%}.welcome{margin-top:15vh}.welcome h1{font-size:24px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">EmbodiedFlow <span style="color:var(--accent)">Agent</span></div>
+      <div class="actions"><div class="status"><i class="dot off" id="dot"></i><span id="status">连接中</span></div><button class="button" id="newSession">新会话</button></div>
+    </header>
+    <details class="event-panel"><summary>执行事件 <span id="eventStatus">连接中</span></summary><ol id="executionEvents"></ol></details>
+    <main class="thread" id="thread">
+      <div class="welcome" id="welcome"><h1>研发助手</h1><p>查询数据集、训练任务、GPU、实验指标、评测报告和模型版本</p></div>
+      <div class="messages" id="messages"></div>
+    </main>
+    <footer class="composer-wrap">
+      <form class="composer" id="form">
+        <textarea id="input" placeholder="询问数据、训练或评测结果…" rows="2"></textarea>
+        <div class="compose-bottom"><span class="spinner" id="spinner">正在查询…</span><span id="shortcut">Enter 发送 · Shift+Enter 换行</span><button class="send" id="send">发送</button></div>
+      </form>
+    </footer>
+  </div>
+  <script>
+    const $=id=>document.getElementById(id), box=$('messages'), thread=$('thread');
+    const API_BASE=location.protocol+'//'+location.hostname+':18080';
+    const jobWatchers=new Map(), deploymentWatchers=new Map();
+    const eventList=$('executionEvents'), eventLabels={preview_created:'已生成确认预览',preview_cancelled:'已取消预览',preview_expired:'预览已过期',confirmation_rejected:'确认参数不匹配',confirmation_replayed:'重复确认已复用',submission_started:'任务已提交',submission_failed:'提交失败',submission_completed:'任务已创建'};
+    const newId=()=>crypto.randomUUID?crypto.randomUUID().replaceAll('-',''):`ef${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+    let sessionId=sessionStorage.getItem('ef-agent-session')||newId();
+    sessionStorage.setItem('ef-agent-session',sessionId);
+    function add(text,role,error=false){const el=document.createElement('div');el.className=`message ${role}${error?' error':''}`;el.append(document.createTextNode(text));box.appendChild(el);thread.scrollTop=thread.scrollHeight;return el;}
+    function extractJobIds(text){const ids=new Set();for(const re of [/\bJob(?:\s+ID)?\s*[#:：]?\s*(\d+)\b/gi,/任务(?:\s*ID)?\s*[#:：]?\s*(\d+)/gi,/"job_id"\s*:\s*(\d+)/gi])for(const m of text.matchAll(re))ids.add(m[1]);return [...ids];}
+    function extractDeploymentIds(text){const ids=new Set();for(const re of [/\bDeployment(?:\s+ID)?\s*[#:：]?\s*(\d+)\b/gi,/部署(?:\s*ID)?\s*[#:：]?\s*(\d+)/gi,/"deployment_id"\s*:\s*(\d+)/gi])for(const m of text.matchAll(re))ids.add(m[1]);return [...ids];}
+    function persistTrackedWork(){localStorage.setItem('ef-agent-watched-jobs',JSON.stringify([...jobWatchers.keys()]));localStorage.setItem('ef-agent-watched-deployments',JSON.stringify([...deploymentWatchers.keys()]));}
+    async function api(path){const r=await fetch(API_BASE+path,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+    function addJobLink(parent,label,url){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.textContent=label;parent.append(a);}
+    function num(value,digits=4){const n=Number(value);return Number.isFinite(n)?n.toFixed(digits):String(value);}
+    async function summarizeJob(parent,id,job){const details=document.createElement('div');details.className='job-watch-details';parent.append(details);const links=document.createElement('div');links.className='job-watch-links';
+      if(job.error){details.append(document.createTextNode('错误：'+String(job.error).slice(0,180)));}
+      if(job.kind==='eval'&&job.status==='completed'){try{const report=await api('/workbench/api/evaluations/'+encodeURIComponent(id)+'/report');const parts=[];if(report.mae!=null)parts.push('MAE '+num(report.mae));if(report.rmse!=null)parts.push('RMSE '+num(report.rmse));if(report.improvement_vs_baseline!=null)parts.push('较基线改善 '+num(Number(report.improvement_vs_baseline)*100,1)+'%');if(report.samples!=null)parts.push(report.episodes?.length?report.episodes.length+' episodes':report.samples+' samples');if(report.action_steps!=null)parts.push(report.action_steps+' action steps');details.append(document.createTextNode(parts.join(' · ')||'评测已完成'));addJobLink(links,'评测报告',API_BASE+'/workbench/api/evaluations/'+encodeURIComponent(id)+'/report');addJobLink(links,'评测页',API_BASE+'/workbench/#sec-eval');}catch{details.append(document.createTextNode('评测报告暂不可用'));addJobLink(links,'评测页',API_BASE+'/workbench/#sec-eval');}}
+      else if(['train','train_openpi','train_act'].includes(job.kind)&&job.status==='completed'){try{const data=await api('/workbench/api/experiments?limit=1&job_id='+encodeURIComponent(id));const run=(data.runs||[]).find(x=>Number(x.job_id)===Number(id));const metrics=run?.metrics||{};const parts=[];const loss=metrics.final_train_loss??metrics.train_loss;if(loss!=null)parts.push('训练损失 '+num(loss));if(metrics.val_loss!=null)parts.push('验证损失 '+num(metrics.val_loss));if(run?.model_version)parts.push('模型 '+run.model_version);if(run?.run_id)parts.push('MLflow '+run.run_id.slice(0,10));details.append(document.createTextNode(parts.join(' · ')||'训练已完成'));addJobLink(links,'实验记录',API_BASE+'/workbench/#sec-exp');if(run?.model_version)addJobLink(links,'模型仓库',API_BASE+'/workbench/#sec-registry');}catch{details.append(document.createTextNode('训练已完成；指标暂不可用'));addJobLink(links,'实验记录',API_BASE+'/workbench/#sec-exp');}}
+      else if(job.kind==='materialize'&&job.status==='completed'){try{const data=await api('/workbench/api/processing/materialize/'+encodeURIComponent(id));const parts=[];if(data.output_version_id)parts.push('派生数据版本 '+data.output_version_id);const report=data.report||{};if(report.episode_count!=null)parts.push(report.episode_count+' episodes');if(report.frame_count!=null)parts.push(report.frame_count+' frames');details.append(document.createTextNode(parts.join(' · ')||'数据物化已完成'));addJobLink(links,'数据集',API_BASE+'/workbench/#sec-datasets');}catch{details.append(document.createTextNode('数据物化已完成'));addJobLink(links,'数据集',API_BASE+'/workbench/#sec-datasets');}}
+      else if(job.kind==='quality'&&job.status==='completed'){try{const data=await api('/workbench/api/processing/jobs/'+encodeURIComponent(id));const report=data.report||{},parts=[];if(report.episodes_checked!=null)parts.push(report.episodes_checked+' episodes');if(report.findings!=null)parts.push(report.findings+' 项发现');const completeness=report.metrics?.timestamp_completeness?.value;if(completeness!=null)parts.push('时间戳完整度 '+num(Number(completeness)*100,1)+'%');details.append(document.createTextNode(parts.join(' · ')||'数据质检已完成'));addJobLink(links,'质检结果',API_BASE+'/workbench/#sec-process');}catch{details.append(document.createTextNode('数据质检已完成'));addJobLink(links,'质检结果',API_BASE+'/workbench/#sec-process');}}
+      else if(job.kind==='clean'&&job.status==='completed'){try{const data=await api('/workbench/api/processing/jobs/'+encodeURIComponent(id));const report=data.report||{},parts=[];if(report.dropped_episodes)parts.push('移除 '+report.dropped_episodes.length+' episodes');if(report.kept_episodes!=null)parts.push('保留 '+report.kept_episodes);if(report.new_version)parts.push('版本 '+report.new_version+' (#'+report.new_version_id+')');details.append(document.createTextNode(parts.join(' · ')||'数据清洗已完成'));addJobLink(links,'数据集',API_BASE+'/workbench/#sec-datasets');addJobLink(links,'处理记录',API_BASE+'/workbench/#sec-process');}catch{details.append(document.createTextNode('数据清洗已完成'));addJobLink(links,'工作台',API_BASE+'/workbench/#sec-process');}}
+      else if(job.kind==='benchmark'&&job.status==='completed'){try{const data=await api('/workbench/api/benchmarks/jobs/'+encodeURIComponent(id));const report=data.report||{},parts=[];for(const [name,result] of Object.entries(report.policies||{})){const success=result.success||{};parts.push(name+' '+(success.numerator??0)+'/'+(success.denominator??0));}details.append(document.createTextNode(parts.join(' · ')||'仿真基准已完成'));addJobLink(links,'基准报告',API_BASE+'/workbench/api/benchmarks/jobs/'+encodeURIComponent(id));addJobLink(links,'基准页',API_BASE+'/workbench/#sec-bench');}catch{details.append(document.createTextNode('仿真基准已完成'));addJobLink(links,'基准页',API_BASE+'/workbench/#sec-bench');}}
+      else if(job.kind==='vision_track'&&job.status==='completed'){details.append(document.createTextNode('视频跟踪已完成'));addJobLink(links,'视觉结果',API_BASE+'/workbench/#sec-vision');}
+      else if(job.status==='cancelled'&&!job.error){details.append(document.createTextNode('任务已取消'));}
+      if(!details.textContent)details.remove();if(links.childElementCount)parent.append(links);}
+    async function summarizeDeployment(parent,id){const details=document.createElement('div');details.className='job-watch-details';parent.append(details);const links=document.createElement('div');links.className='job-watch-links';try{const data=await api('/workbench/api/deployments/'+encodeURIComponent(id)+'/lineage'),model=data.model||{},training=data.training||{},dataset=data.dataset||{},evaluations=data.evaluations||[];const parts=[];if(model.model)parts.push(model.model);if(model.version)parts.push('版本 '+model.version);if(data.mlflow_run_id)parts.push('MLflow '+data.mlflow_run_id.slice(0,10));if(training.job_id)parts.push('训练 Job #'+training.job_id);if(dataset.dataset_version_id)parts.push('数据版本 '+dataset.dataset_version_id);const latest=evaluations.find(x=>x.status==='completed');if(latest){const report=latest.report||{};const metrics=[];if(report.mae!=null)metrics.push('MAE '+num(report.mae));if(report.rmse!=null)metrics.push('RMSE '+num(report.rmse));if(metrics.length)parts.push('评测 '+metrics.join(' / '));}details.append(document.createTextNode(parts.join(' · ')||'部署记录已读取'));if(data.mlflow_run_id)addJobLink(links,'实验记录',API_BASE+'/workbench/#sec-exp');if(latest)addJobLink(links,'评测报告',API_BASE+'/workbench/api/evaluations/'+encodeURIComponent(latest.job_id)+'/report');}catch{details.append(document.createTextNode('部署血缘暂不可用'));}addJobLink(links,'部署列表',API_BASE+'/workbench/#sec-deploy');if(links.childElementCount)parent.append(links);}
+    function watchJob(parent,id){
+      if(jobWatchers.has(id))clearInterval(jobWatchers.get(id));
+      const card=document.createElement('div');card.className='job-watch';
+      const state=document.createElement('span');state.className='job-watch-state';state.textContent=`Job #${id} · 查询状态…`;
+      const link=document.createElement('a');link.href=API_BASE+'/workbench/#sec-overview';link.target='_blank';link.rel='noopener';link.textContent='工作台';
+      card.append(state,link);parent.append(card);
+      const labels={queued:'排队中',running:'运行中',completed:'已完成',failed:'失败',cancelled:'已取消'};let timer=null,summarized=false;
+      async function refresh(){try{
+        const job=await api('/api/jobs/'+encodeURIComponent(id));state.dataset.state=job.status||'';
+        state.textContent=`Job #${id} · ${labels[job.status]||job.status}`+(job.error?` · ${String(job.error).slice(0,140)}`:'');
+        if(['completed','failed','cancelled'].includes(job.status)){
+          if(timer){clearInterval(timer);timer=null;}jobWatchers.delete(id);persistTrackedWork();
+          if(!summarized){summarized=true;await summarizeJob(card,id,job);}
+        }
+      }catch{state.textContent=`Job #${id} · 状态暂不可用`;}}
+      jobWatchers.set(id,null);persistTrackedWork();refresh();timer=setInterval(refresh,5000);jobWatchers.set(id,timer);
+    }
+    function watchDeployment(parent,id){
+      if(deploymentWatchers.has(id))clearInterval(deploymentWatchers.get(id));
+      const card=document.createElement('div');card.className='job-watch';
+      const state=document.createElement('span');state.className='job-watch-state';state.textContent=`Deployment #${id} · 查询状态…`;
+      const link=document.createElement('a');link.href=API_BASE+'/workbench/#sec-deploy';link.target='_blank';link.rel='noopener';link.textContent='部署列表';
+      card.append(state,link);parent.append(card);
+      const labels={pending:'准备中',starting:'启动中',running:'运行中',stopped:'已停止',failed:'失败'};let timer=null,summarized=false,missing=0;
+      async function refresh(){try{
+        const rows=await api('/workbench/api/deployments'),deployment=(rows||[]).find(x=>Number(x.id)===Number(id));
+        if(!deployment){missing++;state.textContent=`Deployment #${id} · ${missing<6?'等待记录':'未找到'}`;if(missing>=6){if(timer)clearInterval(timer);deploymentWatchers.delete(id);persistTrackedWork();}return;}
+        missing=0;state.dataset.state=deployment.status||'';state.textContent=`Deployment #${id} · ${labels[deployment.status]||deployment.status}`;
+        if(!summarized&&(deployment.status==='running'||['stopped','failed'].includes(deployment.status))){summarized=true;await summarizeDeployment(card,id);}
+        if(['stopped','failed'].includes(deployment.status)){if(timer)clearInterval(timer);deploymentWatchers.delete(id);persistTrackedWork();}
+      }catch{state.textContent=`Deployment #${id} · 状态暂不可用`;}}
+      deploymentWatchers.set(id,null);persistTrackedWork();refresh();timer=setInterval(refresh,5000);deploymentWatchers.set(id,timer);
+    }
+    function restoreTrackedWork(){
+      let jobIds=[],deploymentIds=[];
+      try{jobIds=JSON.parse(localStorage.getItem('ef-agent-watched-jobs')||'[]').map(String);}catch{}
+      try{deploymentIds=JSON.parse(localStorage.getItem('ef-agent-watched-deployments')||'[]').map(String);}catch{}
+      if(jobIds.length){const parent=add('恢复跟踪任务：'+jobIds.map(id=>'Job #'+id).join('、'),'assistant');jobIds.forEach(id=>watchJob(parent,id));}
+      if(deploymentIds.length){const parent=add('恢复跟踪部署：'+deploymentIds.map(id=>'Deployment #'+id).join('、'),'assistant');deploymentIds.forEach(id=>watchDeployment(parent,id));}
+    }
+    async function health(){try{const r=await fetch('/health');const d=await r.json();$('dot').classList.toggle('off',!d.provider_configured);$('status').textContent=d.provider_configured?'在线':'待配置模型';}catch{$('status').textContent='离线';}}
+    function connectExecutionEvents(){const saved=Number(localStorage.getItem('ef-agent-event-cursor')||0);const source=new EventSource(API_BASE+'/workbench/api/agent/events/stream?project_id=1&cursor='+encodeURIComponent(saved));source.onopen=()=>{$('eventStatus').textContent='实时';};source.onerror=()=>{$('eventStatus').textContent='重连中';};source.onmessage=e=>{try{const item=JSON.parse(e.data);if(item.event_id)localStorage.setItem('ef-agent-event-cursor',String(item.event_id));const li=document.createElement('li');const time=item.created_at?new Date(Number(item.created_at)*1000).toLocaleTimeString():'--:--';li.textContent=`${time} · ${eventLabels[item.event_type]||item.event_type} · ${item.action||''}`;eventList.prepend(li);while(eventList.children.length>30)eventList.lastElementChild.remove();}catch{}};}
+    $('newSession').onclick=()=>{const jobIds=[...jobWatchers.keys()],deploymentIds=[...deploymentWatchers.keys()];sessionId=newId();sessionStorage.setItem('ef-agent-session',sessionId);jobWatchers.forEach(clearInterval);deploymentWatchers.forEach(clearInterval);jobWatchers.clear();deploymentWatchers.clear();persistTrackedWork();box.replaceChildren();$('welcome').style.display='block';if(jobIds.length){const parent=add('继续跟踪任务：'+jobIds.map(id=>'Job #'+id).join('、'),'assistant');jobIds.forEach(id=>watchJob(parent,id));}if(deploymentIds.length){const parent=add('继续跟踪部署：'+deploymentIds.map(id=>'Deployment #'+id).join('、'),'assistant');deploymentIds.forEach(id=>watchDeployment(parent,id));}};
+    $('input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('form').requestSubmit();}});
+    $('form').onsubmit=async e=>{e.preventDefault();const message=$('input').value.trim();if(!message)return;add(message,'user');$('input').value='';document.body.classList.add('busy');$('send').disabled=true;
+      try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,session_id:sessionId})});const d=await r.json();if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);const response=String(d.response||'已完成。'),answer=add(response,'assistant');extractJobIds(response).forEach(id=>watchJob(answer,id));extractDeploymentIds(response).forEach(id=>watchDeployment(answer,id));}
+      catch(err){add(err.message,'assistant',true);}finally{document.body.classList.remove('busy');$('send').disabled=false;$('input').focus();}}
+    health();connectExecutionEvents();restoreTrackedWork();
+  </script>
+</body>
+</html>

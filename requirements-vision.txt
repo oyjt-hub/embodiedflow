@@ -1,0 +1,2 @@
+# Florence-2 remote-code dependency for the shared OpenPI vision runtime.
+timm==0.9.16

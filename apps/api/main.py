@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
+import hashlib
 import os
+import time
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,12 +12,14 @@ from fastapi.responses import JSONResponse
 
 from apps.api.routers import (
     annotation, assistant, benchmarks, catalog, datasets, devices, edge, evaluations,
-    families, health, jobs, models, report, resources,
+    families, health, jobs, models, report, resources, vision,
 )
 from core.config import ensure_dirs
 from persistence.db import session_scope
 from persistence.migrate import upgrade
+from persistence.models import User, UserSession
 from services import resources as ressvc
+from services.identity import reset_actor, set_actor
 
 
 @asynccontextmanager
@@ -41,6 +45,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def _bind_session_actor(request: Request, call_next):
+    raw_token = request.cookies.get("ef_session", "")
+    actor = None
+    if raw_token:
+        token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+        now = time.time()
+        try:
+            with session_scope() as session:
+                user_session = session.get(UserSession, token_hash)
+                if user_session and user_session.expires_at > now:
+                    user = session.get(User, user_session.user_id)
+                    actor = user.name if user else None
+                    if now - user_session.last_seen_at > 300:
+                        user_session.last_seen_at = now
+        except Exception:
+            actor = None
+    context_token = set_actor(actor)
+    try:
+        return await call_next(request)
+    finally:
+        reset_actor(context_token)
 
 
 # 可选鉴权：只有设置了 EF_API_TOKEN 才生效，默认关闭（不改变现有用法）。
@@ -72,6 +100,7 @@ app.include_router(families.router, prefix="/api")
 app.include_router(annotation.router, prefix="/api")
 app.include_router(edge.router, prefix="/api")
 app.include_router(devices.router, prefix="/api")
+app.include_router(vision.router)
 
 
 @app.get("/")
