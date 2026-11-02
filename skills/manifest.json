@@ -1,0 +1,206 @@
+{
+  "schema": "embodiedflow.skills/1",
+  "version": "1.0.0",
+  "skills": [
+    {
+      "name": "data-readiness",
+      "title": "数据就绪检查与清洗",
+      "purpose": "在训练前判定一份数据版本是否可用，给出可执行的清洗建议。",
+      "inputs": [
+        {
+          "name": "project_id",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "dataset_version_id",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "max_episodes",
+          "type": "int",
+          "required": false,
+          "default": 50
+        },
+        {
+          "name": "min_completeness",
+          "type": "float",
+          "required": false,
+          "default": 0.99
+        }
+      ],
+      "outputs": [
+        "ready",
+        "quality",
+        "checked_episodes",
+        "bad_episodes",
+        "clean_plan",
+        "next_action"
+      ],
+      "tools": [
+        "dataset_get",
+        "dataset_list_episodes",
+        "processing_quality_submit",
+        "processing_quality_get",
+        "processing_clean_submit",
+        "processing_clean_get"
+      ],
+      "path": "skills/data-readiness/SKILL.md"
+    },
+    {
+      "name": "train-launch",
+      "title": "训练发起与守护",
+      "purpose": "用受支持的配置发起训练，跟踪到终态，失败时给出原因与重试建议。",
+      "inputs": [
+        {
+          "name": "project_id",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "dataset_version_id",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "backend",
+          "type": "str",
+          "required": true,
+          "enum": [
+            "bc",
+            "act",
+            "openpi"
+          ]
+        },
+        {
+          "name": "epochs",
+          "type": "int",
+          "required": false,
+          "default": 1
+        },
+        {
+          "name": "lr",
+          "type": "float",
+          "required": false,
+          "default": 0.001
+        },
+        {
+          "name": "batch_size",
+          "type": "int",
+          "required": false,
+          "default": 64
+        },
+        {
+          "name": "device",
+          "type": "str",
+          "required": false,
+          "default": "cpu"
+        }
+      ],
+      "outputs": [
+        "job_id",
+        "status",
+        "metrics",
+        "model_version_id",
+        "failure_reason"
+      ],
+      "tools": [
+        "training_get_capabilities",
+        "training_validate_config",
+        "training_submit",
+        "training_get_job",
+        "training_get_logs",
+        "training_retry"
+      ],
+      "path": "skills/train-launch/SKILL.md"
+    },
+    {
+      "name": "eval-deploy",
+      "title": "评测到部署",
+      "purpose": "对训练产出的模型版本做离线评测，达标后登记并启动推理服务。",
+      "inputs": [
+        {
+          "name": "project_id",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "model_version_id",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "benchmark",
+          "type": "str",
+          "required": false,
+          "default": "holdout"
+        },
+        {
+          "name": "deploy",
+          "type": "bool",
+          "required": false,
+          "default": false
+        }
+      ],
+      "outputs": [
+        "evaluation_id",
+        "metrics",
+        "registered",
+        "deployment",
+        "verdict"
+      ],
+      "tools": [
+        "model_list_versions",
+        "evaluation_submit",
+        "evaluation_get_report",
+        "model_register_candidate",
+        "deployment_start"
+      ],
+      "path": "skills/eval-deploy/SKILL.md"
+    },
+    {
+      "name": "vision-annotate",
+      "title": "视觉标注与审核",
+      "purpose": "检查视觉能力、取回掩码与 FLORA 审核结果，判定标注质量是否可用。",
+      "inputs": [
+        {
+          "name": "project_id",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "dataset_version_id",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "episode",
+          "type": "int",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "camera",
+          "type": "str",
+          "required": false,
+          "default": "front"
+        }
+      ],
+      "outputs": [
+        "masks",
+        "review_status",
+        "quality_flags",
+        "next_action"
+      ],
+      "tools": [
+        "vision_get_capabilities",
+        "vision_list_masks",
+        "vision_get_mask",
+        "vision_flora_get_result",
+        "vision_flora_get_review"
+      ],
+      "path": "skills/vision-annotate/SKILL.md"
+    }
+  ]
+}

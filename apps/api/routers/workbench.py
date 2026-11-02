@@ -3214,3 +3214,16 @@ def research_search(q: str, limit: int = 20):
         raise HTTPException(400, f"检索语法错误：{exc}") from exc
     finally:
         conn.close()
+
+@router.get("/api/agent/skills")
+def agent_skills():
+    """平台提供的核心 Skills 清单（由 skills/manifest.json 驱动）。"""
+    import json as _json
+
+    root = Path(__file__).resolve().parents[3]
+    manifest = root / "skills" / "manifest.json"
+    if not manifest.is_file():
+        return {"schema": "embodiedflow.skills/1", "count": 0, "skills": []}
+    data = _json.loads(manifest.read_text(encoding="utf-8"))
+    data["count"] = len(data.get("skills") or [])
+    return data
