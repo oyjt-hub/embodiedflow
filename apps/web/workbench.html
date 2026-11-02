@@ -758,6 +758,19 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
     </div>
     <pre id="pf-out" style="display:none;margin-top:10px"></pre>
   </div>
+
+  <div style="margin-top:18px">
+    <div class="hint">发起视觉任务</div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="vt-ds">数据版本</label><input id="vt-ds" type="number" value="5"></div>
+      <div><label for="vt-ep">Episode</label><input id="vt-ep" type="number" value="0"></div>
+      <div><label for="vt-cam">相机</label><input id="vt-cam" value="front"></div>
+      <div><label for="vt-x">点 x</label><input id="vt-x" type="number" value="320"></div>
+      <div><label for="vt-y">点 y</label><input id="vt-y" type="number" value="240"></div>
+      <div><label>&nbsp;</label><button type="button" onclick="submitVision()">提交跟踪</button></div>
+    </div>
+    <pre id="vt-out" style="display:none;margin-top:10px"></pre>
+  </div>
 </section>
 <section hidden class="card" id="sec-dataset">
     <h2>数据集详情 <span class="tag" id="dd-tag">未选择</span></h2>
@@ -3890,6 +3903,29 @@ async function loadSystemInfo() {
     if (rs[2]) { L.push('主机 ' + rs[2].host + '　GPU ' + (rs[2].gpus || []).length + ' 张'); }
     so('sys-out', jl(L));
   } catch (e) { so('sys-out', '失败 ' + e.message); }
+}
+async function submitVision() {
+  const ds = parseInt(fv("vt-ds"), 10);
+  const ep = parseInt(fv("vt-ep"), 10);
+  const cam = fv("vt-cam") || "front";
+  const x = parseFloat(fv("vt-x"));
+  const y = parseFloat(fv("vt-y"));
+  so("vt-out", "提交中…");
+  try {
+    const body = {operation: "track_video", arguments: {
+      source: {dataset_version_id: ds, episode: ep, camera: cam, timestamp_s: 0.0},
+      points: [{x: x, y: y, label: 1}]}};
+    const r = await fetch("api/vision/execute", {method: "POST",
+      headers: {"content-type": "application/json"}, body: JSON.stringify(body)});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const res = d.result || {};
+    so("vt-out", jl(["operation: " + (d.operation || ""),
+      "id: " + (res.id || "-"),
+      "job_id: " + (res.job_id || "-"),
+      "status: " + (res.status || "-"),
+      "frame_url: " + (res.frame_url || "-")]));
+  } catch (e) { so("vt-out", "失败 " + e.message); }
 }
 initLogin();
 </script>
