@@ -19,7 +19,8 @@ import torch
 import torch.nn as nn
 
 
-def load(data_dir: str, episode_indices: set[int] | None = None):
+def load(data_dir: str, episode_indices: set[int] | None = None,
+         profile_name: str | None = None):
     import pyarrow.parquet as pq
     files = sorted(glob.glob(os.path.join(data_dir, "data", "**", "*.parquet"), recursive=True))
     if not files:
@@ -79,7 +80,7 @@ def main() -> int:
         allowed = set(int(x) for x in json.load(open(a.episode_indices_file, encoding="utf-8")))
         if not allowed:
             raise ValueError("Episode 选择为空")
-    X, Y, ep = load(a.data, allowed)
+    X, Y, ep = load(a.data, allowed, getattr(a, "profile", None))
     uniq = sorted(set(ep.tolist()))
     if len(uniq) < 2:
         raise ValueError("训练至少需要 2 个 Episode，才能分出训练集和验证集")
