@@ -3109,3 +3109,51 @@ def track_revision_compare(payload: TrackCompareIn):
         "changes": changed[:50],
         "note": "仅比较共同帧序号；帧数不同时不做插值" if len(fa) != len(fb) else "帧数一致",
     }
+
+@router.get("/tracks/{run_id}/metrics")
+def track_quality_metrics(run_id: str):
+    """视频跟踪质量指标（无需真值）：稳定性、丢失率、重现次数、面积波动。"""
+    import json as _json
+    import statistics
+
+    try:
+        safe = str(uuid.UUID(run_id))
+    except ValueError as exc:
+        raise HTTPException(400, "run_id 不是合法 UUID") from exc
+    f = VISION_DIR / "tracks" / safe / "metadata.json"
+    if not f.is_file():
+        raise HTTPException(404, "跟踪记录不存在")
+    m = _json.loads(f.read_text(encoding="utf-8"))
+    frames = m.get("frames") or []
+    n = len(frames)
+    if n == 0:
+        raise HTTPException(400, "该记录没有帧数据")
+
+    areas = [int(x.get("foreground_pixels") or 0) for x in frames]
+    vis = [x.get("visibility_status") for x in frames]
+    counts = {}
+    for v in vis:
+        counts[v] = counts.get(v, 0) + 1
+
+    # 重现次数：以状态机标注的 reappeared 帧为准（该帧单独标记，随后回到 visible）
+    reappear = counts.get("reappeared", 0)
+
+    mean_area = statistics.fmean(areas) if areas else 0.0
+    cv = (statistics.pstdev(areas) / mean_area) if mean_area else 0.0
+    review = sum(1 for x in frames if x.get("review_suggested"))
+    return {
+        "run_id": safe,
+        "frames": n,
+        "fps": m.get("fps"),
+        "duration_s": m.get("duration_s"),
+        "visibility_counts": counts,
+        "lost_ratio": round(counts.get("lost", 0) / n, 6),
+        "occluded_ratio": round(counts.get("suspected_occluded", 0) / n, 6),
+        "reappear_count": reappear,
+        "review_suggested": review,
+        "review_ratio": round(review / n, 6),
+        "mask_area": {"mean": round(mean_area, 1),
+                       "min": min(areas), "max": max(areas),
+                       "cv": round(cv, 6)},
+        "note": "无需真值的轨迹质量指标，用于比较跟踪配置或修订，不代表检测精度",
+    }
