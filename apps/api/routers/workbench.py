@@ -2971,3 +2971,28 @@ def unified_capabilities():
         "total": len(services),
         "services": services,
     }
+
+@router.get("/api/agent/tools")
+def agent_tools_version():
+    """工具版本指纹：Web / Codex / IDE 用同一份来源核对工具版本是否一致。
+
+    直接扫描 MCP 服务端源码里的 @mcp.tool 声明，不导入 MCP 运行时
+    （MCP 跑在独立 .mcp-venv，API 进程里没有 mcp 包）。
+    """
+    import hashlib
+    import re
+
+    root = Path(__file__).resolve().parents[3]
+    src = root / "apps" / "mcp" / "server.py"
+    names: list[str] = []
+    digest = hashlib.sha256(b"").hexdigest()
+    if src.is_file():
+        text = src.read_text(encoding="utf-8", errors="ignore")
+        names = sorted(re.findall(r'@mcp\.tool\(\s*name="([^"]+)"', text))
+        digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return {
+        "source": str(src.relative_to(root)) if src.is_file() else None,
+        "tool_count": len(names),
+        "tools_sha256_12": digest[:12],
+        "tools": names,
+    }
