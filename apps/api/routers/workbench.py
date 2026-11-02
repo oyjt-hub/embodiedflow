@@ -3294,3 +3294,84 @@ def asset_list(kind: str | None = None, limit: int = 100):
     rows.sort(key=lambda r: r.get("recorded_at") or "", reverse=True)
     return {"count": len(rows), "items": rows[: max(1, min(limit, 500))],
             "kinds": sorted(ASSET_KINDS)}
+
+RESEARCH_EXP_FILE = RESEARCH_DIR / "experiments.jsonl"
+
+
+class ResearchExpIn(BaseModel):
+    hypothesis: str
+    workflow_id: str | None = None
+    verdict: str = "unknown"
+    notes: str | None = None
+
+
+def _workflow_metrics(workflow_id: str) -> dict:
+    import json as _json
+    import sqlite3
+
+    db = settings.data_root / "metadata" / "platform.db"
+    conn = sqlite3.connect(db, timeout=30)
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute("SELECT status, steps_json FROM agent_workflows WHERE workflow_id=?", (workflow_id,)).fetchone()
+        if not row:
+            return {}
+        steps = _json.loads(row["steps_json"] or "[]")
+        metrics = {}
+        for s in steps:
+            r = (s or {}).get("result") if isinstance(s, dict) else None
+            if isinstance(r, dict):
+                tr = r.get("training") or r.get("metrics")
+                if isinstance(tr, dict):
+                    for k in ("val_mae", "val_rmse", "train_loss", "val_loss", "model_version_id"):
+                        if tr.get(k) is not None:
+                            metrics[k] = tr[k]
+        mv = conn.execute("SELECT id, version FROM model_versions ORDER BY id DESC LIMIT 1").fetchone()
+        return {"workflow_status": row["status"], "metrics": metrics,
+                "latest_model_version": dict(mv) if mv else None}
+    finally:
+        conn.close()
+
+
+@router.post("/api/research/experiments", status_code=201)
+def research_experiment_create(payload: ResearchExpIn):
+    """记录一条研究实验：假设、关联工作流、自动抓取的指标与结论。"""
+    import json as _json
+    import uuid as _uuid
+
+    if not payload.hypothesis.strip():
+        raise HTTPException(400, "hypothesis 不能为空")
+    metrics = _workflow_metrics(payload.workflow_id) if payload.workflow_id else {}
+    rec = {
+        "id": _uuid.uuid4().hex[:12],
+        "hypothesis": payload.hypothesis.strip(),
+        "workflow_id": payload.workflow_id,
+        "verdict": payload.verdict,
+        "notes": payload.notes,
+        "evidence": metrics,
+        "recorded_at": __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc).isoformat(timespec="seconds"),
+    }
+    RESEARCH_DIR.mkdir(parents=True, exist_ok=True)
+    with RESEARCH_EXP_FILE.open("a", encoding="utf-8") as fh:
+        fh.write(_json.dumps(rec, ensure_ascii=False) + chr(10))
+    return rec
+
+
+@router.get("/api/research/experiments")
+def research_experiment_list(limit: int = 50):
+    import json as _json
+
+    if not RESEARCH_EXP_FILE.exists():
+        return {"count": 0, "items": []}
+    rows = []
+    for line in RESEARCH_EXP_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rows.append(_json.loads(line))
+        except Exception:
+            continue
+    rows.sort(key=lambda r: r.get("recorded_at") or "", reverse=True)
+    return {"count": len(rows), "items": rows[: max(1, min(limit, 200))]}
