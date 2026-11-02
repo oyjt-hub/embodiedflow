@@ -3107,11 +3107,11 @@ def research_report(format: str = "md", topic: str | None = None):
         for tp in sorted(grouped):
             out.append(f"## {tp}")
             out.append("")
-            out.append("| 标题 | 类型 | 版本 | 发表时间 | 链接 |")
-            out.append("| --- | --- | --- | --- | --- |")
+            out.append("| 证据ID | 标题 | 类型 | 版本 | 发表时间 | 链接 |")
+            out.append("| --- | --- | --- | --- | --- | --- |")
             for r in sorted(grouped[tp], key=lambda x: x.get("title") or ""):
-                out.append("| {} | {} | {} | {} | {} |".format(
-                    r.get("title") or "-", r.get("kind") or "-",
+                out.append("| {} | {} | {} | {} | {} | {} |".format(
+                    r.get("id") or "-", r.get("title") or "-", r.get("kind") or "-",
                     r.get("version") or "-", r.get("published_at") or "-",
                     r.get("url") or "-"))
             out.append("")
@@ -3123,13 +3123,14 @@ def research_report(format: str = "md", topic: str | None = None):
     for tp in sorted(grouped):
         parts.append(f"<h2>{esc(tp)}</h2>")
         parts.append("<table border=1 cellpadding=4 cellspacing=0>"
-                     "<tr><th>标题</th><th>类型</th><th>版本</th>"
+                     "<tr><th>证据ID</th><th>标题</th><th>类型</th><th>版本</th>"
                      "<th>发表时间</th><th>链接</th></tr>")
         for r in sorted(grouped[tp], key=lambda x: x.get("title") or ""):
             link = (f'<a href="{esc(r.get("url"))}">{esc(r.get("url"))}</a>'
                     if r.get("url") else "-")
-            parts.append("<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
-                esc(r.get("title")), esc(r.get("kind")), esc(r.get("version")),
-                esc(r.get("published_at")), link))
+            parts.append("<tr><td><code>{}</code></td><td>{}</td><td>{}</td>"
+                         "<td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                esc(r.get("id")), esc(r.get("title")), esc(r.get("kind")),
+                esc(r.get("version")), esc(r.get("published_at")), link))
         parts.append("</table>")
     return Response(content="".join(parts), media_type="text/html; charset=utf-8")
