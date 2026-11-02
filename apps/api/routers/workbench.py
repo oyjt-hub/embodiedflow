@@ -1472,6 +1472,78 @@ def interpolate_episode(payload: InterpIn):
     }
 
 
+AGENT_ENV = Path("/home/oyjt/workspace/embodiedflow_data/agent/agent.env")
+_AGENT_KEYS = ("DEEPSEEK_BASE_URL", "DSH_MODEL", "DEEPSEEK_API_KEY")
+
+
+def _read_agent_env() -> dict[str, str]:
+    cfg: dict[str, str] = {}
+    if not AGENT_ENV.exists():
+        return cfg
+    for line in AGENT_ENV.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        cfg[k.strip()] = v.strip()
+    return cfg
+
+
+def _mask(secret: str | None) -> str:
+    if not secret:
+        return "未设置"
+    tail = secret[-4:] if len(secret) >= 4 else ""
+    return f"已设置 …{tail}（长度 {len(secret)}）"
+
+
+@router.get("/api/admin/agent-config")
+def get_agent_config():
+    """Agent/MCP 的 Provider 配置。密钥只返回掩码，永不回显明文。"""
+    cfg = _read_agent_env()
+    return {
+        "path": str(AGENT_ENV),
+        "exists": AGENT_ENV.exists(),
+        "base_url": cfg.get("DEEPSEEK_BASE_URL") or None,
+        "model": cfg.get("DSH_MODEL") or None,
+        "api_key": _mask(cfg.get("DEEPSEEK_API_KEY")),
+        "api_key_set": bool(cfg.get("DEEPSEEK_API_KEY")),
+    }
+
+
+class AgentCfgIn(BaseModel):
+    base_url: str | None = None
+    model: str | None = None
+    api_key: str | None = None
+
+
+@router.post("/api/admin/agent-config")
+def set_agent_config(payload: AgentCfgIn):
+    """更新 agent.env；空字段保持不变，api_key 传 "clear" 可清除。"""
+    cfg = _read_agent_env()
+    if payload.base_url is not None:
+        cfg["DEEPSEEK_BASE_URL"] = payload.base_url.strip()
+    if payload.model is not None:
+        cfg["DSH_MODEL"] = payload.model.strip()
+    if payload.api_key is not None:
+        key = payload.api_key.strip()
+        if key.lower() == "clear":
+            cfg.pop("DEEPSEEK_API_KEY", None)
+        elif key:
+            cfg["DEEPSEEK_API_KEY"] = key
+
+    AGENT_ENV.parent.mkdir(parents=True, exist_ok=True)
+    lines = [f"{k}={cfg[k]}" for k in _AGENT_KEYS if cfg.get(k)]
+    _nl = chr(10)
+    AGENT_ENV.write_text(_nl.join(lines) + _nl, encoding="utf-8")
+    try:
+        AGENT_ENV.chmod(0o600)
+    except OSError:
+        pass
+    return {"ok": True, "changed": [k for k in _AGENT_KEYS if cfg.get(k)],
+            "api_key": _mask(cfg.get("DEEPSEEK_API_KEY")),
+            "restart_hint": "bash ops/restart_agent.sh"}
+
+
 @router.get("/api/processing/clean-options")
 def clean_options():
     return [{"key": k, "label": v} for k, v in CLEAN_OPS.items()]
