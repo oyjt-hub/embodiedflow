@@ -2691,3 +2691,57 @@ def page():
     if ROOT_HTML.exists():
         return HTMLResponse(ROOT_HTML.read_text(encoding="utf-8"))
     return HTMLResponse("<h1>workbench</h1><p>页面尚未生成</p>", status_code=200)
+
+@router.get("/api/agent/confirmations")
+def list_confirmations_history(project_id: int | None = None,
+                               status: str | None = None, limit: int = 20):
+    """确认记录（只读）。与 MCP/Agent 共用 agent_confirmations 表。"""
+    import sqlite3
+
+    db = settings.data_root / "metadata" / "platform.db"
+    if not db.exists():
+        raise HTTPException(404, "平台库不存在")
+    conn = sqlite3.connect(db, timeout=30)
+    conn.row_factory = sqlite3.Row
+    try:
+        where, params = [], []
+        if project_id is not None:
+            where.append("project_id=?")
+            params.append(project_id)
+        if status:
+            where.append("status=?")
+            params.append(status)
+        clause = ("WHERE " + " AND ".join(where)) if where else ""
+        rows = [dict(r) for r in conn.execute(
+            f"SELECT confirmation_id, project_id, action, status, created_at, "
+            f"updated_at FROM agent_confirmations {clause} "
+            f"ORDER BY created_at DESC LIMIT ?",
+            (*params, max(1, min(limit, 100)))).fetchall()]
+        return {"count": len(rows), "db": db.name, "items": rows}
+    finally:
+        conn.close()
+
+
+@router.get("/api/agent/workflows")
+def list_workflows_history(project_id: int | None = None, limit: int = 20):
+    """Workflow 执行历史（只读）。"""
+    import sqlite3
+
+    db = settings.data_root / "metadata" / "platform.db"
+    if not db.exists():
+        raise HTTPException(404, "平台库不存在")
+    conn = sqlite3.connect(db, timeout=30)
+    conn.row_factory = sqlite3.Row
+    try:
+        sql = ("SELECT workflow_id, project_id, kind, name, status, updated_at "
+               "FROM agent_workflows ")
+        params: tuple = ()
+        if project_id is not None:
+            sql += "WHERE project_id=? "
+            params = (project_id,)
+        sql += "ORDER BY updated_at DESC LIMIT ?"
+        rows = [dict(r) for r in conn.execute(
+            sql, (*params, max(1, min(limit, 100)))).fetchall()]
+        return {"count": len(rows), "items": rows}
+    finally:
+        conn.close()
