@@ -2611,3 +2611,72 @@ def vision_assets():
     total = sum(i["size_mb"] or 0 for i in items)
     return {"root": str(CHECKPOINT.parent), "count": len(items),
             "total_mb": round(total, 1), "assets": items}
+
+@router.get("/ground-batches/{batch_id}/quality")
+def batch_quality_gate(batch_id: str, min_score: float = 0.3,
+                       min_area: float = 0.0, max_area: float = 1e12):
+    """批量标注质量门槛：按置信度与框面积（单位：像素²）过滤，统计通过/拒绝。
+
+    不改变已有产物，只对 results.json 做只读评估。
+    """
+    import json as _json
+
+    try:
+        safe = str(uuid.UUID(batch_id))
+    except ValueError as exc:
+        raise HTTPException(404, "batch not found") from exc
+    rp = VISION_DIR / "ground-batches" / safe / "results.json"
+    if not rp.exists():
+        raise HTTPException(404, "该批次没有结果文件")
+    data = _json.loads(rp.read_text(encoding="utf-8"))
+
+    def boxes_of(node):
+        """从任意层级里找出带 score/box 的条目。"""
+        out = []
+        if isinstance(node, dict):
+            if "box" in node or "bbox" in node:
+                out.append(node)
+            for v in node.values():
+                if isinstance(v, (list, dict)):
+                    out.extend(boxes_of(v))
+        elif isinstance(node, list):
+            for v in node:
+                out.extend(boxes_of(v))
+        return out
+
+    # 真实检测结果在 results.json 的顶层 detections（episodes 只是索引列表）
+    items = data.get("detections") or []
+    if not items:
+        items = boxes_of(data.get("frames"))
+    passed, rejected = [], []
+    for it in items:
+        try:
+            score = float(it.get("score", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            score = 0.0
+        box = it.get("box") or it.get("bbox") or {}
+        try:
+            if isinstance(box, dict):
+                x1, y1, x2, y2 = (float(box.get(k, 0)) for k in ("x1", "y1", "x2", "y2"))
+            else:
+                x1, y1, x2, y2 = [float(v) for v in list(box)[:4]]
+            area = max(0.0, (x2 - x1)) * max(0.0, (y2 - y1))
+        except (TypeError, ValueError, IndexError):
+            area = 0.0
+        rec = {"score": round(score, 4), "area": round(area, 1),
+               "label": it.get("label") or it.get("phrase")}
+        if score >= min_score and min_area <= area <= max_area:
+            passed.append(rec)
+        else:
+            rejected.append(rec)
+
+    return {
+        "batch_id": safe,
+        "thresholds": {"min_score": min_score, "min_area": min_area,
+                       "max_area": max_area},
+        "total": len(items),
+        "passed": len(passed),
+        "rejected": len(rejected),
+        "pass_rate": round(len(passed) / len(items), 4) if items else None,
+        "rejected_sample": rejected[:10],
+    }
