@@ -3057,3 +3057,52 @@ def mask_revision_compare(payload: MaskCompareIn):
                 "changed_ratio": round((added + removed) / n, 6) if n else 0.0,
                 "unchanged_ratio": round(same / n, 6) if n else 0.0})
     return out
+
+class TrackCompareIn(BaseModel):
+    run_a: str
+    run_b: str
+
+
+@router.post("/tracks/compare")
+def track_revision_compare(payload: TrackCompareIn):
+    """比较两次视频跟踪修订：可见性分布差异与逐帧状态变化。"""
+    import json as _json
+
+    def load(run_id: str) -> dict:
+        try:
+            safe = str(uuid.UUID(run_id))
+        except ValueError as exc:
+            raise HTTPException(400, "run_id 不是合法 UUID") from exc
+        f = VISION_DIR / "tracks" / safe / "metadata.json"
+        if not f.is_file():
+            raise HTTPException(404, f"跟踪记录不存在: {run_id}")
+        return _json.loads(f.read_text(encoding="utf-8"))
+
+    a = load(payload.run_a)
+    b = load(payload.run_b)
+    fa = {f.get("index"): f for f in (a.get("frames") or [])}
+    fb = {f.get("index"): f for f in (b.get("frames") or [])}
+    common = sorted(set(fa) & set(fb))
+
+    changed = []
+    for i in common:
+        sa = fa[i].get("visibility_status")
+        sb = fb[i].get("visibility_status")
+        if sa != sb:
+            changed.append({"frame": i, "a": sa, "b": sb})
+
+    def dist(m):
+        return m.get("visibility_counts") or {}
+
+    da, db = dist(a), dist(b)
+    keys = sorted(set(da) | set(db))
+    return {
+        "run_a": payload.run_a, "run_b": payload.run_b,
+        "frames_a": len(fa), "frames_b": len(fb),
+        "common_frames": len(common),
+        "visibility_diff": {k: {"a": da.get(k, 0), "b": db.get(k, 0)} for k in keys},
+        "changed_frames": len(changed),
+        "changed_ratio": round(len(changed) / len(common), 6) if common else 0.0,
+        "changes": changed[:50],
+        "note": "仅比较共同帧序号；帧数不同时不做插值" if len(fa) != len(fb) else "帧数一致",
+    }
