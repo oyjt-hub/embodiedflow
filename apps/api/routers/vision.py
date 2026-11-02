@@ -271,8 +271,26 @@ def vision_capabilities():
 
 @router.get("/runtime")
 def get_vision_runtime():
+    """运行时常驻状态。若标记为 active 但进程已死，自动清理（异常恢复）。"""
+    import os as _os
+
     from services.vision_runtime import runtime
-    return runtime.snapshot()
+
+    snap = runtime.snapshot()
+    pid = snap.get("pid")
+    if snap.get("active") and pid:
+        alive = True
+        try:
+            _os.kill(int(pid), 0)
+        except (ProcessLookupError, PermissionError):
+            alive = False
+        except (TypeError, ValueError):
+            alive = True
+        if not alive:
+            runtime.close()
+            snap = runtime.snapshot()
+            snap["recovered"] = "stale_pid_cleared"
+    return snap
 
 
 @router.post("/runtime/release")
