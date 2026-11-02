@@ -2946,3 +2946,38 @@ def pose_to_base(payload: PoseToBaseIn):
     return {"point_base": camera_to_base(payload.point_camera,
                                          payload.camera_translation,
                                          payload.camera_quaternion)}
+
+class TrajIn(BaseModel):
+    model: list[list[float]]
+    estimate: list[list[float]]
+    align: bool = True
+
+
+@router.get("/slam/selftest")
+def slam_selftest():
+    from services.slam_eval import selftest
+    return selftest()
+
+
+@router.post("/slam/ate")
+def slam_ate(payload: TrajIn):
+    """绝对轨迹误差（对齐后 RMSE 与最大值）。"""
+    from services.slam_eval import ate
+    try:
+        return ate(payload.model, payload.estimate, payload.align)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+class RpeIn(TrajIn):
+    delta: int = 1
+
+
+@router.post("/slam/rpe")
+def slam_rpe(payload: RpeIn):
+    """相对位姿误差（相隔 delta 帧的相对平移误差）。"""
+    from services.slam_eval import rpe
+    try:
+        return rpe(payload.model, payload.estimate, payload.delta)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
