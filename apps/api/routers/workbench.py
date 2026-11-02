@@ -1390,6 +1390,8 @@ class InterpIn(BaseModel):
     dataset_version_id: int
     episode: int = 0
     target_fps: float = 30.0
+    apply: bool = False
+    output_name: str | None = None
 
 
 def _resample(y: "list[list[float]]", src_fps: float, dst_fps: float) -> list[list[float]]:
@@ -1457,6 +1459,60 @@ def interpolate_episode(payload: InterpIn):
 
     s2 = _resample(state, src_fps, payload.target_fps)
     a2 = _resample(action, src_fps, payload.target_fps)
+
+    materialized = None
+    if payload.apply:
+        import pyarrow as _pa
+        import pyarrow.parquet as _pq
+
+        name = (payload.output_name or f"interp{int(payload.target_fps)}fps").strip("/")
+        out_root = settings.data_root / "derived" / "interpolated" / name
+        (out_root / "meta").mkdir(parents=True, exist_ok=True)
+        (out_root / "data" / "chunk-000").mkdir(parents=True, exist_ok=True)
+
+        n = len(s2)
+        table = _pa.table({
+            "episode_index": [0] * n,
+            "observation.state": s2,
+            "action": a2,
+            "timestamp": [i / payload.target_fps for i in range(n)],
+            "frame_index": list(range(n)),
+        })
+        pq_path = out_root / "data" / "chunk-000" / "episode_000000.parquet"
+        _pq.write_table(table, pq_path)
+
+        info = {
+            "codebase_version": "v2.1",
+            "robot_type": v.manifest_uri and "interpolated" or "interpolated",
+            "total_episodes": 1,
+            "total_frames": n,
+            "total_tasks": 1,
+            "fps": payload.target_fps,
+            "source_version_id": v.id,
+            "source_fps": src_fps,
+            "note": "仅状态与动作插值；未重编码视频，不可用于视觉策略",
+        }
+        (out_root / "meta" / "info.json").write_text(
+            _json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
+        (out_root / "meta" / "episodes.jsonl").write_text(
+            _json.dumps({"episode_index": 0, "length": n}) + chr(10), encoding="utf-8")
+
+        from persistence.models import DatasetVersion
+
+        with session_scope() as s:
+            dv = DatasetVersion(
+                dataset_id=v.dataset_id,
+                version=f"{v.version}-interp{int(payload.target_fps)}",
+                status="derived", episode_count=1,
+                total_bytes=pq_path.stat().st_size,
+                manifest_uri=str(out_root / "meta" / "info.json"),
+                episode_indices=_json.dumps([0]),
+            )
+            s.add(dv)
+            s.flush()
+            materialized = {"version_id": dv.id, "version": dv.version,
+                            "path": str(out_root), "frames": n}
+
     return {
         "dataset_version_id": v.id,
         "episode": payload.episode,
@@ -1468,7 +1524,8 @@ def interpolate_episode(payload: InterpIn):
         "state_head": [[round(x, 4) for x in row] for row in s2[:2]],
         "state_tail": [[round(x, 4) for x in row] for row in s2[-1:]],
         "action_head": [[round(x, 4) for x in row] for row in a2[:2]],
-        "note": "仅返回插值结果，未落盘",
+        "materialized": materialized,
+        "note": "apply=true 时落成派生版本（仅状态/动作，未重编码视频）",
     }
 
 
