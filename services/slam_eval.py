@@ -39,27 +39,32 @@ def umeyama_alignment(model: Pts, data: Pts) -> dict:
         b = [pd[i] - mu_d[i] for i in range(3)]
         for i in range(3):
             for j in range(3):
-                cov[i][j] += b[i] * a[j]
+                cov[i][j] += a[i] * b[j]
         var_d += sum(v * v for v in b)
     for i in range(3):
         for j in range(3):
             cov[i][j] /= n
     var_d /= n
 
-    # 通过对小矩阵做幂迭代求最大奇异值对应的旋转（简化实现）
-    # 用 SVD 的替代：对 cov 做 Jacobi 特征分解得到 U S V^T 不可行，
-    # 这里用「无缩放、旋转取单位」的保守分支，并在 selftest 中覆盖纯平移/纯缩放场景。
-    R = [[1.0 if i == j else 0.0 for j in range(3)] for i in range(3)]
+    from services.linalg3 import det3, matmul3, svd3
+
+    U, sv, Vt = svd3(cov)
+    # 修正反射：保证 det(R)=+1
+    D = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    if det3(matmul3(U, Vt)) < 0:
+        D[2][2] = -1.0
+    R = matmul3(matmul3(U, D), Vt)
     s = 1.0
     if var_d > 0:
-        # 仅估计尺度：s = sqrt(sum||a||^2 / sum||b||^2)
-        num = sum(sum((pm[i] - mu_m[i]) ** 2 for i in range(3)) for pm in model)
-        s = math.sqrt(num / (var_d * n)) if var_d > 0 else 1.0
-    t = [mu_m[i] - s * mu_d[i] for i in range(3)]
+        trace_ds = sum(sv[i] * D[i][i] for i in range(3))
+        s = trace_ds / var_d
+    mu_m_t = _centroid(model)
+    Rmu_d = [sum(R[i][j] * mu_d[j] for j in range(3)) for i in range(3)]
+    t = [mu_m_t[i] - s * Rmu_d[i] for i in range(3)]
     return {"scale": round(s, 9),
             "rotation": [[round(v, 9) for v in row] for row in R],
             "translation": [round(v, 9) for v in t],
-            "note": "旋转估计为保守分支（单位阵）；完整 SVD 版本待引入数值库"}
+            "note": "完整 SVD 对齐（含反射修正），旋转可用"}
 
 
 def apply_transform(P: Pts, s: float, R, t) -> Pts:
@@ -135,5 +140,13 @@ def selftest() -> dict:
     r = rpe(traj, off, delta=1)
     cases.append({"case": "rpe_translation_invariant",
                   "passed": abs(r["rmse"]) < 1e-9, "value": r["rmse"]})
+
+    # 7) 整体旋转 90 度 + 平移，对齐后 ATE 应回 0
+    # 注意：轨迹必须三维散开，否则共线轨迹绕自身轴的旋转不可观测（退化）
+    traj3 = [[float(i), float(i % 3), float(i % 2)] for i in range(10)]
+    rot = [[-p[1] + 3.0, p[0] - 2.0, p[2] + 1.0] for p in traj3]
+    r = ate(traj3, rot)
+    cases.append({"case": "rotated_aligned", "passed": abs(r["rmse"]) < 1e-6,
+                  "value": r["rmse"]})
 
     return {"all_pass": all(c["passed"] for c in cases), "cases": cases}
