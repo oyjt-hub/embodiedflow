@@ -2680,3 +2680,51 @@ def batch_quality_gate(batch_id: str, min_score: float = 0.3,
         "pass_rate": round(len(passed) / len(items), 4) if items else None,
         "rejected_sample": rejected[:10],
     }
+
+@router.get("/hardware")
+def hardware_profile():
+    """本机硬件画像：视觉 benchmark 出分时随结果记录，便于跨机器对比。"""
+    import platform
+    import shutil as _shutil
+    import subprocess as _sp
+
+    hw = {"host": platform.node(), "platform": platform.platform(),
+          "gpus": [], "cpu": {}, "memory_mb": None}
+
+    # GPU：优先 nvidia-smi，避免为查硬件去加载 torch
+    if _shutil.which("nvidia-smi"):
+        try:
+            out = _sp.run(
+                ["nvidia-smi", "--query-gpu=index,name,memory.total,driver_version",
+                 "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, timeout=10).stdout
+            for line in out.strip().splitlines():
+                parts = [x.strip() for x in line.split(",")]
+                if len(parts) >= 4:
+                    hw["gpus"].append({"index": int(parts[0]), "name": parts[1],
+                                       "memory_mb": int(float(parts[2])),
+                                       "driver": parts[3]})
+        except Exception as exc:
+            hw["gpu_error"] = type(exc).__name__
+
+    # CPU 型号
+    try:
+        with open("/proc/cpuinfo", encoding="utf-8", errors="ignore") as fh:
+            for line in fh:
+                if line.startswith("model name"):
+                    hw["cpu"]["model"] = line.split(":", 1)[1].strip()
+                    break
+        hw["cpu"]["cores"] = __import__("os").cpu_count()
+    except Exception:
+        pass
+
+    # 内存
+    try:
+        with open("/proc/meminfo", encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith("MemTotal:"):
+                    hw["memory_mb"] = int(line.split()[1]) // 1024
+                    break
+    except Exception:
+        pass
+    return hw
