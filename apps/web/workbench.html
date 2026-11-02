@@ -742,6 +742,17 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
   </div>
   <div id="vision-track-results"></div>
   <div id="vision-batch-results" class="vision-batch-list"></div>
+
+  <div style="margin-top:18px">
+    <div class="hint">批量标注质量门槛</div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="qg-batch">批次 ID</label><input id="qg-batch" placeholder="ground-batches 的 id"></div>
+      <div><label for="qg-score">最低分</label><input id="qg-score" type="number" step="0.05" value="0.3"></div>
+      <div><label for="qg-area">最小面积(px²)</label><input id="qg-area" type="number" value="0"></div>
+      <div><label>&nbsp;</label><button type="button" onclick="loadQualityGate()">评估</button></div>
+    </div>
+    <pre id="qg-out" style="display:none;margin-top:10px"></pre>
+  </div>
 </section>
 <section hidden class="card" id="sec-dataset">
     <h2>数据集详情 <span class="tag" id="dd-tag">未选择</span></h2>
@@ -3820,6 +3831,33 @@ async function loadVisionCompare() {
 " + body + "
 
 共 " + rows.length + " 条，best mAP50=" + (d.best_map50 ?? "-");
+  } catch (e) {
+    out.textContent = "失败：" + e.message;
+  }
+}
+
+async function loadQualityGate() {
+  const batch = ($("qg-batch") && $("qg-batch").value || "").trim();
+  const out = $("qg-out");
+  if (!batch) { out.style.display = "block"; out.textContent = "请填写批次 ID"; return; }
+  const score = parseFloat(($("qg-score") || {}).value || "0.3");
+  const area = parseFloat(($("qg-area") || {}).value || "0");
+  out.style.display = "block";
+  out.textContent = "评估中…";
+  try {
+    const r = await fetch("api/vision/ground-batches/" + encodeURIComponent(batch) +
+      "/quality?min_score=" + score + "&min_area=" + area);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const lines = [
+      "检测总数: " + d.total + "　通过: " + d.passed + "　拒绝: " + d.rejected,
+      "通过率: " + (d.pass_rate === null ? "-" : (d.pass_rate * 100).toFixed(1) + "%"),
+    ];
+    (d.rejected_sample || []).slice(0, 5).forEach(x => {
+      lines.push("  拒绝 score=" + x.score + " area=" + x.area + " label=" + (x.label || "-"));
+    });
+    out.textContent = lines.join("
+");
   } catch (e) {
     out.textContent = "失败：" + e.message;
   }
