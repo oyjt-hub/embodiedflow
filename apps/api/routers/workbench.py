@@ -3095,8 +3095,8 @@ def research_report(format: str = "md", topic: str | None = None):
         grouped.setdefault(r.get("topic") or "(未分类)", []).append(r)
 
     fmt = (format or "md").lower()
-    if fmt not in {"md", "html"}:
-        raise HTTPException(400, "format 需为 md 或 html")
+    if fmt not in {"md", "html", "pdf"}:
+        raise HTTPException(400, "format 需为 md / html / pdf")
 
     def esc(v) -> str:
         return _html.escape(str(v or ""))
@@ -3133,7 +3133,37 @@ def research_report(format: str = "md", topic: str | None = None):
                 esc(r.get("id")), esc(r.get("title")), esc(r.get("kind")),
                 esc(r.get("version")), esc(r.get("published_at")), link))
         parts.append("</table>")
-    return Response(content="".join(parts), media_type="text/html; charset=utf-8")
+    html_body = "".join(parts)
+
+    if fmt == "pdf":
+        # 用系统 LibreOffice 把 HTML 转成 PDF（无 Python PDF 库依赖）
+        import shutil as _shutil
+        import subprocess as _sp
+        import tempfile as _tf
+
+        soffice = _shutil.which("soffice") or _shutil.which("libreoffice")
+        if not soffice:
+            raise HTTPException(503, "系统未安装 LibreOffice，无法导出 PDF")
+        with _tf.TemporaryDirectory() as td:
+            src = Path(td) / "report.html"
+            src.write_text(
+                '<html><head><meta charset="utf-8"><style>'
+                'body{font-family:sans-serif;font-size:11pt}'
+                'table{border-collapse:collapse}td,th{border:1px solid #888;padding:4px}'
+                '</style></head><body>' + html_body + "</body></html>",
+                encoding="utf-8")
+            proc = _sp.run([soffice, "--headless", "--norestore",
+                            "--convert-to", "pdf", "--outdir", td, str(src)],
+                           capture_output=True, text=True, timeout=120)
+            pdf = Path(td) / "report.pdf"
+            if not pdf.exists():
+                raise HTTPException(500, f"PDF 生成失败：{proc.stderr[:200]}")
+            data = pdf.read_bytes()
+        return Response(content=data, media_type="application/pdf",
+                        headers={"content-disposition":
+                                 'attachment; filename="research-report.pdf"'})
+
+    return Response(content=html_body, media_type="text/html; charset=utf-8")
 
 @router.get("/api/research/search")
 def research_search(q: str, limit: int = 20):
