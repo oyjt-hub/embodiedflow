@@ -3134,3 +3134,53 @@ def research_report(format: str = "md", topic: str | None = None):
                 esc(r.get("version")), esc(r.get("published_at")), link))
         parts.append("</table>")
     return Response(content="".join(parts), media_type="text/html; charset=utf-8")
+
+@router.get("/api/research/search")
+def research_search(q: str, limit: int = 20):
+    """研究来源全文检索（SQLite FTS5，独立索引库，不触碰主库）。"""
+    import json as _json
+    import sqlite3 as _sq
+
+    if not q.strip():
+        raise HTTPException(400, "q 不能为空")
+    if not RESEARCH_FILE.exists():
+        return {"count": 0, "items": []}
+
+    idx = RESEARCH_DIR / "index.db"
+    idx.parent.mkdir(parents=True, exist_ok=True)
+    conn = _sq.connect(idx, timeout=20)
+    conn.row_factory = _sq.Row
+    try:
+        conn.execute("CREATE VIRTUAL TABLE IF NOT EXISTS src USING fts5("
+                     "id UNINDEXED, topic, title, kind UNINDEXED, note, url)")
+        # 文件比索引新 → 重建（数据量小，全量重建最省心）
+        row = conn.execute("SELECT COUNT(*) c FROM src").fetchone()
+        need_rebuild = row["c"] == 0 or (
+            idx.stat().st_mtime < RESEARCH_FILE.stat().st_mtime)
+        if need_rebuild:
+            conn.execute("DELETE FROM src")
+            for line in RESEARCH_FILE.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = _json.loads(line)
+                except Exception:
+                    continue
+                conn.execute(
+                    "INSERT INTO src(id, topic, title, kind, note, url) VALUES(?,?,?,?,?,?)",
+                    (rec.get("id"), rec.get("topic") or "", rec.get("title") or "",
+                     rec.get("kind") or "", rec.get("note") or "", rec.get("url") or ""))
+            conn.commit()
+
+        rows = conn.execute(
+            "SELECT id, topic, title, kind, url, "
+            "snippet(src, 2, '[', ']', ' … ', 12) AS snip, rank "
+            "FROM src WHERE src MATCH ? ORDER BY rank LIMIT ?",
+            (q, max(1, min(limit, 100)))).fetchall()
+        return {"count": len(rows), "rebuilt": need_rebuild,
+                "items": [dict(r) for r in rows]}
+    except _sq.OperationalError as exc:
+        raise HTTPException(400, f"检索语法错误：{exc}") from exc
+    finally:
+        conn.close()
