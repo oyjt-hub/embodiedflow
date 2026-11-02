@@ -125,6 +125,8 @@ class GroundBenchmarkIn(BaseModel):
 class TrackIn(BaseModel):
     source: VisionSource
     points: list[Point]
+    fps: int | None = None
+    window_seconds: int | None = None
 
 
 class TrackCorrectionIn(BaseModel):
@@ -1149,7 +1151,8 @@ def track_video(payload: TrackIn):
         "points": [point.model_dump() for point in payload.points],
         "source": source.model_dump(),
         "fps": 4,
-        "window_seconds": 30,
+        "window_seconds": int(getattr(payload, "window_seconds", None) or 30),
+        **(({"fps": int(payload.fps)}) if getattr(payload, "fps", None) else {}),
     }
     vendor = str(settings.root / "vendor" / "sam2")
     with session_scope() as session:
