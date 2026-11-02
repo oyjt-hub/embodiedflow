@@ -871,7 +871,17 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <button class="ghost" onclick="loadLogs('task')">任务</button>
     </div>
     <pre id="log-out" style="max-height:200px;margin-top:10px">-</pre>
-  </section>
+  
+  <div style="margin-top:18px">
+    <div class="hint">三入口互查</div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="lk-job">Job 号</label><input id="lk-job" type="number" placeholder="如 43"></div>
+      <div><label for="lk-model">或模型版本 ID</label><input id="lk-model" type="number" placeholder="如 12"></div>
+      <div><label>&nbsp;</label><button type="button" onclick="loadLinks()">查询关联</button></div>
+    </div>
+    <pre id="lk-out" style="display:none;margin-top:10px"></pre>
+  </div>
+</section>
 <section hidden class="card" id="sec-research">
   <h2>研究来源 <span class="tag" id="rs-count"></span></h2>
   <div class="row" style="margin-top:12px">
@@ -3742,6 +3752,36 @@ function openResearchReport() {
   window.open("api/research/report?format=html", "_blank");
 }
 
+
+async function loadLinks() {
+  const job = ($("lk-job") && $("lk-job").value || "").trim();
+  const mv = ($("lk-model") && $("lk-model").value || "").trim();
+  const out = $("lk-out");
+  if (!job && !mv) { out.style.display = "block"; out.textContent = "请填 Job 号或模型版本 ID"; return; }
+  out.style.display = "block";
+  out.textContent = "查询中…";
+  try {
+    const url = job ? "api/links/job/" + job : "api/links/model/" + mv;
+    const r = await fetch(url);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const lines = [];
+    if (d.job) lines.push("Job #" + d.job.id + "  " + (d.job.kind || "") + "  " + (d.job.status || ""));
+    if (d.model_version) lines.push("模型版本 " + d.model_version.version + "（id=" + d.model_version.id + "）");
+    const models = d.models || [];
+    const arts = d.reports || [];
+    const evs = d.evaluations || [];
+    const deps = d.deployments || [];
+    lines.push("关联模型: " + (models.length ? models.map(x => x.version || x.id).join(", ") : "无"));
+    lines.push("制品: " + (arts.length ? arts.map(x => (x.kind || "artifact") + "#" + x.id).join(", ") : "无"));
+    lines.push("评测: " + (evs.length ? evs.map(x => "#" + x.id + " " + (x.status || "")).join(", ") : "无"));
+    if (deps.length) lines.push("部署: " + deps.map(x => "#" + x.id + " " + (x.status || "")).join(", "));
+    out.textContent = lines.join("
+");
+  } catch (e) {
+    out.textContent = "失败：" + e.message;
+  }
+}
 initLogin();
 </script>
 </body>
