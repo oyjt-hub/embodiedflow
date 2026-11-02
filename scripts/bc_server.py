@@ -41,9 +41,17 @@ def load(model_dir: str):
     VERSION = model_dir.rstrip("/").split("/")[-1]
 
 
-def predict(state: list[float]) -> dict:
+def build_state(state, sidecar):
+    prof_name = (NORM or {}).get("profile")
+    if not prof_name:
+        return list(state)
+    from services.observation_profile import get_profile, vectorize
+    return list(state) + list(vectorize(get_profile(prof_name), sidecar or {})["values"])
+
+
+def predict(state: list[float], sidecar=None) -> dict:
     t0 = time.perf_counter()
-    x = (np.asarray(state, dtype=np.float32) - np.array(NORM["state_mean"], dtype=np.float32)) \
+    x = (np.asarray(build_state(state, sidecar), dtype=np.float32) - np.array(NORM["state_mean"], dtype=np.float32)) \
         / np.array(NORM["state_std"], dtype=np.float32)
     with torch.no_grad():
         y = MODEL(torch.tensor(x[None, :])).numpy()[0] * np.array(NORM["action_std"], dtype=np.float32) \
@@ -79,7 +87,7 @@ class H(BaseHTTPRequestHandler):
             if not isinstance(st, list):
                 self._send({"detail": "state 必须是数组"}, 400)
                 return
-            self._send(predict(st))
+            self._send(predict(st, data.get('sidecar')))
         except Exception as e:
             self._send({"detail": f"{type(e).__name__}: {e}"}, 500)
 

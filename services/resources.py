@@ -101,6 +101,11 @@ def schedulable_gpus(session, need_mb: int = 0) -> list[str]:
     for gpu in gpus:
         if gpu.uuid in leased:
             continue
+        # Keep scheduler policy consistent with the displayed GPU state.
+        # When partial sharing is disabled, do not allocate a card occupied
+        # by an external process even if its free-memory estimate is large.
+        if not ALLOW_PARTIAL and gpu.memory_used_mb > 0:
+            continue
         if _free_mb(gpu) < required:
             continue
         out.append(gpu.uuid)

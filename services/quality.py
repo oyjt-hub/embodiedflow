@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 
 import numpy as np
 
@@ -133,13 +134,27 @@ def check_episode(ep: EpisodeData, cfg: dict | None = None) -> EpisodeReport:
     for name, s in images.items():
         frames = s.frames
         n_declared = s.length
-        rep.image_expected += n_declared
-        if frames is None or frames.size == 0:
-            rep.image_missing += n_declared
+        if frames is None:
+            # Metadata-only checks do not decode video. A present file is
+            # unverified, not corrupt; only a missing file is a video finding.
+            if s.video_path and Path(s.video_path).is_file():
+                continue
+            rep.image_expected += max(n_declared, 1)
+            rep.image_missing += max(n_declared, 1)
             rep.add(Finding("video_corrupt", "error", ep.index, name, None, None,
-                            "视频无法解码或帧数为 0", n_declared))
+                            "视频文件不存在或路径无效", max(n_declared, 1)))
             continue
-        if not s.meta.get("decode_truncated"):
+        if frames.size == 0:
+            rep.image_expected += max(n_declared, 1)
+            rep.image_missing += max(n_declared, 1)
+            rep.add(Finding("video_corrupt", "error", ep.index, name, None, None,
+                            "视频无法解码或帧数为 0", max(n_declared, 1)))
+            continue
+        if s.meta.get("decode_truncated"):
+            # The reader deliberately decoded a small sample for a fast check.
+            rep.image_expected += int(frames.shape[0])
+        else:
+            rep.image_expected += n_declared
             rep.image_missing += max(0, n_declared - frames.shape[0])
         zero = [i for i, f in enumerate(frames) if not f.any()]
         if frames.shape[0] and len(zero) / frames.shape[0] > c["corrupt_zero_ratio"]:
@@ -264,6 +279,10 @@ def build_report(adapter, cfg: dict | None = None, max_episodes: int | None = No
 
     return {
         "rules_version": RULES_VERSION,
+        "image_check": {
+            "mode": "sampled_decode" if getattr(adapter, "decode_frames", 0) else "file_presence",
+            "decode_frames": int(getattr(adapter, "decode_frames", 0) or 0),
+        },
         "episodes": len(reports),
         "findings": findings,
         "by_episode": {k: sorted(set(v)) for k, v in sorted(by_episode.items(), key=lambda kv: int(kv[0]))},

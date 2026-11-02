@@ -35,6 +35,11 @@ def finalize(session, job: Job, attempt: JobAttempt, exit_code: int) -> dict:
             artifacts = [Path(p) for p in (spec.get("artifact_paths") or []) if Path(p).exists()]
             if metrics_path and Path(metrics_path).is_file():
                 artifacts.append(Path(metrics_path))
+            metric_history = {}
+            if isinstance(metrics.get("loss_history"), list):
+                metric_history["train_loss"] = metrics["loss_history"]
+            if isinstance(metrics.get("val_loss_history"), list):
+                metric_history["val_loss"] = metrics["val_loss_history"]
             run_id = tracking.log_run(
                 experiment=spec.get("mlflow_experiment", "training"),
                 run_name=f"{job.name}-job{job.id}-attempt{attempt.id}",
@@ -45,6 +50,7 @@ def finalize(session, job: Job, attempt: JobAttempt, exit_code: int) -> dict:
                     **{k: v for k, v in (spec.get("mlflow_params") or {}).items()},
                 },
                 metrics=metrics,
+                metric_history=metric_history,
                 artifacts=artifacts,
                 tags={"source": "embodiedflow.worker", "kind": job.kind},
             )

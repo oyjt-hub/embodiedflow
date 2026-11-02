@@ -13,13 +13,15 @@ import numpy as np
 import torch
 
 
-def load(data_dir: str):
+def load(data_dir: str, episode_indices: set[int] | None = None):
     import pyarrow.parquet as pq
     files = sorted(glob.glob(os.path.join(data_dir, "data", "**", "*.parquet"), recursive=True))
     S, A, E = [], [], []
     for f in files:
         t = pq.read_table(f, columns=["episode_index", "observation.state", "action"]).to_pydict()
         for s, a, e in zip(t["observation.state"], t["action"], t["episode_index"]):
+            if episode_indices is not None and int(e) not in episode_indices:
+                continue
             S.append(np.asarray(s, dtype=np.float32))
             A.append(np.asarray(a, dtype=np.float32))
             E.append(int(e))
@@ -44,6 +46,7 @@ def main() -> int:
     ap.add_argument("--model", required=True, help="训练输出目录（含 checkpoint.pt / norm.json）")
     ap.add_argument("--out", required=True)
     ap.add_argument("--holdout", type=int, default=3)
+    ap.add_argument("--episode-indices-file")
     a = ap.parse_args()
 
     ck = torch.load(os.path.join(a.model, "checkpoint.pt"), map_location="cpu")
@@ -52,9 +55,17 @@ def main() -> int:
     net.load_state_dict(ck["state_dict"])
     net.eval()
 
-    X, Y, ep = load(a.data)
+    allowed = None
+    if a.episode_indices_file:
+        allowed = set(int(x) for x in json.load(open(a.episode_indices_file, encoding="utf-8")))
+        if not allowed:
+            raise ValueError("Episode 选择为空")
+    X, Y, ep = load(a.data, allowed)
     uniq = sorted(set(ep.tolist()))
-    held = set(uniq[-a.holdout:]) if len(uniq) > a.holdout else set()
+    if len(uniq) < 2:
+        raise ValueError("评测至少需要 2 个 Episode，才能留出验证集")
+    holdout_count = min(max(1, a.holdout), len(uniq) - 1)
+    held = set(uniq[-holdout_count:])
     mask = np.array([e in held for e in ep])
 
     mu = np.array(norm["state_mean"], dtype=np.float32)

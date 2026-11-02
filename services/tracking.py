@@ -24,6 +24,7 @@ def log_run(
     run_name: str,
     params: dict | None = None,
     metrics: dict | None = None,
+    metric_history: dict | None = None,
     artifacts: list[Path] | None = None,
     tags: dict | None = None,
     uri: str | None = None,
@@ -37,9 +38,16 @@ def log_run(
         for k, v in (params or {}).items():
             if v is not None:
                 mlflow.log_param(k, v)
+        history_keys = set((metric_history or {}).keys())
         for k, v in (metrics or {}).items():
-            if isinstance(v, (int, float)) and v is not None:
+            if k not in history_keys and isinstance(v, (int, float)) and v is not None:
                 mlflow.log_metric(k, float(v))
+        for key, values in (metric_history or {}).items():
+            if not isinstance(values, (list, tuple)):
+                continue
+            for step, value in enumerate(values):
+                if isinstance(value, (int, float)):
+                    mlflow.log_metric(key, float(value), step=step)
         for k, v in (tags or {}).items():
             mlflow.set_tag(k, str(v))
         for p in artifacts or []:

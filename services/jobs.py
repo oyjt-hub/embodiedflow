@@ -22,6 +22,9 @@ def create_job(
     created_by: str = "system",
     dataset_version_id: int | None = None,
 ) -> Job:
+    from services.identity import current_actor
+
+    created_by = current_actor() or created_by
     job = Job(
         kind=kind,
         name=name or kind,
