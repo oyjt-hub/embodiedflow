@@ -2728,3 +2728,61 @@ def hardware_profile():
     except Exception:
         pass
     return hw
+
+@router.get("/benchmarks/compare")
+def compare_vision_benchmarks(dataset_version_id: int | None = None,
+                              annotation_run_id: int | None = None):
+    """多模型对比：同一 GT 集上各次视觉评估的关键指标并列。
+
+    数据源为 evaluations 表中 source=vision 且 metrics 含 bbox protocol 的记录。
+    """
+    import json as _json
+
+    from sqlalchemy import select
+
+    from persistence.models import Evaluation
+
+    rows = []
+    with session_scope() as s:
+        for ev in s.scalars(select(Evaluation).where(Evaluation.source == "vision")
+                            .order_by(Evaluation.id.desc())).all():
+            try:
+                m = _json.loads(ev.metrics or "{}")
+            except Exception:
+                continue
+            if "protocol" not in m or "bbox" not in str(m.get("protocol", "")):
+                continue
+            if dataset_version_id is not None and int(m.get("dataset_version_id") or 0) != dataset_version_id:
+                continue
+            if annotation_run_id is not None and int(m.get("annotation_run_id") or 0) != annotation_run_id:
+                continue
+            rows.append({
+                "evaluation_id": ev.id,
+                "model": m.get("model"),
+                "mask_model": m.get("mask_model"),
+                "prompt": m.get("prompt"),
+                "iou_threshold": m.get("iou_threshold"),
+                "precision": m.get("precision"),
+                "recall": m.get("recall"),
+                "f1": m.get("f1"),
+                "map50": m.get("map50"),
+                "mean_matched_iou": m.get("mean_matched_iou"),
+                "tp": m.get("tp"), "fp": m.get("fp"), "fn": m.get("fn"),
+                "frames_annotated": m.get("frames_annotated"),
+                "frame_coverage": m.get("frame_coverage"),
+                "batch_id": m.get("batch_id"),
+                "report_uri": ev.report_uri,
+            })
+
+    best = None
+    for r in rows:
+        score = r.get("map50")
+        if isinstance(score, (int, float)) and (best is None or score > best):
+            best = score
+    for r in rows:
+        r["is_best_map50"] = (r.get("map50") == best) if best is not None else False
+
+    return {"count": len(rows), "best_map50": best,
+            "filters": {"dataset_version_id": dataset_version_id,
+                        "annotation_run_id": annotation_run_id},
+            "rows": rows}
