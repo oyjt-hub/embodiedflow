@@ -2746,10 +2746,14 @@ def compare_vision_benchmarks(dataset_version_id: int | None = None,
     with session_scope() as s:
         for ev in s.scalars(select(Evaluation).where(Evaluation.source == "vision")
                             .order_by(Evaluation.id.desc())).all():
-            try:
-                m = _json.loads(ev.metrics or "{}")
-            except Exception:
-                continue
+            raw = ev.metrics
+            if isinstance(raw, dict):
+                m = raw                      # JSON 列可能已反序列化为 dict
+            else:
+                try:
+                    m = _json.loads(raw or "{}")
+                except Exception:
+                    continue
             if "protocol" not in m or "bbox" not in str(m.get("protocol", "")):
                 continue
             if dataset_version_id is not None and int(m.get("dataset_version_id") or 0) != dataset_version_id:
