@@ -192,10 +192,30 @@ main { max-width: 1600px; margin: 0 auto; padding: 30px 32px 64px; }
 .page-eyebrow { display: flex; align-items: center; gap: 7px; margin: 0 0 8px; color: var(--secondary); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .page-eyebrow::before { content: ""; width: 18px; height: 2px; background: #3c78ae; }
 .page-header h1 { margin: 0; font-size: 27px; font-weight: 720; line-height: 1.2; letter-spacing: -0.035em; }
-.page-desc { margin: 8px 0 0; color: var(--secondary); font-size: 13px; }
 .content-stack { display: grid; gap: 18px; }
 .card { min-width: 0; padding: 22px 24px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
 .card h2 { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 16px; color: var(--text); font-size: 16px; font-weight: 650; letter-spacing: -0.015em; }
+.vision-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.vision-tools { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.vision-layout { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:16px; }
+.vision-stage { min-height:440px; display:grid; place-items:center; overflow:hidden; border:1px solid var(--line); border-radius:9px; background-color:#f2f4f7; background-image:linear-gradient(45deg,#e4e8ef 25%,transparent 25%),linear-gradient(-45deg,#e4e8ef 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e4e8ef 75%),linear-gradient(-45deg,transparent 75%,#e4e8ef 75%); background-size:20px 20px; background-position:0 0,0 10px,10px -10px,-10px 0; }
+.vision-stage canvas { display:block; max-width:100%; max-height:64vh; object-fit:contain; cursor:crosshair; }
+.vision-empty { padding:30px; color:var(--secondary); text-align:center; }
+.vision-side { display:flex; flex-direction:column; gap:12px; padding:14px; border:1px solid var(--line); border-radius:9px; background:var(--surface); }
+.vision-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; padding-bottom:11px; border-bottom:1px solid var(--line); font-size:12px; font-weight:600; }
+.vision-run-note { color:var(--secondary); font-size:12px; line-height:1.5; }
+.vision-track-results { display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:8px; max-height:360px; overflow:auto; margin-top:12px; padding:1px; }
+.vision-track-item { position:relative; min-width:0; padding:0; overflow:hidden; border:1px solid var(--line); border-radius:8px; background:#10151d; text-align:left; }
+.vision-track-item[data-status="lost"],.vision-track-item[data-status="empty"] { border-color:#d97706; }
+.vision-track-item[data-review="true"] { border-color:#f59e0b; }
+.vision-track-results[data-review-only="true"] .vision-track-item:not([data-review="true"]) { display:none; }
+.vision-track-item img { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; }
+.vision-track-item .overlay { position:absolute; inset:0; height:calc(100% - 22px); opacity:.72; }
+.vision-track-item time { display:block; padding:4px 6px; color:var(--text); background:var(--surface); font-size:10px; font-variant-numeric:tabular-nums; }
+.vision-batch-card { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); }
+.vision-batch-list { display:grid; gap:7px; margin-top:8px; }
+.vision-tools .active { border-color:#5d86b4; color:#28659f; background:rgba(61,120,174,.10); }
+@media (max-width:900px) { .vision-layout { grid-template-columns:1fr; } .vision-stage { min-height:300px; } }
 .hint { margin-top: 6px; color: var(--secondary); font-size: 12px; line-height: 1.6; }
 .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 175px), 1fr)); gap: 15px; }
 label { display: block; margin: 2px 0 7px; color: var(--text); font-size: 12px; font-weight: 600; }
@@ -244,6 +264,14 @@ pre {
 .tag.ok { border-color: transparent; background: var(--positive-bg); color: var(--positive); }
 .tag.bad { border-color: transparent; background: var(--danger-bg); color: var(--danger); }
 .tag.run { border-color: transparent; background: var(--warning-bg); color: var(--warning); }
+.model-catalog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 12px; margin: 12px 0 16px; }
+.model-catalog-card { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+.model-catalog-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.model-catalog-head strong { color: var(--text); font-size: 13px; }
+.model-catalog-card p { margin: 5px 0 10px; color: var(--secondary); font-size: 11px; }
+.model-catalog-status { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.model-catalog-card code { display: block; margin-top: 6px; color: var(--secondary); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.model-catalog-links { display: flex; gap: 12px; margin: 8px 0; font-size: 11px; }
 .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; margin-top: 12px; }
 .kv > div { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--secondary); font-size: 12px; }
 .kv b { display: block; margin-top: 5px; color: var(--text); font-size: 19px; font-weight: 700; letter-spacing: -0.03em; overflow-wrap: anywhere; }
@@ -274,7 +302,64 @@ pre {
 .overview-panel { min-width: 0; padding: 20px 22px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
 .overview-panel h3 { margin: 0; color: var(--text); font-size: 15px; letter-spacing: -.02em; }
 .overview-panel > p { margin: 5px 0 0; color: var(--secondary); font-size: 12px; }
-#ov-recent { max-height: 265px !important; min-height: 150px; margin-top: 16px; background: var(--surface); }
+.gpu-card-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.gpu-card { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+.gpu-card-head, .gpu-card-memory { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gpu-card-head strong { color: var(--text); font-size: 13px; }
+.gpu-card-state { color: var(--secondary); font-size: 11px; }
+.gpu-card-memory { margin-top: 15px; color: var(--text); font-size: 12px; }
+.gpu-card-memory small { color: var(--secondary); font-size: 10px; }
+.gpu-meter { height: 5px; overflow: hidden; margin-top: 8px; border-radius: 9px; background: var(--muted); }
+.gpu-meter span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.recent-jobs { display: grid; gap: 0; margin-top: 10px; }
+.recent-job { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 3px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.recent-job:last-child { border-bottom: 0; }
+.recent-job strong { overflow: hidden; color: var(--text); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.recent-job span, .recent-job time { color: var(--secondary); font-size: 11px; }
+.recent-empty { padding: 16px 0; color: var(--secondary); font-size: 12px; }
+.experiment-toolbar { display: grid; grid-template-columns: minmax(180px, 1fr) 130px 145px auto auto auto; gap: 8px; margin: 12px 0; }
+.experiment-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, .8fr); gap: 14px; }
+.experiment-panel { min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+.experiment-panel h3 { margin: 0 0 12px; font-size: 13px; }
+.experiment-table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+.experiment-table { min-width: 830px; width: 100%; border-collapse: collapse; font-size: 11px; }
+.experiment-table th, .experiment-table td { padding: 10px 9px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+.experiment-table th { background: var(--muted); color: var(--secondary); font-weight: 650; }
+.experiment-table tbody tr { cursor: pointer; }
+.experiment-table tbody tr:hover, .experiment-table tbody tr.selected { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.experiment-table td:first-child, .experiment-table th:first-child { width: 34px; }
+.experiment-run { display: grid; gap: 2px; }
+.experiment-run strong { color: var(--text); font-size: 11px; }
+.experiment-run small { color: var(--secondary); font-size: 10px; }
+.metric-chart { display: block; width: 100%; min-height: 230px; margin-top: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.metric-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; color: var(--secondary); font-size: 10px; }
+.metric-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.metric-legend i { width: 9px; height: 9px; border-radius: 50%; }
+.experiment-detail { max-height: 240px; overflow: auto; margin: 0; padding: 11px; border: 1px solid var(--line); border-radius: 7px; background: var(--muted); font: 10px/1.55 ui-monospace, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.experiment-compare { display: grid; gap: 8px; }
+.experiment-compare-row { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(50px, auto) 1.3fr; align-items: center; gap: 8px; font-size: 10px; }
+.experiment-bar { height: 7px; overflow: hidden; border-radius: 9px; background: var(--muted); }
+.experiment-bar span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+#ex-empty { padding: 16px; color: var(--secondary); text-align: center; font-size: 12px; }
+#dd-video { display: block; width: 100%; max-height: 520px; margin-top: 12px; border: 1px solid var(--line); border-radius: 9px; background: #10151d; }
+#dd-video[hidden] { display: none; }
+#vision-video { display: block; width: 100%; max-height: 420px; margin-top: 10px; border: 1px solid var(--line); border-radius: 9px; background: #10151d; }
+#vision-video[hidden] { display: none; }
+.flora-segments { display: grid; gap: 6px; margin-top: 10px; }
+.flora-segment { display: grid; grid-template-columns: 115px minmax(0,1fr); gap: 10px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--text); text-align: left; }
+.flora-segment:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+.flora-segment time { color: var(--secondary); font-size: 11px; font-variant-numeric: tabular-nums; }
+.flora-segment span { font-size: 12px; }
+.flora-review { display:grid; gap:10px; margin-top:12px; }
+.flora-review-episode { display:grid; gap:8px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--surface); }
+.flora-review-episode h3 { margin:0; font-size:12px; }
+.flora-review-segment { display:grid; grid-template-columns:90px 90px minmax(180px,1fr) auto; align-items:center; gap:7px; }
+.flora-review-segment input { min-width:0; }
+.flora-review-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
+.flora-review-note { width:min(100%,560px); margin-top:8px; }
+.flora-mask-list { display:flex; flex-wrap:wrap; gap:8px; }
+.flora-mask-option { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--line); border-radius:7px; font-size:11px; }
+.flora-mask-option img { width:52px; height:40px; object-fit:contain; border-radius:4px; background:#151a22; }
 .quick-links { display: grid; gap: 4px; margin-top: 15px; }
 .quick-link { display: flex; align-items: center; gap: 11px; min-height: 48px; padding: 8px; border-radius: 7px; text-decoration: none; }
 .quick-link:hover { background: var(--muted); }
@@ -292,6 +377,7 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
 @media (max-width: 1080px) {
   .summary-primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .summary-secondary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gpu-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .connection { display: none; }
 }
 @media (max-width: 760px) {
@@ -307,6 +393,10 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
   main { padding: 24px 16px 48px; }
   .page-header { margin-bottom: 21px; }
   .page-header h1 { font-size: 23px; }
+  .gpu-card-grid { gap: 8px; }
+  .gpu-card { padding: 12px; }
+  .experiment-toolbar { grid-template-columns: 1fr 1fr; }
+  .experiment-grid { grid-template-columns: 1fr; }
   .card, .overview-panel { padding: 18px; }
   .overview { padding: 0; }
   .summary-secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -330,15 +420,14 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
 .login-card input{width:100%;margin-top:14px}
 .login-card button{width:100%;margin-top:12px}
 .login-card .hint{margin:6px 0 0}
-.who{margin-left:auto;font-size:12px;color:var(--dim);padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:#fff}
+.who{margin-left:auto;font-size:12px;color:var(--dim);padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer}
 </style>
 </head>
 <body>
 <div id="login-gate">
   <div class="login-card">
     <h2>EmbodiedFlow</h2>
-    <p class="hint">输入服务器上的用户名进入</p>
-    <input id="login-user" placeholder="用户名" autocomplete="username">
+  <input id="login-user" placeholder="用户名" autocomplete="username">
     <datalist id="login-list"></datalist>
     <button id="login-btn" type="button">进入</button>
     <p class="hint" id="login-msg"></p>
@@ -368,18 +457,16 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
 </svg>
 <div class="app-shell">
   <aside class="sidebar" id="sidebar" aria-label="主导航">
-    <a class="brand" href="#sec-overview" data-page="sec-overview">
-      <span class="brand-mark"><svg class="icon"><use href="#i-brand"/></svg></span>
-      <span><span class="brand-title">EmbodiedFlow</span><span class="brand-caption">具身智能研发工作台</span></span>
-    </a>
     <div class="sidebar-scroll">
       <p class="nav-label">工作空间</p>
       <nav class="wf-nav" aria-label="工作空间">
         <a href="#sec-overview" data-page="sec-overview"><svg class="icon"><use href="#i-grid"/></svg><span>系统总览</span></a>
+        <a href="http://172.19.5.252:18082/" target="_blank" rel="noopener"><svg class="icon"><use href="#i-grid"/></svg><span>Agent 助手</span></a>
       </nav>
       <p class="nav-label">研发流程</p>
       <nav class="wf-nav" aria-label="研发流程">
         <a href="#sec-dataset" data-page="sec-dataset"><svg class="icon"><use href="#i-database"/></svg><span>数据集</span></a>
+        <a href="#sec-vision" data-page="sec-vision"><svg class="icon"><use href="#i-grid"/></svg><span>视觉标注</span></a>
         <a href="#sec-process" data-page="sec-process"><svg class="icon"><use href="#i-filter"/></svg><span>数据处理</span></a>
         <a href="#sec-train" data-page="sec-train"><svg class="icon"><use href="#i-training"/></svg><span>模型训练</span></a>
         <a href="#sec-exp" data-page="sec-exp"><svg class="icon"><use href="#i-flask"/></svg><span>实验记录</span></a>
@@ -393,6 +480,7 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
         <a href="#sec-gpu" data-page="sec-gpu"><svg class="icon"><use href="#i-chip"/></svg><span>算力资源</span></a>
         <a href="#sec-robot" data-page="sec-robot"><svg class="icon"><use href="#i-robot"/></svg><span>机器人设备</span></a>
         <a href="#sec-logs" data-page="sec-logs"><svg class="icon"><use href="#i-logs"/></svg><span>系统日志</span></a>
+        <a href="#sec-research" data-page="sec-research"><svg class="icon"><use href="#i-flask"/></svg><span>研究来源</span></a>
       </nav>
     </div>
     <div class="sidebar-footer">
@@ -417,59 +505,83 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
         <button class="icon-button" id="theme-toggle" type="button" aria-label="切换深色主题" title="切换主题"><svg class="icon"><use id="theme-icon" href="#i-moon"/></svg></button>
       </div>
     
-      <span id="current-user" class="who" title="当前用户"></span></header>
+      <button id="current-user" class="who" type="button" aria-label="退出登录" title="点击退出登录"></button></header>
     <main id="main-content">
       <div class="page-header">
         <div>
           <p class="page-eyebrow" id="page-eyebrow">WORKSPACE</p>
           <h1 id="page-title">系统总览</h1>
-          <p class="page-desc" id="page-desc">查看数据、任务与算力资源的当前状态。</p>
         </div>
       </div>
       <div class="content-stack">
 
 <section class="card" id="sec-overview">
   <h2>系统总览 <span class="tag" id="ov-tag">加载中</span></h2>
-  <div class="overview-stats">
-    <div class="stat"><div class="stat-label">GPU 卡数</div><b id="ov-gpu">-</b></div>
-    <div class="stat"><div class="stat-label">空闲显存</div><b id="ov-free">-</b></div>
-    <div class="stat"><div class="stat-label">运行中作业</div><b id="ov-run">-</b></div>
+  <div class="overview-panel">
+    <div class="overview-heading"><h3>GPU 资源</h3><span class="gpu-card-state">8 张卡 · 空余显存</span></div>
+    <div id="ov-cards" class="gpu-card-grid" aria-live="polite"></div>
   </div>
   <div class="overview-panel">
-    <h3>显卡</h3>
-    <pre id="ov-cards">正在加载…</pre>
-  </div>
-  <div class="overview-panel">
-    <h3>正在运行</h3>
-    <pre id="ov-jobs">正在加载…</pre>
+    <h3>最近任务</h3>
+    <div id="ov-jobs" class="recent-jobs" aria-live="polite"></div>
   </div>
 </section>
 
 <section hidden class="card" id="sec-data-picker">
-  <h2>选择数据版本 <span class="tag" id="ds-count"></span></h2>
+  <h2>数据集 <span class="tag" id="ds-count"></span></h2>
     <div class="row" style="margin-top:16px">
-    <div><label for="ds-q">搜索数据集</label><input id="ds-q" placeholder="输入关键词，如 libero"></div>
+    <div><label for="ds-q">搜索数据集</label><input id="ds-q"></div>
     <div><label for="ds">数据版本</label><select id="ds"></select></div>
   </div>
-  <div class="hint" id="ds-hint">选择数据版本</div>
-  <div class="row" style="margin-top:16px">
-    <div><label for="pv-dims">状态维度</label><input id="pv-dims" value="0,1,2" placeholder="如 0,1,2 或 0-5"></div>
-    <div><label for="pv-act-dims">动作维度</label><input id="pv-act-dims" value="0,1,2" placeholder="如 0,1,2 或 0-5"></div>
+  <div id="dataset-visualization">
+    <div class="row" style="margin-top:16px">
+  <div><label for="pv-dims">状态维度</label><input id="pv-dims" value="0,1,2" placeholder="0,1,2"></div>
+  <div><label for="pv-act-dims">动作维度</label><input id="pv-act-dims" value="0,1,2" placeholder="0,1,2"></div>
+    </div>
+    <div id="preview" style="margin-top:16px"></div>
   </div>
-  <div id="preview" style="margin-top:16px"></div>
 </section>
 
 <section hidden class="card" id="sec-train-config">
-  <h2>训练配置 <span class="tag">任务参数</span></h2>
-  <p class="hint">使用上方所选数据版本创建任务，运行状态将在下方更新。</p>
+  <h2>训练配置</h2>
   <div class="row" style="margin-top:16px">
-    <div><label for="epochs">训练轮数</label><input id="epochs" type="number" value="5" min="1" max="200"></div>
-      <div><label>批大小</label><input id="batch" type="number" value="256" min="1" max="8192"></div>
-    <div><label for="lr">学习率</label><input id="lr" type="number" value="0.001" step="0.0001"></div>
-    <div><label for="device">计算设备</label><select id="device"><option value="cpu">CPU</option><option value="cuda">GPU · CUDA</option></select></div>
-    <div><label for="backend">训练后端</label><select id="backend"><option value="bc">BC · 行为克隆</option><option value="openpi">π0.5 · OpenPI（调试配置）</option></select></div>
+    <div><label for="backend">训练后端</label><select id="backend" disabled><option value="">加载中</option></select></div>
+    <div class="bc-only"><label for="epochs">训练轮数</label><input id="epochs" type="number" value="5" min="1" max="200"></div>
+    <div class="bc-only"><label for="batch">批大小</label><input id="batch" type="number" value="256" min="1" max="8192"></div>
+    <div class="bc-only"><label for="lr">学习率</label><input id="lr" type="number" value="0.001" min="0.0000001" max="1" step="0.0001"></div>
+    <div class="bc-only"><label for="optimizer">优化器</label><select id="optimizer"><option value="adamw" selected>AdamW</option><option value="adam">Adam</option></select></div>
+    <div class="bc-only"><label for="weight-decay">权重衰减</label><input id="weight-decay" type="number" value="0.0001" min="0" max="1" step="0.0001"></div>
+    <div class="bc-only"><label for="holdout-episodes">验证 Episode</label><input id="holdout-episodes" type="number" value="3" min="1" max="1000"></div>
+    <div class="bc-only"><label for="seed">随机种子</label><input id="seed" type="number" value="42" min="0" max="2147483647"></div>
+    <div class="bc-only"><label for="device">计算设备</label><select id="device"><option value="cuda" selected>GPU · CUDA</option><option value="cpu">CPU</option></select></div>
+    <div class="bc-only"><label for="gpu-memory">显存预算 MiB</label><input id="gpu-memory" type="number" value="8192" min="1024" max="49140" step="1024"></div>
   </div>
-  <p class="hint" id="backend-hint">BC 使用上方选择的数据版本进行训练。</p>
+  <div class="row openpi-only" id="openpi-params" style="margin-top:16px" hidden>
+    <div><label for="openpi-config">OpenPI 训练预设</label><select id="openpi-config"></select></div>
+    <div><label for="openpi-batch">全局 Batch Size</label><input id="openpi-batch" type="number" value="16" min="1" max="512"></div>
+    <div><label for="openpi-steps">训练步数</label><input id="openpi-steps" type="number" value="5000" min="1" max="500000" step="100"></div>
+    <div><label for="openpi-lr">学习率</label><input id="openpi-lr" type="number" value="0.00001" min="0.00000001" max="1" step="0.000001"></div>
+    <div><label for="openpi-rank">SigLIP LoRA Rank</label><select id="openpi-rank"><option value="0">关闭</option><option value="8">8</option><option value="16">16</option><option value="32">32</option><option value="64">64</option></select></div>
+    <div><label for="openpi-freeze">冻结策略</label><select id="openpi-freeze">
+      <option value="preset">使用预设策略</option><option value="lora_only">仅训练 LoRA</option>
+      <option value="vision_lora">训练视觉塔 + LoRA</option><option value="full">全量微调</option>
+    </select></div>
+    <div><label for="openpi-gpus">GPU 数量</label><input id="openpi-gpus" type="number" value="1" min="1" max="8"></div>
+    <div><label for="openpi-memory">单卡显存预算 MiB</label><input id="openpi-memory" type="number" value="22000" min="1024" max="49140" step="1024"></div>
+    <div><label for="openpi-workers">数据加载进程</label><input id="openpi-workers" type="number" value="8" min="0" max="64"></div>
+  </div>
+  <div class="row act-only" id="act-params" style="margin-top:16px" hidden>
+    <div><label for="act-batch">批大小</label><input id="act-batch" type="number" value="4" min="1" max="128"></div>
+    <div><label for="act-steps">训练步数</label><input id="act-steps" type="number" value="5000" min="1" max="500000" step="100"></div>
+    <div><label for="act-lr">学习率</label><input id="act-lr" type="number" value="0.00001" min="0.00000001" max="1" step="0.000001"></div>
+    <div><label for="act-chunk">动作块长度</label><input id="act-chunk" type="number" value="50" min="1" max="200"></div>
+    <div><label for="act-action-steps">执行步数</label><input id="act-action-steps" type="number" value="50" min="1" max="200"></div>
+    <div><label for="act-amp">混合精度</label><select id="act-amp"><option value="false">关闭</option><option value="true">开启</option></select></div>
+    <div><label for="act-memory">单卡显存预算 MiB</label><input id="act-memory" type="number" value="20000" min="1024" max="49140" step="1024"></div>
+    <div><label for="act-gpu">GPU</label><select id="act-gpu"><option value="">自动分配</option><option value="0">GPU 0</option><option value="1">GPU 1</option><option value="2">GPU 2</option><option value="3">GPU 3</option><option value="4">GPU 4</option><option value="5">GPU 5</option><option value="6">GPU 6</option><option value="7">GPU 7</option></select></div>
+    <div><label for="act-workers">数据加载进程</label><input id="act-workers" type="number" value="4" min="0" max="32"></div>
+    <div><label for="act-backbone">预训练视觉骨干</label><select id="act-backbone"><option value="true">启用</option><option value="false">关闭</option></select></div>
+  </div>
   <div style="margin-top:18px"><button id="btn-train" onclick="startTraining()">开始训练</button></div>
 </section>
 
@@ -480,11 +592,11 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <div>状态<b id="k-status">-</b></div>
       <div>保存目录<b id="k-out" style="font-size:12px">-</b></div>
     </div>
+    <div style="margin:10px 0;display:flex;gap:8px"><button id="btn-cancel-job" class="ghost" onclick="cancelTrainingJob()" hidden>取消任务</button><button id="btn-retry-job" class="ghost" onclick="retryTrainingJob()" hidden>重试任务</button></div>
     <pre id="job-log">无</pre>
   </section>
 <section hidden class="card" id="sec-eval">
     <h2>评测 <span class="tag" id="eval-tag">未开始</span></h2>
-    <div class="hint">使用本次训练完成的模型，比较留出集 MAE / RMSE 与基线。</div>
     <div style="margin-top:12px"><button id="btn-eval" onclick="startEval()" disabled>③ 评测此版本</button></div>
     <div class="kv" id="eval-kv" style="display:none">
       <div>MAE<b id="e-mae">-</b></div>
@@ -496,7 +608,6 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
   </section>
 <section hidden class="card" id="sec-deploy">
     <h2>部署与调用 <span class="tag" id="dep-tag">未部署</span></h2>
-    <div class="hint">完成训练后可发布当前模型，并通过 HTTP 推理端点调用。</div>
     <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
       <button id="btn-deploy" onclick="startDeploy()" disabled>④ 发布为推理服务</button>
       <button id="btn-stop" class="ghost" onclick="stopDeploy()" disabled>停止</button>
@@ -504,12 +615,19 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
     <div class="hint" id="dep-ep" style="word-break:break-all"></div>
     <label for="state">状态 14 维</label>
     <textarea id="state" rows="2" placeholder="0.01,-0.003,0.003,...,0"></textarea>
+    <div id="openpi-camera-inputs" hidden style="margin-top:10px">
+      <label for="pred-prompt">任务指令</label><input id="pred-prompt" value="Pick up the objects and place them in the target area">
+      <div class="row">
+        <div><label for="pred-front">正视相机</label><input id="pred-front" type="file" accept="image/*"></div>
+        <div><label for="pred-left">左腕相机</label><input id="pred-left" type="file" accept="image/*"></div>
+        <div><label for="pred-right">右腕相机</label><input id="pred-right" type="file" accept="image/*"></div>
+      </div>
+    </div>
     <div style="margin-top:10px"><button id="btn-predict" class="ghost" onclick="callPredict()" disabled>调用一次</button></div>
     <pre id="pred-out" style="display:none"></pre>
   </section>
 <section hidden class="card" id="sec-bench">
     <h2>策略对比（MuJoCo 基准） <span class="tag" id="bm-tag">未运行</span></h2>
-    <div class="hint">固定种子对比两个策略</div>
     <div class="row" style="margin-top:10px">
       <div><label>任务</label>
         <select id="bm-task">
@@ -526,8 +644,97 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
     </div>
     <pre id="bm-out" style="display:none"></pre>
   </section>
+<section hidden class="card" id="sec-vision">
+  <h2>视觉标注 <span class="tag" id="vision-status">SAM2</span></h2>
+  <div class="row" style="margin:10px 0">
+    <div><label for="vision-episode">Episode</label><select id="vision-episode"></select></div>
+    <div><label for="vision-camera">相机</label><select id="vision-camera"></select></div>
+    <div><label>&nbsp;</label><button class="ghost" id="vision-import-frame" type="button">导入当前帧</button></div>
+  </div>
+  <video id="vision-video" controls playsinline preload="metadata" hidden></video>
+  <div class="hint" id="vision-source-hint">选择数据集后载入 Episode 视频，可暂停并定位到需要标注的帧。</div>
+  <div class="row" style="margin:12px 0 8px">
+    <div><label for="vision-flora-scope">FLORA 范围</label><select id="vision-flora-scope"><option value="current">当前 Episode</option><option value="all">当前数据版本全部 Episode</option></select></div>
+    <div><label for="vision-flora-profile">动作配置</label><select id="vision-flora-profile"><option value="yam">YAM · 机器人</option><option value="dex">Dex</option><option value="tianji">Tianji</option><option value="human">Human</option></select></div>
+    <div><label>&nbsp;</label><button class="ghost" id="vision-flora-run" type="button">FLORA 自动标注</button></div>
+    <div><label>&nbsp;</label><span class="tag" id="vision-flora-status">检查中</span></div>
+    <div><label for="vision-flora-history">历史任务</label><select id="vision-flora-history"><option value="">选择任务</option></select></div>
+  </div>
+  <div class="hint" id="vision-flora-note"></div>
+  <div id="vision-flora-results"></div>
+  <div class="vision-toolbar">
+    <label class="ghost" style="display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:7px;cursor:pointer">
+      选择图片<input id="vision-file" type="file" accept="image/*" hidden>
+    </label>
+    <div class="vision-tools">
+      <button class="ghost active" id="vision-positive" type="button">正点</button>
+      <button class="ghost" id="vision-negative" type="button">负点</button>
+      <button class="ghost" id="vision-undo" type="button">撤销</button>
+      <button class="ghost" id="vision-clear" type="button">清空点</button>
+      <button id="vision-run" type="button">分割并保存</button>
+      <button class="ghost" id="vision-track" type="button" disabled>跟踪视频</button>
+      <button class="ghost" id="vision-batch-run" type="button" disabled>批量标注</button>
+      <button class="ghost" id="vision-track-correct" type="button" hidden disabled>从关键帧修正</button>
+    </div>
+  </div>
+  <div class="row" style="margin:10px 0 8px">
+    <div style="flex:1"><label for="vision-ground-prompt">文本找物体</label><input id="vision-ground-prompt" type="text" placeholder="plug, socket"></div>
+    <div><label for="vision-ground-detector">检测模型</label><select id="vision-ground-detector"><option value="florence-2-large">Florence-2</option><option value="grounding-dino-tiny">Grounding DINO</option></select></div>
+    <div style="max-width:110px"><label for="vision-ground-threshold">阈值</label><input id="vision-ground-threshold" type="number" min="0" max="1" step="0.05" value="0.20"></div>
+    <div style="max-width:110px"><label for="vision-ground-text-threshold">文本阈值</label><input id="vision-ground-text-threshold" type="number" min="0" max="1" step="0.05" value="0.25"></div>
+    <div><label>&nbsp;</label><button class="ghost" id="vision-ground-run" type="button">检测</button></div>
+    <div><label>&nbsp;</label><button class="ghost" id="vision-ground-segment" type="button">定位并分割</button></div>
+    <div class="hint" id="vision-ground-status"></div>
+  </div>
+  <div id="vision-ground-results" class="vision-batch-list"></div>
+  <div class="row" style="margin-top:10px">
+    <div><label for="vision-batch-episodes">批量 Episode</label><input id="vision-batch-episodes" type="text" placeholder="当前 / all / 0-5,8"></div>
+    <div class="hint" id="vision-batch-status"></div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <div style="max-width:150px"><label for="vision-ground-start">起始秒</label><input id="vision-ground-start" type="number" min="0" step="1" value="0"></div>
+    <div style="max-width:150px"><label for="vision-ground-end">结束秒</label><input id="vision-ground-end" type="number" min="0" step="1" placeholder="整段"></div>
+    <div style="max-width:150px"><label for="vision-ground-interval">抽帧间隔（秒）</label><input id="vision-ground-interval" type="number" min="0.25" step="0.25" value="2"></div>
+    <div><label>&nbsp;</label><button class="ghost" id="vision-ground-batch-run" type="button" disabled>批量定位 + 分割</button></div>
+    <div class="hint" id="vision-ground-batch-status"></div>
+  </div>
+  <div id="vision-ground-batch-results" class="vision-batch-list"></div>
+  <div class="row" style="margin-top:14px">
+    <div style="min-width:180px"><label for="vision-gt-run">真值标注集</label><select id="vision-gt-run"></select></div>
+    <div style="max-width:190px"><label for="vision-gt-name">新建名称</label><input id="vision-gt-name" type="text" value="bbox-gt-v1" maxlength="32"></div>
+    <div style="max-width:160px"><label>&nbsp;</label><button class="ghost" id="vision-gt-new" type="button">新建标注集</button></div>
+    <div style="max-width:180px"><label for="vision-gt-label">目标类别</label><input id="vision-gt-label" type="text" value="plug" maxlength="128"></div>
+    <div><label>&nbsp;</label><button class="ghost" id="vision-gt-box" type="button">画真值框</button></div>
+    <div><label>&nbsp;</label><button class="ghost" id="vision-gt-save" type="button" disabled>保存此帧</button></div>
+    <div><label>&nbsp;</label><button class="ghost" id="vision-gt-publish" type="button" disabled>完成标注集</button></div>
+  </div>
+  <div class="hint" id="vision-gt-status"></div>
+  <div id="vision-gt-annotations" class="vision-batch-list"></div>
+  <div id="vision-benchmark-results" class="vision-batch-list"></div>
+  <div class="hint">复用当前正负点和相对时间；留空为当前 Episode。</div>
+  <div class="vision-layout">
+    <div class="vision-stage">
+      <canvas id="vision-canvas" hidden aria-label="图片分割画布"></canvas>
+      <div class="vision-empty" id="vision-empty">选择图片后，点击物体添加 正点；背景可添加负点。</div>
+    </div>
+    <aside class="vision-side">
+      <div class="vision-meta"><span>SAM2.1 · Hiera Small</span><span id="vision-score">等待图片</span></div>
+      <div class="vision-run-note" id="vision-note">Mask 会保存到视觉产物目录。</div>
+      <label><input id="vision-mask-visible" type="checkbox" checked> 显示 Mask</label>
+      <label for="vision-mask-opacity">透明度 <output id="vision-mask-opacity-value">48%</output></label>
+      <input id="vision-mask-opacity" type="range" min="0" max="1" step="0.01" value="0.48">
+      <label for="vision-instance-label">类别</label><input id="vision-instance-label" type="text" value="object" maxlength="128">
+      <a id="vision-download" class="ghost" hidden download>下载 Mask PNG</a>
+      <a id="vision-download-coco" class="ghost" hidden download>下载 COCO RLE</a>
+      <label for="vision-mask-history">已保存 Mask</label><select id="vision-mask-history"><option value="">选择记录</option></select>
+      <pre id="vision-error" hidden style="white-space:pre-wrap;margin:0;color:#b42318"></pre>
+    </aside>
+  </div>
+  <div id="vision-track-results"></div>
+  <div id="vision-batch-results" class="vision-batch-list"></div>
+</section>
 <section hidden class="card" id="sec-dataset">
-    <h2>数据集详情 <span class="tag" id="dd-tag">选择数据版本后加载</span></h2>
+    <h2>数据集详情 <span class="tag" id="dd-tag">未选择</span></h2>
     <div class="kv" id="dd-kv" style="display:none">
       <div>数据集<b id="dd-name">-</b></div>
       <div>版本<b id="dd-ver">-</b></div>
@@ -535,18 +742,29 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <div>大小<b id="dd-size">-</b></div>
       <div>fps<b id="dd-fps">-</b></div>
       <div>状态/动作维<b id="dd-dim">-</b></div>
+      <div>相机<b id="dd-cameras">-</b></div>
     </div>
     <div class="hint" style="margin-top:12px">Episodes</div>
     <pre id="dd-list" style="max-height:160px">-</pre>
+    <div class="hint" style="margin-top:12px">录制视频</div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="dd-camera">相机</label><select id="dd-camera"></select></div>
+      <div><label for="dd-video-episode">Episode</label><select id="dd-video-episode"></select></div>
+    </div>
+    <video id="dd-video" controls playsinline preload="metadata" hidden></video>
+    <div id="dd-video-hint" class="hint"></div>
     <div class="hint" style="margin-top:8px">Manifest</div>
     <pre id="dd-manifest" style="max-height:120px">-</pre>
   </section>
 <section hidden class="card" id="sec-process">
     <h2>数据处理 <span class="tag" id="pr-tag">未运行</span></h2>
-    <div class="hint">12 类质检规则</div>
     <div class="row" style="margin-top:10px">
       <div><label>检查 Episode 数</label><input id="pr-max" type="number" value="5" min="1" max="200"></div>
       <div><label>&nbsp;</label><button onclick="runProcessing()">运行质检</button></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="proc-project">所属项目</label><select id="proc-project"><option value="">不关联项目</option></select></div>
+      <div><label>&nbsp;</label><button class="ghost" onclick="createProcessProject()">新建项目</button></div>
     </div>
     <div class="kv" id="pr-kv" style="display:none">
       <div>检查数<b id="pr-eps">-</b></div>
@@ -564,20 +782,53 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
     <pre id="clean-out" style="display:none;margin-top:10px"></pre>
   </div>
   <div style="margin-top:18px">
-    <div class="hint">时间戳与对齐</div>
+    <div class="hint">裁剪与重采样</div>
     <div class="row" style="margin-top:8px">
-      <div><label>目标帧率</label><input id="al-fps" type="number" value="30" step="1"></div>
+      <div><label>目标帧率</label><input id="al-fps" type="number" value="15" min="1" max="120" step="1"></div>
+      <div><label>开始秒数</label><input id="mat-start" type="number" value="0" min="0" step="0.1"></div>
+      <div><label>结束秒数</label><input id="mat-end" type="number" min="0" step="0.1" placeholder="不裁剪"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div><label>Episode（逗号分隔，留空为全部）</label><input id="mat-episodes" type="text" placeholder="如 0,1,4"></div>
       <div><label>&nbsp;</label><button class="ghost" onclick="tsCheck()">时间戳检查</button></div>
-      <div><label>&nbsp;</label><button class="ghost" onclick="alignPlan()">对齐计划</button></div>
+      <div><label>&nbsp;</label><button class="ghost" onclick="alignPlan()">帧数预览</button></div>
+      <div><label>&nbsp;</label><button id="mat-run" onclick="materializeDataset()">生成数据版本</button></div>
     </div>
     <pre id="ts-box" style="display:none;margin-top:10px"></pre>
+    <pre id="mat-out" style="display:none;margin-top:10px"></pre>
   </div>
 </section>
 <section hidden class="card" id="sec-exp">
-    <h2>实验记录 <span class="tag" id="ex-tag">加载中</span></h2>
-        <div style="margin-top:10px"><button class="ghost" onclick="loadExperiments()">刷新</button></div>
-    <pre id="ex-out" style="max-height:220px">-</pre>
-  </section>
+  <h2>实验记录 <span class="tag" id="ex-tag">加载中</span></h2>
+  <div class="experiment-toolbar">
+     <input id="ex-search" type="search" placeholder="搜索 Run / 数据集 / 模型">
+    <select id="ex-status"><option value="">全部状态</option><option value="completed">完成</option><option value="failed">失败</option><option value="running">运行中</option></select>
+    <select id="ex-metric"><option value="train_loss">Train Loss</option><option value="val_loss">Validation Loss</option><option value="val_mae">Validation MAE</option><option value="val_rmse">Validation RMSE</option></select>
+    <button class="ghost" type="button" onclick="loadExperiments()">刷新</button>
+    <button class="ghost" id="ex-compare-btn" type="button" disabled>对比所选</button>
+    <button class="ghost" id="ex-copy-btn" type="button" disabled>复制参数</button>
+  </div>
+  <div id="ex-summary" class="hint"></div>
+  <div class="experiment-grid">
+    <div class="experiment-panel">
+      <div class="experiment-table-wrap">
+        <table class="experiment-table">
+          <thead><tr><th><input id="ex-select-all" type="checkbox" aria-label="全选当前 Run"></th><th>Run</th><th>状态</th><th>数据集</th><th>Train Loss</th><th>Val Loss</th><th>Val MAE</th><th>Val RMSE</th><th>模型版本</th></tr></thead>
+          <tbody id="ex-body"></tbody>
+        </table>
+        <div id="ex-empty" hidden>没有符合筛选条件的 Run</div>
+      </div>
+      <svg id="ex-chart" class="metric-chart" viewBox="0 0 760 230" role="img" aria-label="实验指标曲线"></svg>
+      <div id="ex-chart-legend" class="metric-legend"></div>
+    </div>
+    <aside class="experiment-panel">
+      <h3>Run 详情</h3>
+      <pre id="ex-detail" class="experiment-detail">-</pre>
+      <h3 style="margin-top:18px">指标对比</h3>
+      <div id="ex-compare" class="experiment-compare"></div>
+    </aside>
+  </div>
+</section>
 <section hidden class="card" id="sec-gpu">
     <h2> 算力管理 <span class="tag" id="gpu-tag">加载中</span></h2>
     <div class="kv" id="gpu-kv">
@@ -589,24 +840,30 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
   </section>
 <section hidden class="card" id="sec-registry">
     <h2>模型仓库 <span class="tag" id="rg-tag">加载中</span></h2>
-    <div class="hint">版本、血缘与权重</div>
+    <h3 style="margin:18px 0 6px;font-size:14px">本机模型与训练环境</h3>
+    <div class="model-catalog-grid" id="rg-catalog"><span class="hint">正在扫描模型目录…</span></div>
     <div style="margin-top:10px"><button class="ghost" onclick="loadRegistry()">刷新</button></div>
     <pre id="rg-out" style="max-height:220px">-</pre>
   </section>
 <section hidden class="card" id="sec-robot">
     <h2>机器人设备 <span class="tag" id="rb-tag">加载中</span></h2>
-    <div class="hint">设备与执行契约</div>
     <div class="kv" id="rb-kv">
       <div>设备数<b id="rb-count">-</b></div>
       <div>适配器在线<b id="rb-online">-</b></div>
       <div>急停<b id="rb-estop">-</b></div>
-      <div>看门狗<b id="rb-wd">-</b></div>
     </div>
     <pre id="rb-out" style="max-height:180px;margin-top:10px">-</pre>
+    <div class="row" style="margin-top:12px;align-items:end">
+      <div><label for="rb-device">机器人</label><select id="rb-device"></select></div>
+      <div style="flex:2"><label for="rb-camera-url">相机 MJPEG 地址</label><input id="rb-camera-url" placeholder="http://host:port/video.mjpg"></div>
+      <div><label>&nbsp;</label><button type="button" class="ghost" onclick="saveRobotCamera()">保存地址</button></div>
+      <div><label>&nbsp;</label><button type="button" onclick="connectRobotCamera()">连接画面</button></div>
+    </div>
+    <div id="rb-camera-hint" class="hint" style="margin-top:8px"></div>
+    <img id="rb-camera-preview" alt="机器人相机画面" hidden style="display:block;max-width:100%;max-height:520px;margin-top:12px;border:1px solid var(--line);border-radius:10px;background:#111">
   </section>
 <section hidden class="card" id="sec-logs">
     <h2>日志索引 <span class="tag" id="log-tag">加载中</span></h2>
-    <div class="hint">训练 / 评测 / 任务日志（只索引路径与摘要）</div>
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="ghost" onclick="loadLogs('')">全部</button>
       <button class="ghost" onclick="loadLogs('train')">训练</button>
@@ -615,6 +872,16 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
     </div>
     <pre id="log-out" style="max-height:200px;margin-top:10px">-</pre>
   </section>
+<section hidden class="card" id="sec-research">
+  <h2>研究来源 <span class="tag" id="rs-count"></span></h2>
+  <div class="row" style="margin-top:12px">
+    <div><label for="rs-q">检索</label><input id="rs-q" placeholder="标题/备注/链接关键词"></div>
+    <div><label>&nbsp;</label><button type="button" onclick="loadResearch()">查询</button></div>
+    <div><label>&nbsp;</label><button type="button" class="ghost" onclick="openResearchReport()">生成报告</button></div>
+  </div>
+  <div id="rs-out" style="margin-top:12px"></div>
+</section>
+
       </div>
     </main>
   </div>
@@ -627,12 +894,26 @@ const PREFIX = location.pathname.startsWith("/ef/") ? "/ef" : "";
 const base = location.pathname.replace(/\/+$/, "");
 let timer = null;
 let lastModelDir = null;
+let lastBackend = "bc";
 let depId = null;
+let trainingCapabilities = null;
 
 async function j(path, opts) {
   const r = await fetch(base + path, opts);
   if (!r.ok) throw new Error(path + " -> " + r.status + " " + (await r.text()).slice(0,200));
   return r.json();
+}
+
+async function confirmedSubmit(action, payload, label) {
+  const options = {method:"POST", headers:{"content-type":"application/json"}};
+  const request = {...options, body:JSON.stringify({project_id:1, action, payload})};
+  const preview = await j("/api/agent/confirmations/preview", request);
+  const details = Object.entries(payload).map(([key,value]) => `${key}: ${value}`).join("\n");
+  if (!window.confirm(`确认${label}？\n\n${details}`)) {
+    await j(`/api/agent/confirmations/${encodeURIComponent(preview.confirmation_id)}/cancel`, request);
+    return null;
+  }
+  return j(`/api/agent/confirmations/${encodeURIComponent(preview.confirmation_id)}/confirm`, request);
 }
 
 function setStatus(t, cls) {
@@ -651,39 +932,141 @@ async function loadDatasets(q) {
     $("ds-count").textContent = ds.length + " 个";
     drawPreview();
     if (location.hash === "#sec-dataset") loadDatasetDetail();
+    if (activePage === "sec-vision") loadVisionDataset();
     setStatus("已连接 · 可选数据 " + ds.length + " 个");
   } catch (e) { setStatus("连接失败：" + e.message); }
 }
+
+async function loadTrainingCapabilities() {
+  const backendSelect = $("backend");
+  const trainButton = $("btn-train");
+  try {
+    const catalog = await j("/api/training/capabilities");
+    const backends = Array.isArray(catalog.backends) ? catalog.backends : [];
+    const previousBackend = backendSelect.value;
+    backendSelect.replaceChildren(...backends.map(item => {
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.available ? item.name : `${item.name} · 不可用`;
+      option.disabled = !item.available;
+      return option;
+    }));
+    const available = backends.filter(item => item.available);
+    const selected = available.some(item => item.id === previousBackend)
+      ? previousBackend : (available[0]?.id || "");
+    backendSelect.value = selected;
+    backendSelect.disabled = available.length === 0;
+    if (!available.length) {
+      backendSelect.replaceChildren(new Option("暂无可用训练后端", ""));
+    }
+
+    const openpi = backends.find(item => item.id === "openpi");
+    const configSelect = $("openpi-config");
+    const configs = (openpi?.configs || []).map(value => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = value;
+      return option;
+    });
+    configSelect.replaceChildren(...configs);
+    if (configs.some(option => option.value === "4items_rtc_v2_lora")) {
+      configSelect.value = "4items_rtc_v2_lora";
+    }
+    trainingCapabilities = catalog;
+    trainButton.disabled = available.length === 0;
+    syncTrainingBackend();
+  } catch (e) {
+    backendSelect.replaceChildren(new Option("能力目录加载失败", ""));
+    backendSelect.disabled = true;
+    trainButton.disabled = true;
+    setStatus("连接失败：" + e.message);
+  }
+}
+
+function syncTrainingBackend() {
+  const openpi = $("backend").value === "openpi";
+  const act = $("backend").value === "act";
+  const isTrainingPage = location.hash === "#sec-train";
+  document.querySelectorAll(".bc-only").forEach(el => { el.hidden = openpi || act; });
+  $("openpi-params").hidden = !openpi;
+  $("act-params").hidden = !act;
+  $("dataset-visualization").hidden = isTrainingPage;
+}
+
+$("backend").addEventListener("change", syncTrainingBackend);
+$("openpi-config").addEventListener("change", () => {
+  $("openpi-rank").value = $("openpi-config").value.endsWith("all_lora") ? "16" : "0";
+});
+syncTrainingBackend();
 
 async function startTraining() {
   const btn = $("btn-train");
   btn.disabled = true;
   try {
-    const body = {
-      dataset_version_id: parseInt($("ds").value, 10),
-      epochs: parseInt($("epochs").value, 10),
-      lr: parseFloat($("lr").value),
-      batch_size: parseInt(($("batch") || {}).value || "256", 10),
-      device: ($("device") ? $("device").value : "cpu"),
-    };
     $("job-log").textContent = "提交中…";
     const backend = $("backend") ? $("backend").value : "bc";
-    const r = backend === "openpi"
-      ? await j("/api/training/openpi", {
-          method: "POST", headers: {"content-type": "application/json"},
-          body: JSON.stringify({config: "debug_pi05", exp_name: "wb-" + Date.now(), gpus: 1})
-        })
-      : await j("/api/training/jobs", {
-      method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(body)
-    });
+    lastBackend = backend;
+    $("btn-retry-job").hidden = true;
+    let r;
+    if (backend === "openpi") {
+      const body = {
+        dataset_version_id: parseInt($("ds").value, 10),
+        config: $("openpi-config").value,
+        exp_name: "ef-" + Date.now(),
+        batch_size: parseInt($("openpi-batch").value, 10),
+        steps: parseInt($("openpi-steps").value, 10),
+        learning_rate: parseFloat($("openpi-lr").value),
+        lora_rank: parseInt($("openpi-rank").value, 10),
+        freeze_strategy: $("openpi-freeze").value,
+        gpus: parseInt($("openpi-gpus").value, 10),
+        gpu_memory_mb: parseInt($("openpi-memory").value, 10),
+        num_workers: parseInt($("openpi-workers").value, 10),
+      };
+      r = await confirmedSubmit(`training_submit:${backend}`, body, "π0.5 训练");
+    } else if (backend === "act") {
+      const body = {
+        dataset_version_id: parseInt($("ds").value, 10),
+        exp_name: "act-" + Date.now(),
+        batch_size: parseInt($("act-batch").value, 10),
+        steps: parseInt($("act-steps").value, 10),
+        learning_rate: parseFloat($("act-lr").value),
+        chunk_size: parseInt($("act-chunk").value, 10),
+        n_action_steps: parseInt($("act-action-steps").value, 10),
+        use_amp: $("act-amp").value === "true",
+        gpu_memory_mb: parseInt($("act-memory").value, 10),
+        gpu_index: $("act-gpu").value === "" ? null : parseInt($("act-gpu").value, 10),
+        num_workers: parseInt($("act-workers").value, 10),
+        pretrained_backbone: $("act-backbone").value === "true",
+      };
+      r = await confirmedSubmit(`training_submit:${backend}`, body, "ACT 训练");
+    } else {
+      const body = {
+        dataset_version_id: parseInt($("ds").value, 10),
+        epochs: parseInt($("epochs").value, 10),
+        lr: parseFloat($("lr").value),
+        batch_size: parseInt(($("batch") || {}).value || "256", 10),
+        optimizer: $("optimizer").value,
+        weight_decay: parseFloat($("weight-decay").value),
+        holdout_episodes: parseInt($("holdout-episodes").value, 10),
+        seed: parseInt($("seed").value, 10),
+        device: ($("device") ? $("device").value : "cpu"),
+        gpu_memory_mb: parseInt($("gpu-memory").value, 10),
+      };
+      r = await confirmedSubmit(`training_submit:${backend}`, body, "BC 训练");
+    }
+    if (!r) {
+      $("job-log").textContent = "已取消提交";
+      btn.disabled = false;
+      return;
+    }
     $("job-kv").style.display = "grid";
     $("k-id").textContent = r.job_id;
-    $("k-out").textContent = r.out_dir || "-";
-    lastModelDir = r.out_dir || null;
+    $("k-out").textContent = r.out_dir || r.exp_dir || "-";
+    lastModelDir = r.out_dir || r.exp_dir || null;
     $("btn-eval").disabled = true;
     $("btn-deploy").disabled = true;
-    $("job-tag").textContent = "运行中";
-    $("job-tag").className = "tag run";
+    $("k-status").textContent = r.status || "queued";
+    setTrainingStatus(r.status || "queued");
     poll(r.job_id);
   } catch (e) {
     $("job-log").textContent = "提交失败：" + e.message;
@@ -698,17 +1081,59 @@ function poll(id) {
       const d = await j("/api/jobs/" + id);
       $("k-status").textContent = d.status;
       $("job-log").textContent = d.log_tail || "无";
+      setTrainingStatus(d.status);
       if (["completed","failed","cancelled"].includes(d.status)) {
         clearInterval(timer);
-        $("job-tag").textContent = d.status === "completed" ? "完成" : d.status;
-        $("job-tag").className = "tag " + (d.status === "completed" ? "ok" : "bad");
         $("btn-train").disabled = false;
-        const modelReady = d.status === "completed" && Boolean(lastModelDir);
+        $("btn-cancel-job").hidden = true;
+        const modelReady = d.status === "completed" && ["bc", "openpi"].includes(lastBackend) && Boolean(lastModelDir);
         $("btn-eval").disabled = !modelReady;
         $("btn-deploy").disabled = !modelReady;
       }
     } catch (e) { /* 轮询失败不打断 */ }
   }, 2000);
+}
+
+function setTrainingStatus(status) {
+  const labels = {queued:"排队中", running:"运行中", completed:"完成", failed:"失败", cancelled:"已取消"};
+  const active = status === "queued" || status === "running";
+  $("job-tag").textContent = labels[status] || status || "未知";
+  $("job-tag").className = "tag " + (status === "completed" ? "ok" : active ? "run" : "bad");
+  $("btn-cancel-job").hidden = !active;
+  $("btn-cancel-job").disabled = !active;
+  $("btn-retry-job").hidden = status !== "failed";
+  $("btn-retry-job").disabled = false;
+}
+
+async function cancelTrainingJob() {
+  const id = Number($("k-id").textContent);
+  if (!Number.isInteger(id) || id < 1) return;
+  const btn = $("btn-cancel-job");
+  btn.disabled = true;
+  try {
+    await j("/api/jobs/" + id + "/cancel", {method:"POST"});
+    $("job-tag").textContent = "正在取消";
+    $("job-log").textContent = "已向任务队列发送取消请求，等待 Worker 收尾。";
+  } catch (e) {
+    $("job-log").textContent = "取消失败：" + e.message;
+    btn.disabled = false;
+  }
+}
+
+async function retryTrainingJob() {
+  const id = Number($("k-id").textContent);
+  if (!Number.isInteger(id) || id < 1) return;
+  const btn = $("btn-retry-job");
+  btn.disabled = true;
+  try {
+    const r = await j("/api/jobs/" + id + "/retry", {method:"POST"});
+    $("job-log").textContent = "已重新排队 · 第 " + r.attempt_no + " 次尝试";
+    setTrainingStatus(r.status);
+    poll(r.job_id);
+  } catch (e) {
+    $("job-log").textContent = "重试失败：" + e.message;
+    btn.disabled = false;
+  }
 }
 
 async function startEval() {
@@ -717,12 +1142,15 @@ async function startEval() {
   $("eval-tag").textContent = "运行中";
   $("eval-tag").className = "tag run";
   try {
-    const r = await j("/api/evaluations", {
-      method: "POST", headers: {"content-type": "application/json"},
-      body: JSON.stringify({model_dir: lastModelDir, dataset_version_id: parseInt($("ds").value,10)})
-    });
+    const payload = {model_dir: lastModelDir, dataset_version_id: parseInt($("ds").value,10)};
+    const r = await confirmedSubmit("evaluation_submit", payload, "模型评测");
+    if (!r) {
+      $("eval-tag").textContent = "已取消";
+      $("eval-tag").className = "tag";
+      return;
+    }
     let st = "";
-    for (let i = 0; i < 90; i++) {
+    for (let i = 0; i < 180; i++) {
       await new Promise(res => setTimeout(res, 1500));
       const jd = await j("/api/jobs/" + r.job_id);
       st = jd.status;
@@ -738,7 +1166,7 @@ async function startEval() {
     $("eval-tag").textContent = "完成";
     $("eval-tag").className = "tag ok";
     $("eval-detail").style.display = "block";
-    $("eval-detail").textContent = "留出 Episode: " + rep.holdout_episodes.join(", ") +
+    $("eval-detail").textContent = "评测 Episode: " + (rep.holdout_episodes || rep.episodes || []).join(", ") +
       "\n样本数: " + rep.samples + "\n逐 Episode:\n" +
       rep.per_episode.map(e => `  ep${e.episode_index}  samples=${e.samples}  mae=${e.mae}  rmse=${e.rmse}`).join("\n");
   } catch (e) {
@@ -755,15 +1183,30 @@ async function startDeploy() {
   if (!lastModelDir) return;
   $("btn-deploy").disabled = true;
   try {
-    const r = await j("/api/deployments", {
-      method: "POST", headers: {"content-type": "application/json"},
-      body: JSON.stringify({model_dir: lastModelDir})
-    });
+    const r = await confirmedSubmit("deployment_start", {model_dir: lastModelDir}, "模型部署");
+    if (!r) {
+      $("dep-tag").textContent = "已取消";
+      $("btn-deploy").disabled = false;
+      return;
+    }
     depId = r.deployment_id;
+    $("openpi-camera-inputs").hidden = r.model_family !== "openpi";
     $("dep-tag").textContent = "运行中";
     $("dep-tag").className = "tag ok";
     const predictUrl = r.predict_url ? new URL(r.predict_url, location.origin).href : r.endpoint;
     $("dep-ep").textContent = "推理地址：" + predictUrl;
+    try {
+      const lin = await j("/api/deployments/" + depId + "/lineage");
+      const model = lin.model || {};
+      const data = lin.dataset || {};
+      const train = lin.training || {};
+      const evalText = (lin.evaluations || []).length
+        ? " · 评测 " + lin.evaluations.map(e => "#" + e.job_id + " " + (e.report.mae ?? e.status)).join(" / ")
+        : "";
+      $("dep-ep").textContent += " · " + (model.model ? model.model + " " + model.version : "未登记模型版本") +
+        " · Run " + (lin.mlflow_run_id || "-") + " · 数据 " +
+        (data.dataset ? data.dataset + "/" + data.version : train.job_id ? "Job " + train.job_id : "-") + evalText;
+    } catch (e) { /* deployment remains usable if optional lineage lookup is unavailable */ }
     $("btn-predict").disabled = false;
     $("btn-stop").disabled = false;
   } catch (e) {
@@ -785,12 +1228,31 @@ async function callPredict() {
     return;
   }
   try {
+    const body = {state: st};
+    if (lastBackend === "openpi") {
+      const toDataUrl = file => new Promise((resolve, reject) => {
+        if (!file) return reject(new Error("请为三路相机选择图片"));
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("相机图片读取失败"));
+        reader.readAsDataURL(file);
+      });
+      body.images = {
+        cam_high: await toDataUrl($("pred-front").files[0]),
+        cam_left_wrist: await toDataUrl($("pred-left").files[0]),
+        cam_right_wrist: await toDataUrl($("pred-right").files[0]),
+      };
+      body.prompt = $("pred-prompt").value;
+    }
     const r = await j("/api/deployments/" + depId + "/predict", {
       method: "POST", headers: {"content-type": "application/json"},
-      body: JSON.stringify({state: st})
+      body: JSON.stringify(body)
     });
     $("pred-out").style.display = "block";
-    $("pred-out").textContent = "动作: [" + r.action.map(v => v.toFixed(4)).join(", ") + "]\n" +
+    const actionText = r.actions
+      ? "动作块首步: [" + r.actions[0].map(v => v.toFixed(4)).join(", ") + "] · " + r.horizon + " 步"
+      : "动作: [" + r.action.map(v => v.toFixed(4)).join(", ") + "]";
+    $("pred-out").textContent = actionText + "\n" +
       "模型版本: " + r.model_version + "\n推理耗时: " + r.latency_ms + " ms";
   } catch (e) {
     $("pred-out").style.display = "block";
@@ -873,7 +1335,11 @@ async function drawPreview() {
   }
 }
 
-document.getElementById("ds").onchange = () => { drawPreview(); loadDatasetDetail(); };
+document.getElementById("ds").onchange = () => {
+  drawPreview();
+  if (activePage === "sec-dataset") loadDatasetDetail();
+  if (activePage === "sec-vision") loadVisionDataset();
+};
 document.getElementById("ds-q").oninput = (e) => loadDatasets(e.target.value.trim());
 
 
@@ -885,12 +1351,23 @@ async function runBenchmark() {
   $("bm-tag").textContent = "运行中";
   $("bm-tag").className = "tag run";
   try {
-    const resp = await fetch(PREFIX + "/api/benchmarks/compare", {
-      method: "POST", headers: {"content-type": "application/json"},
-      body: JSON.stringify({task: task, seeds: seeds, policies: policies})
-    });
-    if (!resp.ok) throw new Error("compare -> " + resp.status);
-    const r = await resp.json();
+    const created = await confirmedSubmit("benchmark_submit", {task, seeds}, "仿真基准");
+    if (!created) {
+      $("bm-tag").textContent = "已取消";
+      $("bm-tag").className = "tag";
+      return;
+    }
+    let state = null;
+    for (let i = 0; i < 600; i++) {
+      state = await j("/api/benchmarks/jobs/" + created.job_id);
+      if (["completed", "failed", "cancelled"].includes(state.status)) break;
+      $("bm-tag").textContent = "Job #" + created.job_id + " · " + state.status;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    if (!state || state.status !== "completed" || !state.report) {
+      throw new Error(state?.error || "基准任务未完成");
+    }
+    const r = state.report;
     const pa = r.policies[policies[0]].success, pb = r.policies[policies[1]].success;
     $("bm-kv").style.display = "grid";
     $("bm-a").textContent = policies[0] + " " + pa.numerator + "/" + pa.denominator;
@@ -899,7 +1376,7 @@ async function runBenchmark() {
     $("bm-tag").className = "tag ok";
     const eps = r.episodes[policies[1]].filter(e => !e.success).length;
     $("bm-out").style.display = "block";
-    $("bm-out").textContent = "任务: " + r.task + "  种子: [" + r.seeds.join(",") + "]\n" +
+    $("bm-out").textContent = "任务: " + (r.task || state.task || task) + "  种子: [" + (r.seeds || state.seeds || seeds).join(",") + "]\n" +
       policies[0] + " 成功 " + pa.numerator + "/" + pa.denominator + "\n" +
       policies[1] + " 成功 " + pb.numerator + "/" + pb.denominator + "\n" +
       "失败 Episode 已落盘: " + eps + " 个";
@@ -914,29 +1391,42 @@ async function runBenchmark() {
 
 async function loadOverview() {
   try {
-    const [g, run] = await Promise.all([
-      fetch("api/gpu").then(r => r.json()),
-      fetch("api/running").then(r => (r.ok ? r.json() : [])).catch(() => []),
-    ]);
-
-    $("ov-gpu").textContent = g.total ?? "-";
-    $("ov-free").textContent = Math.round((g.free_mb_total || 0) / 1024) + " GiB";
-    $("ov-run").textContent = Array.isArray(run) ? run.length : 0;
-
-    const cards = (g.cards || []).map(c => {
-      const free = c.memory_total_mb - c.memory_used_mb;
-      const lease = c.lease ? "  job#" + c.lease.job_id : "";
-      return "GPU" + String(c.index).padEnd(2) + " " + String(c.state || "").padEnd(8) +
-             " 空闲 " + String(free).padStart(6) + " MiB  " +
-             String(c.utilization).padStart(3) + "%" + lease;
+    const data = await j("/api/overview");
+    const cards = $("ov-cards");
+    cards.replaceChildren();
+    (data.gpu?.cards || []).forEach(g => {
+      const total = Number(g.memory_total_mb) || 0;
+      const used = Number(g.memory_used_mb) || 0;
+      const free = Math.max(0, total - used);
+      const usage = total > 0 ? Math.min(100, Math.max(0, used / total * 100)) : 0;
+      const card = document.createElement("article");
+      card.className = "gpu-card";
+      const head = document.createElement("div"); head.className = "gpu-card-head";
+      const name = document.createElement("strong"); name.textContent = "GPU " + g.index;
+      const state = document.createElement("span"); state.className = "gpu-card-state";
+      state.textContent = ({free:"空闲",partial:"部分占用",busy:"繁忙",leased:"任务占用"})[g.state] || "未知";
+      head.append(name,state);
+      const memory = document.createElement("div"); memory.className = "gpu-card-memory";
+      const freeText = document.createElement("span"); freeText.textContent = (free / 1024).toFixed(1) + " GiB 可用";
+      const loadText = document.createElement("small"); loadText.textContent = (Number(g.utilization) || 0) + "% GPU";
+      memory.append(freeText,loadText);
+      const meter = document.createElement("div"); meter.className = "gpu-meter";
+      const fill = document.createElement("span"); fill.style.width = usage.toFixed(1) + "%"; meter.append(fill);
+      const capacity = document.createElement("small"); capacity.textContent = "显存 " + (used / 1024).toFixed(1) + " / " + (total / 1024).toFixed(1) + " GiB";
+      card.append(head,memory,meter,capacity);
+      cards.append(card);
     });
-    $("ov-cards").textContent = cards.length ? cards.join("\n") : "无";
 
-    const jobs = Array.isArray(run) ? run : [];
-    $("ov-jobs").textContent = jobs.length
-      ? jobs.map(j => "#" + j.id + " " + (j.kind || "") + " " + (j.name || "") +
-          (j.gpus ? "  " + j.gpus + " 卡" : "")).join("\n")
-      : "当前没有运行中的作业";
+    const jobs = $("ov-jobs"); jobs.replaceChildren();
+    (data.recent || []).forEach(job => {
+      const row = document.createElement("div"); row.className = "recent-job";
+      const name = document.createElement("strong"); name.textContent = "#" + job.id + "  " + (job.name || job.kind || "任务");
+      const status = document.createElement("span");
+      status.textContent = ({queued:"排队中",running:"运行中",completed:"完成",failed:"失败",cancelled:"已取消"})[job.status] || job.status || "未知";
+      const time = document.createElement("time"); time.textContent = job.created_at || "";
+      row.append(name,status,time); jobs.append(row);
+    });
+    if (!jobs.childElementCount) { const empty=document.createElement("div"); empty.className="recent-empty"; empty.textContent="暂无任务"; jobs.append(empty); }
 
     $("ov-tag").textContent = "实时";
     $("ov-tag").className = "tag ok";
@@ -965,6 +1455,35 @@ async function loadDatasetDetail() {
       ? eps.map(e => "#" + e.index + "  frames=" + (e.frames ?? "-") +
           "  " + (e.duration_s ?? "-") + "s  " + (e.task || "-")).join("\n")
       : "（该版本无 Episode 记录）";
+    const cameras = d.cameras || [];
+    const cameraSelect = $("dd-camera");
+    cameraSelect.replaceChildren();
+    cameras.forEach(camera => {
+      const option = document.createElement("option");
+      option.value = camera.key;
+      option.textContent = camera.key + (camera.shape ? " · " + camera.shape[1] + "×" + camera.shape[0] : "");
+      cameraSelect.append(option);
+    });
+    $("dd-cameras").textContent = cameras.length ? cameras.map(c => c.key).join(" / ") : "无";
+    const episodeSelect = $("dd-video-episode");
+    episodeSelect.replaceChildren();
+    const videoEpisodes = eps.length ? eps : (d.episodes ? [{index: 0, frames: null}] : []);
+    videoEpisodes.forEach(episode => {
+      const option = document.createElement("option");
+      option.value = episode.index;
+      option.textContent = "Episode " + episode.index + (episode.frames ? " · " + episode.frames + " 帧" : "");
+      episodeSelect.append(option);
+    });
+    if (cameras.length && videoEpisodes.length) {
+      cameraSelect.value = cameras.some(c => c.key === "front") ? "front" : cameras[0].key;
+      $("dd-video").hidden = false;
+      $("dd-video-hint").textContent = "已加载所选 Episode 视频";
+      loadDatasetVideo();
+    } else {
+      $("dd-video").hidden = true;
+      $("dd-video").removeAttribute("src");
+      $("dd-video-hint").textContent = cameras.length ? "该版本暂无可播放的 Episode 视频" : "该版本没有相机视频";
+    }
     try {
       const mf = await j("/api/datasets/" + vid + "/manifest");
       $("dd-manifest").textContent = Object.keys(mf).slice(0, 12)
@@ -978,6 +1497,33 @@ async function loadDatasetDetail() {
   }
 }
 
+let datasetVideoRequest = 0;
+async function loadDatasetVideo() {
+  const vid = parseInt($("ds").value, 10);
+  const camera = $("dd-camera").value;
+  const episode = $("dd-video-episode").value;
+  if (!vid || !camera || episode === "") return;
+  const requestId = ++datasetVideoRequest;
+  const query = new URLSearchParams({camera, episode});
+  try {
+    const info = await j("/api/datasets/" + vid + "/video-info?" + query.toString());
+    if (requestId !== datasetVideoRequest) return;
+    let src = base + "/api/datasets/" + vid + "/video?" + query.toString();
+    if (info.segmented) src += "#t=" + Number(info.from_timestamp).toFixed(3) + "," +
+      Number(info.to_timestamp).toFixed(3);
+    $("dd-video").src = src;
+    $("dd-video").load();
+    $("dd-video-hint").textContent = "Episode " + episode + " · " + camera +
+      (info.segmented ? " · " + Number(info.from_timestamp).toFixed(1) + "–" +
+        Number(info.to_timestamp).toFixed(1) + " 秒" : "");
+  } catch (e) {
+    if (requestId === datasetVideoRequest) $("dd-video-hint").textContent = "视频不可用：" + e.message;
+  }
+}
+
+$("dd-camera").onchange = loadDatasetVideo;
+$("dd-video-episode").onchange = loadDatasetVideo;
+
 
 async function runProcessing() {
   const vid = parseInt($("ds").value, 10);
@@ -986,12 +1532,28 @@ async function runProcessing() {
   $("pr-tag").textContent = "运行中";
   $("pr-tag").className = "tag run";
   try {
-    const r = await fetch(PREFIX + "/workbench/api/processing/jobs", {
-      method: "POST", headers: {"content-type": "application/json"},
-      body: JSON.stringify({dataset_version_id: vid, max_episodes: n})
-    });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const d = await r.json();
+    const created = await confirmedSubmit(
+      "processing_quality_submit",
+      {dataset_version_id: vid, max_episodes: n},
+      "数据质检"
+    );
+    if (!created) {
+      $("pr-tag").textContent = "已取消";
+      $("pr-tag").className = "tag";
+      return;
+    }
+    let state = null;
+    for (let i = 0; i < 900; i++) {
+      state = await j("/api/processing/jobs/" + created.job_id);
+      if (["completed", "failed", "cancelled"].includes(state.status)) break;
+      $("pr-tag").textContent = "Job #" + created.job_id + " · " +
+        (state.status === "queued" ? "排队中" : "运行中");
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    if (!state || state.status !== "completed" || !state.report) {
+      throw new Error(state?.error || "质检任务未完成");
+    }
+    const d = state.report;
     $("pr-kv").style.display = "grid";
     $("pr-eps").textContent = d.episodes_checked;
     $("pr-find").textContent = d.findings;
@@ -1017,7 +1579,7 @@ async function runProcessing() {
     }
     $("pr-out").style.display = "block";
     $("pr-out").textContent = lines.join("\n");
-    $("pr-tag").textContent = "完成";
+    $("pr-tag").textContent = "完成 · Job #" + created.job_id;
     $("pr-tag").className = "tag ok";
   } catch (e) {
     $("pr-tag").textContent = "失败";
@@ -1028,43 +1590,209 @@ async function runProcessing() {
 }
 
 
+let experimentRuns = [];
+let selectedExperimentRuns = new Set();
+let activeExperimentRun = null;
+const experimentPalette = ["#14775c", "#3976c6", "#c77916", "#bb4b57", "#7757c7"];
+
+function visibleExperimentRuns() {
+  const query = $("ex-search").value.trim().toLowerCase();
+  const status = $("ex-status").value;
+  return experimentRuns.filter(run => {
+    if (status && run.status !== status) return false;
+    return !query || JSON.stringify(run).toLowerCase().includes(query);
+  });
+}
+
+function selectedExperimentRunRows() {
+  return experimentRuns.filter(run => selectedExperimentRuns.has(run.run_id || String(run.job_id)));
+}
+
+function renderExperimentTable() {
+  const rows = visibleExperimentRuns();
+  const body = $("ex-body");
+  body.replaceChildren();
+  $("ex-empty").hidden = rows.length !== 0;
+  rows.forEach(run => {
+    const key = run.run_id || String(run.job_id);
+    const tr = document.createElement("tr");
+    tr.classList.toggle("selected", key === activeExperimentRun);
+    const selectCell = document.createElement("td");
+    const checkbox = document.createElement("input"); checkbox.type = "checkbox";
+    checkbox.checked = selectedExperimentRuns.has(key);
+    checkbox.setAttribute("aria-label", "选择 Run " + run.job_id);
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) selectedExperimentRuns.add(key);
+      else selectedExperimentRuns.delete(key);
+      renderExperimentPanels();
+    });
+    selectCell.append(checkbox);
+    const runCell = document.createElement("td"); runCell.className = "experiment-run";
+    const runName = document.createElement("strong"); runName.textContent = "#" + run.job_id + " · " + (run.name || run.kind || "Run");
+    const runId = document.createElement("small"); runId.textContent = (run.run_id || "").slice(0, 12);
+    runCell.append(runName, runId);
+    const statusCell = document.createElement("td");
+    const badge = document.createElement("span"); badge.className = "tag " + (run.status === "completed" ? "ok" : run.status === "running" ? "run" : "bad");
+    badge.textContent = ({completed:"完成",running:"运行中",failed:"失败",cancelled:"已取消"})[run.status] || run.status || "未知";
+    statusCell.append(badge);
+    const datasetCell = document.createElement("td"); datasetCell.textContent = run.params?.dataset_name || "-";
+    const metricCells = ["train_loss", "val_loss", "val_mae", "val_rmse"].map(key => {
+      const cell = document.createElement("td");
+      const value = run.metrics?.[key]; cell.textContent = Number.isFinite(Number(value)) ? Number(value).toFixed(5) : "-";
+      return cell;
+    });
+    const modelCell = document.createElement("td"); modelCell.textContent = run.model_version || "-";
+    tr.append(selectCell, runCell, statusCell, datasetCell, ...metricCells, modelCell);
+    tr.addEventListener("click", event => {
+      if (event.target.closest("input,button,a")) return;
+      activeExperimentRun = key;
+      renderExperimentTable();
+      renderExperimentPanels();
+    });
+    body.append(tr);
+  });
+  $("ex-select-all").checked = rows.length > 0 && rows.every(run => selectedExperimentRuns.has(run.run_id || String(run.job_id)));
+  $("ex-summary").textContent = rows.length + " / " + experimentRuns.length + " Runs · " + (window.experimentMlflowOnline ? "MLflow 在线" : "MLflow 离线");
+  renderExperimentPanels();
+}
+
+function renderExperimentDetails() {
+  const run = experimentRuns.find(x => (x.run_id || String(x.job_id)) === activeExperimentRun) ||
+    experimentRuns.find(x => (x.run_id || String(x.job_id)) === (selectedExperimentRuns.values().next().value));
+  const one = selectedExperimentRunRows();
+  $("ex-copy-btn").disabled = !(run || one.length === 1);
+  if (!run) { $("ex-detail").textContent = "-"; return; }
+  activeExperimentRun = run.run_id || String(run.job_id);
+  $("ex-detail").textContent = JSON.stringify({
+    job_id: run.job_id, status: run.status, started_at: run.started_at,
+    run_id: run.run_id, model_version: run.model_version, sha256: run.sha256,
+    params: run.params || {}, metrics: run.metrics || {},
+  }, null, 2);
+}
+
+function renderExperimentChart() {
+  const chosen = selectedExperimentRunRows();
+  const runs = chosen.length ? chosen : experimentRuns.filter(x => (x.run_id || String(x.job_id)) === activeExperimentRun).slice(0, 1);
+  const metric = $("ex-metric").value;
+  const series = runs.map(run => {
+    let points = run.history?.[metric] || [];
+    if (!points.length && run.metrics?.[metric] !== undefined) points = [{step:0,value:run.metrics[metric]}];
+    return {run, points};
+  }).filter(x => x.points.length);
+  const svg = $("ex-chart"), ns = "http://www.w3.org/2000/svg";
+  svg.replaceChildren();
+  const legend = $("ex-chart-legend"); legend.replaceChildren();
+  if (!series.length) {
+    const label = document.createElementNS(ns, "text"); label.setAttribute("x", "28"); label.setAttribute("y", "40");
+    label.setAttribute("fill", "currentColor"); label.textContent = "所选 Run 暂无该指标"; svg.append(label); return;
+  }
+  const all = series.flatMap(s => s.points.map(p => Number(p.value))).filter(Number.isFinite);
+  let min = Math.min(...all), max = Math.max(...all);
+  if (max === min) { max += 0.5; min -= 0.5; }
+  const width = 760, height = 230, left = 48, right = 16, top = 18, bottom = 30;
+  const xAt = step => {
+    const values = series.flatMap(s => s.points.map(p => Number(p.step)));
+    const minStep = Math.min(...values), maxStep = Math.max(...values);
+    return minStep === maxStep ? (left + width - right) / 2 : left + (step - minStep) / (maxStep - minStep) * (width - left - right);
+  };
+  const yAt = value => top + (max - value) / (max - min) * (height - top - bottom);
+  for (let i = 0; i <= 4; i++) {
+    const y = top + i * (height - top - bottom) / 4;
+    const line = document.createElementNS(ns, "line"); line.setAttribute("x1", String(left)); line.setAttribute("x2", String(width-right)); line.setAttribute("y1", String(y)); line.setAttribute("y2", String(y)); line.setAttribute("stroke", "var(--line)"); svg.append(line);
+    const text = document.createElementNS(ns, "text"); text.setAttribute("x", "6"); text.setAttribute("y", String(y+4)); text.setAttribute("fill", "var(--secondary)"); text.setAttribute("font-size", "10"); text.textContent = (max - i * (max-min)/4).toFixed(4); svg.append(text);
+  }
+  series.forEach((item, index) => {
+    const color = experimentPalette[index % experimentPalette.length];
+    const points = item.points.map(p => `${xAt(Number(p.step))},${yAt(Number(p.value))}`).join(" ");
+    if (item.points.length > 1) {
+      const poly = document.createElementNS(ns, "polyline"); poly.setAttribute("points", points); poly.setAttribute("fill", "none"); poly.setAttribute("stroke", color); poly.setAttribute("stroke-width", "2"); svg.append(poly);
+    }
+    item.points.forEach(p => {
+      const circle = document.createElementNS(ns, "circle"); circle.setAttribute("cx", String(xAt(Number(p.step)))); circle.setAttribute("cy", String(yAt(Number(p.value)))); circle.setAttribute("r", "3.5"); circle.setAttribute("fill", color); svg.append(circle);
+    });
+    const entry = document.createElement("span"), dot = document.createElement("i"); dot.style.background = color; entry.append(dot, document.createTextNode("#" + item.run.job_id)); legend.append(entry);
+  });
+  const title = document.createElementNS(ns, "title"); title.textContent = metric + " · " + series.length + " Runs"; svg.prepend(title);
+}
+
+function renderExperimentComparison() {
+  const container = $("ex-compare"), rows = selectedExperimentRunRows();
+  $("ex-compare-btn").disabled = rows.length < 2;
+  container.replaceChildren();
+  if (rows.length < 2) return;
+  const key = $("ex-metric").value;
+  const values = rows.map(run => ({run, value: Number(run.metrics?.[key])})).filter(x => Number.isFinite(x.value));
+  if (!values.length) { container.textContent = "所选 Run 没有该指标"; return; }
+  const max = Math.max(...values.map(x => Math.abs(x.value))) || 1;
+  values.forEach(({run,value}) => {
+    const row = document.createElement("div"); row.className = "experiment-compare-row";
+    const name = document.createElement("span"); name.textContent = "#" + run.job_id;
+    const num = document.createElement("b"); num.textContent = value.toFixed(5);
+    const bar = document.createElement("div"); bar.className = "experiment-bar";
+    const fill = document.createElement("span"); fill.style.width = Math.max(2,Math.abs(value)/max*100) + "%"; bar.append(fill);
+    row.append(name,num,bar); container.append(row);
+  });
+}
+
+function renderExperimentPanels() {
+  renderExperimentDetails(); renderExperimentChart(); renderExperimentComparison();
+}
+
+async function copyExperimentParams() {
+  const selected = selectedExperimentRunRows();
+  const run = selected.length === 1 ? selected[0] : experimentRuns.find(x => (x.run_id || String(x.job_id)) === activeExperimentRun);
+  if (!run) return;
+  const p = run.params || {};
+  $("backend").value = "bc"; setBackendControls();
+  const assign = (id, value) => { if (value !== undefined && $(id)) $(id).value = value; };
+  assign("epochs", p.epochs); assign("batch", p.batch_size); assign("lr", p.learning_rate);
+  assign("optimizer", p.optimizer); assign("weight-decay", p.weight_decay);
+  assign("holdout-episodes", p.holdout_episodes); assign("seed", p.seed);
+  assign("device", p.device); assign("gpu-memory", p.gpu_memory_mb || 8192);
+  const datasetId = String(p.dataset_version_id || "");
+  if (datasetId && ![...$("ds").options].some(option => option.value === datasetId) && p.dataset_name) {
+    $("ds-q").value = p.dataset_name;
+    await loadDatasets(p.dataset_name);
+  }
+  if (datasetId && [...$("ds").options].some(option => option.value === datasetId)) $("ds").value = datasetId;
+  drawPreview(); loadDatasetDetail(); switchPage("sec-train");
+}
+
 async function loadExperiments() {
-  $("ex-tag").textContent = "加载中";
-  $("ex-tag").className = "tag";
+  $("ex-tag").textContent = "加载中"; $("ex-tag").className = "tag";
   try {
-    const r = await fetch("/workbench/api/experiments?limit=15");
+    const r = await fetch("/workbench/api/experiments?limit=50");
     if (!r.ok) throw new Error("HTTP " + r.status);
     const d = await r.json();
-    const lines = [];
-    lines.push("MLflow: " + (d.mlflow_available ? "在线" : "离线（仅显示平台记录）"));
-    lines.push("");
-    if (!d.runs.length) {
-      lines.push("暂无实验记录");
-    } else {
-      d.runs.forEach(x => {
-        const params = Object.entries(x.params || {})
-          .filter(([, v]) => v !== null && v !== undefined)
-          .map(([k, v]) => k + "=" + v).join(" ");
-        lines.push("#" + x.job_id + "  " + (x.kind || "-") + "  [" + x.status + "]  " +
-                   (x.started_at || "-"));
-        lines.push("    run: " + (x.run_id || "-").slice(0, 16) +
-                   "   model: " + (x.model_version || "-") +
-                   (params ? "   " + params : ""));
-        if (x.metrics) {
-          lines.push("    metrics: " + Object.entries(x.metrics)
-            .map(([k, v]) => k + "=" + v).join("  "));
-        }
-      });
+    experimentRuns = d.runs || [];
+    window.experimentMlflowOnline = Boolean(d.mlflow_available);
+    const available = new Set(experimentRuns.map(x => x.run_id || String(x.job_id)));
+    selectedExperimentRuns = new Set([...selectedExperimentRuns].filter(id => available.has(id)));
+    if (!activeExperimentRun || !available.has(activeExperimentRun)) {
+      const first = experimentRuns[0];
+      activeExperimentRun = first ? (first.run_id || String(first.job_id)) : null;
     }
-    $("ex-out").textContent = lines.join("\n");
-    $("ex-tag").textContent = d.count + " 条";
-    $("ex-tag").className = "tag ok";
+    $("ex-tag").textContent = d.count + " 条"; $("ex-tag").className = "tag ok";
+    renderExperimentTable();
   } catch (e) {
-    $("ex-tag").textContent = "失败";
-    $("ex-tag").className = "tag bad";
-    $("ex-out").textContent = "加载失败：" + e.message;
+    $("ex-tag").textContent = "失败"; $("ex-tag").className = "tag bad";
+    $("ex-summary").textContent = "加载失败：" + e.message;
   }
 }
+
+$("ex-search").addEventListener("input", renderExperimentTable);
+$("ex-status").addEventListener("change", renderExperimentTable);
+$("ex-metric").addEventListener("change", renderExperimentPanels);
+$("ex-compare-btn").addEventListener("click", renderExperimentComparison);
+$("ex-copy-btn").addEventListener("click", copyExperimentParams);
+$("ex-select-all").addEventListener("change", event => {
+  visibleExperimentRuns().forEach(run => {
+    const key = run.run_id || String(run.job_id);
+    if (event.target.checked) selectedExperimentRuns.add(key);
+    else selectedExperimentRuns.delete(key);
+  });
+  renderExperimentTable();
+});
 
 
 async function loadGpu() {
@@ -1102,11 +1830,94 @@ async function loadGpu() {
 }
 
 
+function renderModelCatalog(models) {
+  const grid = $("rg-catalog");
+  grid.replaceChildren();
+  if (!models.length) {
+    grid.textContent = "没有扫描到本机模型环境";
+    return;
+  }
+  models.forEach(model => {
+    const card = document.createElement("article");
+    card.className = "model-catalog-card";
+    const head = document.createElement("div");
+    head.className = "model-catalog-head";
+    const title = document.createElement("strong");
+    title.textContent = model.name;
+    const ready = document.createElement("span");
+    ready.className = "tag";
+    const readiness = {
+      "workbench-train": "训练已接入",
+      "assets-incomplete": "资产未齐",
+      "not-found": "本机未找到"
+    };
+    ready.textContent = readiness[model.training_adapter] || "待接训练器";
+    if (model.training_adapter === "workbench-train") ready.classList.add("ok");
+    head.append(title, ready);
+    card.append(head);
+    const family = document.createElement("p");
+    family.textContent = model.family || "机器人模型";
+    card.append(family);
+    const statuses = document.createElement("div");
+    statuses.className = "model-catalog-status";
+    [["代码", model.repo_exists], ["Python 环境", model.environment_exists],
+      ["权重", model.weight_paths.some(item => item.exists)]].forEach(([label, ok]) => {
+      const tag = document.createElement("span");
+      tag.className = "tag" + (ok ? " ok" : "");
+      tag.textContent = label + (ok ? " 已找到" : " 未找到");
+      statuses.append(tag);
+    });
+    card.append(statuses);
+    if (model.status_note) {
+      const note = document.createElement("p");
+      note.className = "hint";
+      note.textContent = model.status_note;
+      card.append(note);
+    }
+    if (model.upstream_url || model.model_url) {
+      const links = document.createElement("div");
+      links.className = "model-catalog-links";
+      [["项目", model.upstream_url], ["模型", model.model_url]].filter(([, url]) => url).forEach(([label, url]) => {
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = label;
+        links.append(link);
+      });
+      card.append(links);
+    }
+    const repo = document.createElement("code");
+    repo.textContent = model.repo_path;
+    card.append(repo);
+    const python = document.createElement("code");
+    python.textContent = model.python_path;
+    card.append(python);
+    model.weight_paths.filter(item => item.exists).forEach(item => {
+      const weights = document.createElement("code");
+      weights.textContent = "权重 · " + item.path;
+      card.append(weights);
+    });
+    (model.partial_weight_paths || []).forEach(item => {
+      const weights = document.createElement("code");
+      weights.textContent = "未完成 · " + item.path + " · " + (item.size_bytes / 1048576).toFixed(0) + " MiB";
+      card.append(weights);
+    });
+    (model.data_paths || []).forEach(item => {
+      const data = document.createElement("code");
+      data.textContent = "数据 · " + item.path + (item.exists ? " · 已找到" : " · 未找到");
+      card.append(data);
+    });
+    grid.append(card);
+  });
+}
+
 async function loadRegistry() {
   try {
     const r = await fetch("/workbench/api/registry");
     if (!r.ok) throw new Error("HTTP " + r.status);
     const d = await r.json();
+    renderModelCatalog(d.available_models || []);
     const lines = [];
     let nver = 0;
     d.models.forEach(m => {
@@ -1146,7 +1957,6 @@ async function loadRobots() {
     $("rb-count").textContent = d.count;
     $("rb-online").textContent = d.adapter.online ? "是" : "否";
     $("rb-estop").textContent = d.adapter.estopped ? "已触发" : "正常";
-    $("rb-wd").textContent = d.adapter.watchdog_ok ? "正常" : "超时";
     const lines = [];
     if (d.devices.length) {
       lines.push("设备台账:");
@@ -1156,21 +1966,84 @@ async function loadRobots() {
     } else {
       lines.push("设备台账: （空）");
     }
-    const s = d.safety;
-    lines.push("");
-    lines.push("安全约束: DoF=" + s.dof + "  限位=±" + s.joint_limit +
-               " rad  单步≤" + s.max_step_delta + " rad  看门狗=" + s.watchdog_timeout_s + "s");
     lines.push("累计执行动作: " + d.adapter.action_count);
-    if (s.recent_rejected.length) {
-      lines.push("最近拒绝: " + s.recent_rejected.slice(-3).join(" | "));
+    if (d.adapter.recent_rejected.length) {
+      lines.push("最近拒绝: " + d.adapter.recent_rejected.slice(-3).join(" | "));
     }
     $("rb-out").textContent = lines.join("\n");
+    const selected = $("rb-device").value;
+    const picker = $("rb-device"); picker.replaceChildren();
+    d.devices.forEach(device => {
+      const option = document.createElement("option");
+      option.value = device.id;
+      option.textContent = device.name + " · " + device.robot_spec;
+      option.dataset.cameraUrl = device.camera_url || "";
+      picker.append(option);
+    });
+    if ([...picker.options].some(option => option.value === selected)) picker.value = selected;
+    const syncCamera = () => {
+      const option = picker.selectedOptions[0];
+      $("rb-camera-url").value = option ? option.dataset.cameraUrl : "";
+      if (option && option.dataset.cameraUrl && !$("sec-robot").hidden) {
+        connectRobotCamera();
+      } else if (option && option.dataset.cameraUrl) {
+        disconnectRobotCamera();
+      } else {
+        disconnectRobotCamera();
+        $("rb-camera-hint").textContent = "未配置相机地址";
+      }
+    };
+    picker.onchange = syncCamera;
+    if (!selected || picker.value !== selected) picker.selectedIndex = 0;
+    syncCamera();
     $("rb-tag").textContent = "实时";
     $("rb-tag").className = "tag ok";
   } catch (e) {
     $("rb-tag").textContent = "失败";
     $("rb-tag").className = "tag bad";
     $("rb-out").textContent = "加载失败：" + e.message;
+  }
+}
+
+async function saveRobotCamera() {
+  const deviceId = $("rb-device").value;
+  if (!deviceId) return;
+  try {
+    const r = await fetch("/workbench/api/robots/" + deviceId + "/camera", {
+      method: "POST", headers: {"content-type":"application/json"},
+      body: JSON.stringify({camera_url: $("rb-camera-url").value.trim()})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || "保存失败");
+    const option = $("rb-device").selectedOptions[0];
+    option.dataset.cameraUrl = d.camera_url || "";
+    $("rb-camera-hint").textContent = d.camera_url ? "相机地址已保存。" : "相机地址已清除。";
+    if (d.camera_url && !$("sec-robot").hidden) connectRobotCamera();
+  } catch (e) { $("rb-camera-hint").textContent = "保存失败：" + e.message; }
+}
+
+function connectRobotCamera() {
+  const url = $("rb-camera-url").value.trim();
+  const img = $("rb-camera-preview");
+  if ($("sec-robot").hidden) { disconnectRobotCamera(); return; }
+  if (!url) { $("rb-camera-hint").textContent = "缺少相机地址"; return; }
+  if (!/^https?:\/\//i.test(url)) { $("rb-camera-hint").textContent = "仅支持 HTTP/HTTPS MJPEG"; return; }
+  img.onload = () => { $("rb-camera-hint").textContent = "相机已连接 · " + $("rb-device").selectedOptions[0].textContent; };
+  img.onerror = () => { img.hidden = true; $("rb-camera-hint").textContent = "相机连接失败"; };
+  img.src = url + (url.includes("?") ? "&" : "?") + "_=" + Date.now();
+  img.hidden = false;
+  $("rb-camera-hint").textContent = "正在连接相机…";
+}
+
+function disconnectRobotCamera() {
+  const img = $("rb-camera-preview");
+  if (!img) return;
+  img.onload = null;
+  img.onerror = null;
+  img.removeAttribute("src");
+  img.hidden = true;
+  if ($("sec-robot").hidden) {
+    $("rb-camera-hint").textContent = "预览已暂停";
   }
 }
 
@@ -1200,21 +2073,1203 @@ async function loadLogs(kind) {
   }
 }
 
+let visionDataUrl = "";
+let visionParentRunId = null;
+const visionSessionId=sessionStorage.getItem("vision-runtime-session")||(crypto.randomUUID?crypto.randomUUID():"vision-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2));
+sessionStorage.setItem("vision-runtime-session",visionSessionId);
+let visionRuntimeUsed=false;
+function releaseVisionSession(){
+  if(!visionRuntimeUsed)return;
+  visionRuntimeUsed=false;
+  fetch(PREFIX+"/workbench/api/vision/runtime/release?session_id="+encodeURIComponent(visionSessionId),{method:"POST",keepalive:true}).catch(()=>{});
+}
+window.addEventListener("pagehide",releaseVisionSession);
+let visionSavedBox = null;
+let visionInstanceLabel="object";
+let visionImageName = "image.png";
+let visionSource = null;
+let visionImage = null;
+let visionMaskImage = null;
+let visionPoints = [];
+let visionBoxes = [];
+let visionTruthBoxes = [];
+let visionGroundTruthSource = null;
+let visionPendingBox = null;
+let visionBoxMode = false;
+let visionAnnotationRun = null;
+let visionAnnotationRows = [];
+let visionMode = 1;
+let visionEpisodeIndices = [];
+let floraReady = false;
+let floraActiveJobId = null;
+let floraPollTimer = null;
+let floraReviewJobId = null;
+let sam2TrackPollJobId = null;
+let sam2BatchPollId = null;
+let visionGroundBatchPollId = null;
+let visionGroundBatchReady = false;
+let sam2TrackResultVersion = null;
+let sam2TrackCorrectionContext = null;
+
+function drawVisionCanvas() {
+  const canvas = $("vision-canvas");
+  if (!visionImage || !canvas.width) return;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(visionImage, 0, 0, canvas.width, canvas.height);
+  if ($("vision-mask-visible").checked && visionMaskImage?.complete && visionMaskImage.naturalWidth) {
+    const layer = document.createElement("canvas");
+    layer.width = canvas.width; layer.height = canvas.height;
+    const mctx = layer.getContext("2d", {willReadFrequently:true});
+    mctx.drawImage(visionMaskImage, 0, 0, canvas.width, canvas.height);
+    const pixels = mctx.getImageData(0, 0, layer.width, layer.height);
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      const a = pixels.data[i];
+      pixels.data[i] = 49; pixels.data[i + 1] = 130; pixels.data[i + 2] = 206; pixels.data[i + 3] = a;
+    }
+    mctx.putImageData(pixels, 0, 0);
+    ctx.globalAlpha = Number($("vision-mask-opacity").value); ctx.drawImage(layer, 0, 0); ctx.globalAlpha = 1;
+  }
+  const radius = Math.max(6, Math.min(canvas.width, canvas.height) / 100);
+  visionPoints.forEach(p => {
+    ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = p.label ? "#16a36a" : "#e5484d"; ctx.fill();
+    ctx.lineWidth = Math.max(2, radius / 3); ctx.strokeStyle = "white"; ctx.stroke();
+  });
+  visionBoxes.forEach((detection, index) => {
+    const b = detection.box;
+    ctx.strokeStyle = index % 2 ? "#e18b25" : "#8a5cf6";
+    ctx.lineWidth = Math.max(3, radius / 2);
+    ctx.strokeRect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1);
+    ctx.font = `${Math.max(14, radius * 1.8)}px sans-serif`;
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.fillText(detection.label, b.x1 + 3, Math.max(16, b.y1 - 5));
+  });
+  visionTruthBoxes.forEach(item => {
+    const b = item.box;
+    ctx.save(); ctx.strokeStyle = "#10a37f"; ctx.lineWidth = Math.max(3, radius / 2);
+    ctx.setLineDash([8, 5]); ctx.strokeRect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1);
+    ctx.setLineDash([]); ctx.font = `${Math.max(14, radius * 1.8)}px sans-serif`;
+    ctx.fillStyle = "#08775c"; ctx.fillText("GT " + item.label, b.x1 + 3, Math.max(16, b.y1 - 5)); ctx.restore();
+  });
+  if (visionPendingBox) {
+    const b = visionPendingBox; ctx.save(); ctx.strokeStyle = "#10a37f"; ctx.lineWidth = Math.max(3, radius / 2);
+    ctx.setLineDash([5, 4]); ctx.strokeRect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1); ctx.restore();
+  }
+}
+
+function setVisionMode(label) {
+  visionMode = label;
+  $("vision-positive").classList.toggle("active", label === 1);
+  $("vision-negative").classList.toggle("active", label === 0);
+}
+
+async function loadVision() {
+  try {
+    const r = await fetch(PREFIX + "/workbench/api/vision/health");
+    const d = await r.json();
+    $("vision-status").textContent = d.grounding_ready ? "SAM2 · Florence-2" : d.ready ? "SAM2" : "安装中";
+    $("vision-status").className = "tag " + (d.ready ? "ok" : "warn");
+    visionGroundBatchReady = Boolean(d.ground_batch_ready);
+    $("vision-ground-run").disabled = !d.grounding_ready;
+    $("vision-ground-batch-run").disabled = !visionGroundBatchReady;
+  } catch (e) {
+    $("vision-status").textContent = "离线"; $("vision-status").className = "tag bad";
+    visionGroundBatchReady = false;
+    $("vision-ground-run").disabled = true;
+    $("vision-ground-batch-run").disabled = true;
+  }
+  try {
+    const d = await j("/api/vision/flora/status");
+    floraReady = Boolean(d.ready);
+    $("vision-flora-status").textContent = floraReady ? "FLORA 就绪" : "FLORA " + d.state;
+    $("vision-flora-status").className = "tag " + (floraReady ? "ok" : "warn");
+    $("vision-flora-run").disabled = !floraReady;
+    if (floraReady && !floraActiveJobId) {
+      const saved = sessionStorage.getItem("embodiedflow-flora-job");
+      if (saved) { floraActiveJobId = Number(saved); pollFloraJob(floraActiveJobId); }
+    }
+  } catch (e) {
+    floraReady = false; $("vision-flora-status").textContent = "FLORA 离线";
+    $("vision-flora-status").className = "tag bad"; $("vision-flora-run").disabled = true;
+  }
+  if (!visionGroundBatchPollId) restoreVisionGroundBatch();
+}
+
+async function loadVisionDataset() {
+  const vid = parseInt($("ds").value, 10);
+  loadMaskHistory(vid);
+  loadFloraHistory(vid);
+  visionSource = null; $("vision-track").disabled = true;
+  updateVisionBatchButton();
+  if (sam2TrackResultVersion && sam2TrackResultVersion !== vid) {
+    $("vision-track-results").replaceChildren(); sam2TrackResultVersion = null;
+  }
+  if (!vid) { $("vision-source-hint").textContent = "先选择数据集。"; return; }
+  try {
+    const d = await j("/api/datasets/" + vid);
+    const episodes = await j("/api/datasets/" + vid + "/episodes?limit=2000");
+    await loadVisionAnnotationRuns(vid);
+    visionEpisodeIndices = episodes.map(ep => Number(ep.index)).filter(Number.isInteger);
+    $("vision-batch-episodes").placeholder = "当前 / all / 0-" + Math.max(0, visionEpisodeIndices.length - 1);
+    const episodeSelect = $("vision-episode"), oldEpisode = episodeSelect.value;
+    episodeSelect.replaceChildren();
+    episodes.forEach(ep => {
+      const option = document.createElement("option");
+      option.value = ep.index;
+      option.textContent = "Episode " + ep.index + (ep.frames ? " · " + ep.frames + " 帧" : "");
+      episodeSelect.append(option);
+    });
+    if ([...episodeSelect.options].some(option => option.value === oldEpisode)) episodeSelect.value = oldEpisode;
+    const cameraSelect = $("vision-camera"), oldCamera = cameraSelect.value;
+    cameraSelect.replaceChildren();
+    (d.cameras || []).forEach(camera => {
+      const option = document.createElement("option");
+      option.value = camera.key; option.textContent = camera.key;
+      cameraSelect.append(option);
+    });
+    if ([...cameraSelect.options].some(option => option.value === oldCamera)) cameraSelect.value = oldCamera;
+    if (!episodeSelect.options.length || !cameraSelect.options.length) {
+      $("vision-video").hidden = true;
+      $("vision-source-hint").textContent = "该数据版本没有可用的 Episode 视频。";
+      $("vision-flora-run").disabled = true;
+      return;
+    }
+    $("vision-flora-run").disabled = !floraReady;
+    if ([...cameraSelect.options].some(option => option.value === "top")) cameraSelect.value = "top";
+    else if ([...cameraSelect.options].some(option => option.value === "front")) cameraSelect.value = "front";
+    await loadVisionVideo();
+  } catch (e) { $("vision-source-hint").textContent = "读取数据集失败：" + e.message; }
+}
+
+let visionVideoRequest = 0;
+async function loadVisionVideo() {
+  const vid = parseInt($("ds").value, 10);
+  const episode = $("vision-episode").value, camera = $("vision-camera").value;
+  if (!vid || episode === "" || !camera) return;
+  $("vision-track").disabled = true;
+  const requestId = ++visionVideoRequest;
+  const query = new URLSearchParams({camera, episode});
+  try {
+    const info = await j("/api/datasets/" + vid + "/video-info?" + query.toString());
+    if (requestId !== visionVideoRequest) return;
+    let src = base + "/api/datasets/" + vid + "/video?" + query.toString();
+    if (info.segmented) src += "#t=" + Number(info.from_timestamp).toFixed(3) + "," + Number(info.to_timestamp).toFixed(3);
+    const video = $("vision-video"); video.src = src; video.hidden = false; video.load();
+    $("vision-source-hint").textContent = "Episode " + episode + " · " + camera +
+      (info.segmented ? " · " + Number(info.from_timestamp).toFixed(1) + "–" + Number(info.to_timestamp).toFixed(1) + " 秒" : "");
+  } catch (e) {
+    if (requestId === visionVideoRequest) $("vision-source-hint").textContent = "视频不可用：" + e.message;
+  }
+}
+
+async function loadMaskHistory(versionId) {
+  const select=$("vision-mask-history");select.replaceChildren(new Option("选择记录",""));
+  try{
+    const data=await j("/api/vision/runs"+(versionId?"?dataset_version_id="+versionId:""));
+    (data.runs||[]).forEach(run=>select.append(new Option((run.filename||"图片")+" · "+run.id.slice(0,8),run.id)));
+  }catch(e){}
+}
+$("vision-mask-history").onchange=async()=>{
+  const id=$("vision-mask-history").value;if(!id)return;
+  try{
+    const run=await j("/api/vision/runs/"+id);
+    const response=await fetch(PREFIX+"/workbench/api/vision/runs/"+id+"/image");
+    if(!response.ok)throw new Error("读取原图失败");
+    const blob=await response.blob();
+    const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob);});
+    setVisionImage(dataUrl,run.filename,run.source);
+    const loaded=visionImage.onload;
+    visionImage.onload=()=>{
+      loaded();visionPoints=run.points||[];visionParentRunId=run.id;visionSavedBox=run.box||null;visionInstanceLabel=run.label||"object";$("vision-instance-label").value=visionInstanceLabel;
+      visionMaskImage=new Image();visionMaskImage.onload=drawVisionCanvas;visionMaskImage.src=PREFIX+"/workbench/api/vision/masks/"+id;
+      $("vision-score").textContent="得分 "+Number(run.score).toFixed(3);
+      $("vision-download").href=PREFIX+"/workbench/api/vision/masks/"+id;$("vision-download").hidden=false;
+      $("vision-download-coco").href=PREFIX+"/workbench/api/vision/runs/"+id+"/coco";$("vision-download-coco").hidden=false;
+    };
+  }catch(e){$("vision-error").hidden=false;$("vision-error").textContent=e.message;}
+};
+
+function setVisionImage(dataUrl, filename, source = null, preserveTrackResults = false) {
+  visionParentRunId=null;visionSavedBox=null;
+  visionInstanceLabel="object";
+  $("vision-instance-label").value=visionInstanceLabel;
+  visionDataUrl = dataUrl; visionImageName = filename; visionSource = source;
+  visionPoints = []; visionBoxes = []; visionTruthBoxes = []; visionPendingBox = null; visionMaskImage = null;
+  visionGroundTruthSource = null; visionBoxMode = false;
+  $("vision-gt-box").classList.remove("active"); updateVisionGroundTruthControls();
+  $("vision-ground-results").replaceChildren(); $("vision-ground-status").textContent = "";
+  $("vision-track").disabled = !source;
+  updateVisionBatchButton();
+  if (!preserveTrackResults) {
+    $("vision-track-results").replaceChildren();
+    sam2TrackCorrectionContext = null; updateTrackCorrectionButton();
+  }
+  if (!source) $("vision-source-hint").textContent = "上传图片 · " + filename;
+  visionImage = new Image();
+  visionImage.onload = () => {
+    const canvas = $("vision-canvas"); canvas.width = visionImage.naturalWidth; canvas.height = visionImage.naturalHeight;
+    canvas.hidden = false; $("vision-empty").hidden = true;
+    $("vision-download").hidden = true; $("vision-download-coco").hidden = true; $("vision-score").textContent = visionImage.width + " × " + visionImage.height;
+    $("vision-error").hidden = true; drawVisionCanvas();
+  };
+  visionImage.src = visionDataUrl;
+}
+
+$("vision-episode").onchange = loadVisionVideo;
+$("vision-camera").onchange = loadVisionVideo;
+$("vision-flora-run").onclick = runFloraAnnotation;
+$("vision-track").onclick = runSam2VideoTrack;
+$("vision-batch-run").onclick = runSam2VideoBatch;
+$("vision-track-correct").onclick = correctSam2TrackKeyframe;
+$("vision-ground-run").onclick = runVisionGrounding;
+$("vision-ground-batch-run").onclick = runVisionGroundBatch;
+$("vision-gt-run").onchange = async () => {
+  const versionId = Number.parseInt($("ds").value, 10);
+  const runId = Number.parseInt($("vision-gt-run").value, 10);
+  if (versionId && runId) await loadVisionAnnotationRuns(versionId, runId);
+};
+$("vision-gt-new").onclick = createVisionAnnotationRun;
+$("vision-gt-box").onclick = () => {
+  if (!visionImage || !visionGroundTruthSource) {
+    $("vision-gt-status").textContent = "先从批量结果打开一帧"; return;
+  }
+  visionBoxMode = !visionBoxMode; $("vision-gt-box").classList.toggle("active", visionBoxMode);
+};
+$("vision-gt-save").onclick = saveVisionGroundTruthFrame;
+$("vision-gt-publish").onclick = publishVisionAnnotationRun;
+
+async function runGroundAndSegment(){
+  const prompt=$("vision-ground-prompt").value.trim();
+  if(!visionDataUrl||!prompt)return;
+  const button=$("vision-ground-segment");button.disabled=true;visionRuntimeUsed=true;
+  $("vision-ground-status").textContent="定位与分割中…";
+  try{
+    const data=await j("/api/vision/execute",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({
+      operation:"ground_and_segment",arguments:{image_base64:visionDataUrl,filename:visionImageName,source:visionSource,
+        prompt,threshold:Number($("vision-ground-threshold").value||0.2),text_threshold:Number($("vision-ground-text-threshold").value||0.25),detector:$("vision-ground-detector").value,session_id:visionSessionId}})});
+    const result=data.result;visionBoxes=result.grounding.boxes||[];drawVisionCanvas();
+    const root=$("vision-ground-results");root.replaceChildren();
+    (result.instances||[]).forEach(instance=>{
+      const card=document.createElement("div");card.className="vision-batch-card";
+      const title=document.createElement("span");title.textContent=instance.label+" · 检测 "+Number(instance.detector_score).toFixed(3)+" · Mask "+Number(instance.mask.score).toFixed(3);
+      const select=document.createElement("button");select.className="ghost";select.type="button";select.textContent="选中修正";
+      select.onclick=()=>{
+        visionParentRunId=instance.mask.id;visionSavedBox=instance.box;visionPoints=[];visionInstanceLabel=instance.label;$("vision-instance-label").value=visionInstanceLabel;
+        visionMaskImage=new Image();visionMaskImage.onload=drawVisionCanvas;visionMaskImage.src=PREFIX+instance.mask.mask_url;
+        $("vision-download").href=PREFIX+instance.mask.mask_url;$("vision-download").hidden=false;
+        $("vision-download-coco").href=PREFIX+"/workbench/api/vision/runs/"+instance.mask.id+"/coco";$("vision-download-coco").hidden=false;
+        $("vision-score").textContent=instance.label+" · "+Number(instance.mask.score).toFixed(3);
+      };
+      card.append(title,select);root.append(card);
+    });
+    $("vision-ground-status").textContent=result.count+" 个实例";
+    loadMaskHistory(Number($("ds").value));
+  }catch(e){$("vision-ground-status").textContent=e.message;}
+  finally{button.disabled=false;}
+}
+$("vision-ground-segment").onclick=runGroundAndSegment;
+
+async function runVisionGrounding() {
+  const prompt = $("vision-ground-prompt").value.trim();
+  if (!visionDataUrl || !prompt) {
+    $("vision-ground-status").textContent = "选择图片并输入目标";
+    return;
+  }
+  const button = $("vision-ground-run"); button.disabled = true; button.textContent = "检测中…";
+  visionRuntimeUsed=true;
+  $("vision-ground-status").textContent = "Florence-2 推理中";
+  $("vision-error").hidden = true;
+  try {
+    const r = await fetch(PREFIX + "/workbench/api/vision/ground", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body:JSON.stringify({image_base64:visionDataUrl, filename:visionImageName, prompt,
+        threshold:Number($("vision-ground-threshold").value||0.2), text_threshold:Number($("vision-ground-text-threshold").value||0.25), detector:$("vision-ground-detector").value, source:visionSource, session_id:visionSessionId})
+    });
+    const d = await r.json(); if (!r.ok) throw new Error(d.detail || ("HTTP " + r.status));
+    visionBoxes = d.boxes || []; drawVisionCanvas();
+    const results = $("vision-ground-results"); results.replaceChildren();
+    d.boxes.forEach((item, index) => {
+      const row = document.createElement("div"); row.className = "vision-batch-card";
+      const label = document.createElement("span");
+      label.textContent = item.label + (Number.isFinite(item.score) ? " · " + Number(item.score).toFixed(2) : "");
+      const use = document.createElement("button"); use.className = "ghost"; use.type = "button"; use.textContent = "SAM2 Mask";
+      use.onclick = () => runSam2Segment(item.box);
+      row.append(label, use); results.append(row);
+    });
+    $("vision-ground-status").textContent = d.boxes.length + " 个目标 · " + Number(d.elapsed_s).toFixed(1) + " 秒";
+    $("vision-score").textContent = "Florence-2 · " + d.boxes.length + " 个目标";
+  } catch (e) {
+    $("vision-ground-status").textContent = "检测失败";
+    $("vision-error").hidden = false; $("vision-error").textContent = e.message;
+  } finally { button.disabled = false; button.textContent = "检测"; }
+}
+
+async function loadVisionAnnotationRuns(versionId, preferredId = null) {
+  const select = $("vision-gt-run");
+  try {
+    const rows = await j("/api/vision/annotation-runs?dataset_version_id=" + encodeURIComponent(versionId));
+    select.replaceChildren();
+    rows.forEach(run => {
+      const option = document.createElement("option"); option.value = run.id;
+      option.textContent = "#" + run.id + " " + run.name + " · " + (run.status === "ready" ? "已发布" : "草稿") + " · " + run.annotation_count + " 框";
+      select.append(option);
+    });
+    const current = preferredId || Number.parseInt(select.value, 10);
+    const chosen = rows.find(run => run.id === current) || rows.find(run => run.status === "draft") || rows[0] || null;
+    visionAnnotationRun = chosen;
+    if (chosen) select.value = String(chosen.id);
+    await loadVisionAnnotations(chosen?.id || null);
+    await loadVisionBenchmarks(versionId);
+    updateVisionGroundTruthControls();
+  } catch (error) {
+    visionAnnotationRun = null;
+    $("vision-gt-status").textContent = "真值集读取失败：" + error.message;
+    updateVisionGroundTruthControls();
+  }
+}
+
+async function loadVisionAnnotations(runId) {
+  const root = $("vision-gt-annotations"); root.replaceChildren();
+  if (!runId) {
+    visionAnnotationRows = [];
+    $("vision-gt-status").textContent = "还没有真值集";
+    return;
+  }
+  const data = await j("/api/vision/annotation-runs/" + runId + "/annotations");
+  visionAnnotationRun = data.run; visionAnnotationRows = data.annotations || [];
+  const frameRows = visionAnnotationRows.filter(row => row.kind === "frame_gt");
+  const boxRows = visionAnnotationRows.filter(row => row.kind === "bbox_gt");
+  $("vision-gt-status").textContent = data.run.name + " · " +
+    (data.run.status === "ready" ? "已发布" : "草稿") + " · " + frameRows.length + " 帧 · " + boxRows.length + " 框";
+  visionAnnotationRows.forEach(row => {
+    const p = row.payload || {}, card = document.createElement("div"); card.className = "vision-batch-card";
+    const label = document.createElement("span"); label.style.flex = "1";
+    label.textContent = "Episode " + p.episode + " · " + p.camera + " · " + Number(p.timestamp_s || 0).toFixed(2) + " 秒 · " +
+      (row.kind === "frame_gt" ? (p.complete ? "帧已复核" : "帧") : (p.label + " 真值框")) +
+      (row.reviewer ? " · " + row.reviewer : "");
+    card.append(label); root.append(card);
+  });
+  if (visionGroundTruthSource) loadVisionTruthBoxesForCurrentFrame();
+  updateVisionGroundTruthControls();
+}
+
+function loadVisionTruthBoxesForCurrentFrame() {
+  if (!visionGroundTruthSource) return;
+  const source = visionGroundTruthSource;
+  visionTruthBoxes = visionAnnotationRows.filter(row => row.kind === "bbox_gt").map(row => row.payload || {})
+    .filter(p => p.batch_id === source.batch_id && Number(p.episode) === Number(source.episode) &&
+      p.camera === source.camera && Number(p.frame_index) === Number(source.frame_index))
+    .map(p => ({label:p.label, box:p.box}));
+  drawVisionCanvas(); updateVisionGroundTruthControls();
+}
+
+async function createVisionAnnotationRun() {
+  const versionId = Number.parseInt($("ds").value, 10);
+  if (!versionId) { $("vision-gt-status").textContent = "先选择数据版本"; return null; }
+  const name = $("vision-gt-name").value.trim() || "bbox-gt-v1";
+  try {
+    const run = await j("/api/vision/annotation-runs", {method:"POST", headers:{"content-type":"application/json"},
+      body:JSON.stringify({dataset_version_id:versionId, name})});
+    await loadVisionAnnotationRuns(versionId, run.id);
+    return run;
+  } catch (error) { $("vision-gt-status").textContent = "创建失败：" + error.message; return null; }
+}
+
+function updateVisionGroundTruthControls() {
+  const run = visionAnnotationRun, editable = Boolean(run && run.status === "draft");
+  const hasFrame = Boolean(visionGroundTruthSource && visionImage);
+  $("vision-gt-box").disabled = !editable || !hasFrame;
+  $("vision-gt-save").disabled = !editable || !hasFrame;
+  $("vision-gt-publish").disabled = !editable || !visionAnnotationRows.some(row => row.kind === "frame_gt");
+  $("vision-gt-new").disabled = false;
+}
+
+async function openVisionGroundFrame(batch, item, annotate) {
+  try {
+    $("vision-episode").value = String(item.episode); $("vision-camera").value = item.camera;
+    const video = $("vision-video"), waitMetadata = new Promise(resolve => {
+      video.addEventListener("loadedmetadata", resolve, {once:true}); setTimeout(resolve, 5000);
+    });
+    await loadVisionVideo();
+    if (video.readyState < 1) await waitMetadata;
+    if (video.readyState >= 1) { video.currentTime = Number(item.timestamp_s); video.pause(); }
+    const source = {dataset_version_id:Number(batch.dataset_version_id), episode:Number(item.episode),
+      camera:item.camera, timestamp_s:Number(item.timestamp_s)};
+    setVisionImage(PREFIX + item.frame_url, "episode_" + item.episode + "_frame_" + item.frame_index + ".jpg", source, true);
+    await visionImage.decode().catch(() => {});
+    visionGroundTruthSource = {batch_id:batch.id, dataset_version_id:Number(batch.dataset_version_id),
+      episode:Number(item.episode), camera:item.camera, frame_index:Number(item.frame_index), timestamp_s:Number(item.timestamp_s)};
+    if (!annotate) {
+      visionMaskImage = new Image(); visionMaskImage.onload = drawVisionCanvas;
+      visionMaskImage.src = PREFIX + item.mask_url; $("vision-note").textContent = item.label + " · SAM2 mask";
+    }
+    if (annotate && (!visionAnnotationRun || visionAnnotationRun.status !== "draft")) await createVisionAnnotationRun();
+    if (visionAnnotationRun) await loadVisionAnnotations(visionAnnotationRun.id);
+    if (annotate && visionAnnotationRun?.status === "draft") {
+      visionBoxMode = true; $("vision-gt-box").classList.add("active");
+      $("vision-gt-status").textContent = "拖动画框；无目标帧可留空保存";
+    }
+    if (annotate) {
+      visionMaskImage = null; drawVisionCanvas(); $("vision-note").textContent = "原始帧 · 人工真值标注";
+    }
+    updateVisionGroundTruthControls();
+  } catch (error) {
+    $("vision-error").hidden = false; $("vision-error").textContent = error.message;
+  }
+}
+
+async function saveVisionGroundTruthFrame() {
+  if (!visionGroundTruthSource || !visionImage) return;
+  if (!visionAnnotationRun && !await createVisionAnnotationRun()) return;
+  try {
+    const source = visionGroundTruthSource;
+    const result = await j("/api/vision/annotation-runs/" + visionAnnotationRun.id + "/frames", {
+      method:"PUT", headers:{"content-type":"application/json"},
+      body:JSON.stringify({...source, width:visionImage.naturalWidth, height:visionImage.naturalHeight,
+        boxes:visionTruthBoxes, reviewer:currentUser()})
+    });
+    await loadVisionAnnotationRuns(source.dataset_version_id, visionAnnotationRun.id);
+    loadVisionTruthBoxesForCurrentFrame();
+    $("vision-gt-status").textContent = "已保存 · " + result.boxes_saved + " 框 · " +
+      (result.boxes_saved ? "人工真值" : "无目标帧");
+  } catch (error) { $("vision-error").hidden = false; $("vision-error").textContent = error.message; }
+}
+
+async function publishVisionAnnotationRun() {
+  if (!visionAnnotationRun) return;
+  try {
+    const run = await j("/api/vision/annotation-runs/" + visionAnnotationRun.id + "/publish", {method:"POST"});
+    await loadVisionAnnotationRuns(run.dataset_version_id, run.id);
+  } catch (error) { $("vision-gt-status").textContent = "发布失败：" + error.message; }
+}
+
+async function evaluateVisionGroundBatch(batch) {
+  if (!visionAnnotationRun || visionAnnotationRun.status !== "ready") {
+    $("vision-benchmark-results").textContent = "完成并发布真值标注集后可评测"; return;
+  }
+  try {
+    const result = await j("/api/vision/ground-batches/" + encodeURIComponent(batch.id) + "/evaluate", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body:JSON.stringify({annotation_run_id:visionAnnotationRun.id, iou_threshold:0.5})
+    });
+    const m = result.metrics;
+    $("vision-benchmark-results").textContent = "评测 #" + result.id + " · Precision " + Number(m.precision).toFixed(3) +
+      " · Recall " + Number(m.recall).toFixed(3) + " · F1 " + Number(m.f1).toFixed(3) +
+      " · mAP@0.5 " + (m.map50 == null ? "无 GT 类别" : Number(m.map50).toFixed(3)) +
+      " · 覆盖 " + m.frames_annotated + "/" + m.frames_total + " 帧";
+    await loadVisionBenchmarks(m.dataset_version_id);
+  } catch (error) { $("vision-benchmark-results").textContent = "评测失败：" + error.message; }
+}
+
+async function loadVisionBenchmarks(versionId) {
+  const root = $("vision-benchmark-results");
+  try {
+    const rows = await j("/api/vision/benchmarks?dataset_version_id=" + encodeURIComponent(versionId));
+    root.replaceChildren();
+    rows.slice(0, 12).forEach(item => {
+      const m = item.metrics || {}, row = document.createElement("div"); row.className = "vision-batch-card";
+      const text = document.createElement("span"); text.style.flex = "1";
+      text.textContent = "评测 #" + item.id + " · IoU " + Number(m.iou_threshold || 0.5).toFixed(2) +
+        " · P " + Number(m.precision || 0).toFixed(3) + " · R " + Number(m.recall || 0).toFixed(3) +
+        " · mAP@0.5 " + (m.map50 == null ? "-" : Number(m.map50).toFixed(3)) + " · " + m.frames_annotated + "/" + m.frames_total + " 帧";
+      const link = document.createElement("a"); link.className = "ghost"; link.textContent = "报告";
+      link.href = PREFIX + item.report_url; link.download = "vision_benchmark_" + item.id + ".json";
+      row.append(text, link); root.append(row);
+    });
+  } catch (error) { root.replaceChildren(); }
+}
+
+async function runVisionGroundBatch() {
+  const button = $("vision-ground-batch-run");
+  const versionId = Number.parseInt($("ds").value, 10);
+  const prompt = $("vision-ground-prompt").value.trim();
+  if (!versionId || !prompt || !document.getElementById("vision-episode").options.length) {
+    $("vision-ground-batch-status").textContent = "选择数据版本并输入目标";
+    return;
+  }
+  button.disabled = true; button.textContent = "提交中…";
+  $("vision-ground-batch-status").textContent = "提交 GPU 批量标注…";
+  $("vision-error").hidden = true;
+  try {
+    const episodes = parseVisionBatchEpisodes();
+    const endValue = $("vision-ground-end").value.trim();
+    const interval = Number($("vision-ground-interval").value || 2);
+    if (!(interval >= 0.25 && interval <= 60)) throw new Error("抽帧间隔需在 0.25–60 秒之间");
+    const batch = await j("/api/vision/ground-batches", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body:JSON.stringify({dataset_version_id:versionId, episodes, camera:$("vision-camera").value,
+        prompt, threshold:Number($("vision-ground-threshold").value||0.2), text_threshold:Number($("vision-ground-text-threshold").value||0.25),
+        detector:$("vision-ground-detector").value, interval_s:interval,
+        start_s:Number($("vision-ground-start").value||0), end_s:endValue ? Number(endValue) : null})
+    });
+    sessionStorage.setItem("embodiedflow-florence-ground-batch", batch.id);
+    await pollVisionGroundBatch(batch.id);
+  } catch (error) {
+    $("vision-ground-batch-status").textContent = "批量标注失败";
+    $("vision-error").hidden = false; $("vision-error").textContent = error.message;
+  } finally { button.textContent = "批量定位 + 分割"; button.disabled = false; }
+}
+
+async function pollVisionGroundBatch(batchId) {
+  if (visionGroundBatchPollId === batchId) return;
+  visionGroundBatchPollId = batchId;
+  try {
+    while (true) {
+      const batch = await j("/api/vision/ground-batches/" + encodeURIComponent(batchId));
+      renderVisionGroundBatch(batch);
+      if (!["queued", "running"].includes(batch.status)) {
+        sessionStorage.removeItem("embodiedflow-florence-ground-batch");
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 2500));
+    }
+  } finally { visionGroundBatchPollId = null; }
+}
+
+function renderVisionGroundBatch(batch) {
+  const progress = batch.progress || {};
+  const done = Number(batch.completed_frames || progress.completed_frames || 0);
+  const total = Number(progress.total_frames || batch.estimated_frames || 0);
+  const phases = {queued:"排队中", extracting:"抽取视频帧", loading_models:"加载模型", running:"标注中",
+    completed:"完成", failed:"失败", cancelled:"已取消"};
+  const phase = ["queued", "completed", "failed", "cancelled"].includes(batch.status)
+    ? batch.status : (progress.status || batch.status);
+  const status = phases[phase] || phase;
+  $("vision-ground-batch-status").textContent = status + " · " + done + "/" + total + " 帧 · " +
+    Number(batch.result_count || 0) + " 个目标" +
+    (batch.filtered_low_confidence ? " · 过滤低置信度 " + batch.filtered_low_confidence : "") +
+    (batch.elapsed_s ? " · " + Number(batch.elapsed_s).toFixed(1) + " 秒" : "");
+  const root = $("vision-ground-batch-results"); root.replaceChildren();
+  if (batch.error) {
+    const note = document.createElement("div"); note.className = "hint"; note.textContent = batch.error; root.append(note);
+  }
+  if (batch.download_url) {
+    const link = document.createElement("a"); link.className = "ghost"; link.textContent = "下载全部标注";
+    link.href = PREFIX + batch.download_url; link.download = "florence_sam2_batch_" + batch.id.slice(0,8) + ".zip"; root.append(link);
+  }
+  if (batch.status === "completed") {
+    const evaluate = document.createElement("button"); evaluate.type = "button"; evaluate.className = "ghost";
+    evaluate.textContent = "用真值评测 IoU@0.5"; evaluate.onclick = () => evaluateVisionGroundBatch(batch); root.append(evaluate);
+  }
+  const shown = (batch.detections || []).slice(0, 80);
+  shown.forEach(item => {
+    const row = document.createElement("div"); row.className = "vision-batch-card";
+    const preview = document.createElement("img"); preview.loading = "lazy"; preview.alt = item.label;
+    preview.src = PREFIX + item.overlay_url; preview.style.cssText = "width:112px;height:68px;object-fit:cover;border-radius:6px";
+    const text = document.createElement("span"); text.style.flex = "1";
+    text.textContent = "Episode " + item.episode + " · " + item.camera + " · " + Number(item.timestamp_s).toFixed(2) +
+      " 秒 · " + item.label + (Number.isFinite(item.score) ? " · " + Number(item.score).toFixed(2) : "");
+    const open = document.createElement("button"); open.type = "button"; open.className = "ghost"; open.textContent = "查看原帧";
+    open.onclick = () => openVisionGroundFrame(batch, item, false);
+    const annotate = document.createElement("button"); annotate.type = "button"; annotate.className = "ghost"; annotate.textContent = "标注真值";
+    annotate.onclick = () => openVisionGroundFrame(batch, item, true);
+    const mask = document.createElement("a"); mask.className = "ghost"; mask.textContent = "Mask PNG";
+    mask.href = PREFIX + item.mask_url; mask.download = "episode_" + item.episode + "_mask.png";
+    row.append(preview, text, open, annotate, mask); root.append(row);
+  });
+  (batch.frames || []).filter(frame => !Number(frame.detection_count || 0)).forEach(frame => {
+    const row = document.createElement("div"); row.className = "vision-batch-card";
+    const preview = document.createElement("img"); preview.loading = "lazy"; preview.alt = "无检测帧";
+    preview.src = PREFIX + frame.frame_url; preview.style.cssText = "width:112px;height:68px;object-fit:cover;border-radius:6px";
+    const text = document.createElement("span"); text.style.flex = "1";
+    text.textContent = "Episode " + frame.episode + " · " + frame.camera + " · " + Number(frame.timestamp_s).toFixed(2) +
+      " 秒 · 无自动检出" + (frame.filtered_low_confidence ? " · 低置信过滤 " + frame.filtered_low_confidence : "");
+    const annotate = document.createElement("button"); annotate.type = "button"; annotate.className = "ghost"; annotate.textContent = "标注真值";
+    annotate.onclick = () => openVisionGroundFrame(batch, {...frame, label:"", mask_url:null}, true);
+    row.append(preview, text, annotate); root.append(row);
+  });
+  if (Number(batch.result_count || 0) > shown.length) {
+    const note = document.createElement("div"); note.className = "hint";
+    note.textContent = "显示最近 " + shown.length + " 个目标；完整结果见下载包。"; root.append(note);
+  }
+}
+
+function restoreVisionGroundBatch() {
+  const saved = sessionStorage.getItem("embodiedflow-florence-ground-batch");
+  if (!saved) return;
+  $("vision-ground-batch-run").disabled = true; $("vision-ground-batch-run").textContent = "批量运行中…";
+  pollVisionGroundBatch(saved).catch(error => {
+    $("vision-ground-batch-status").textContent = "批量任务读取失败";
+    $("vision-error").hidden = false; $("vision-error").textContent = error.message;
+  }).finally(() => {
+    $("vision-ground-batch-run").textContent = "批量定位 + 分割";
+    $("vision-ground-batch-run").disabled = !visionGroundBatchReady;
+  });
+}
+
+function updateVisionBatchButton() {
+  const button = $("vision-batch-run");
+  if (button) button.disabled = !visionSource || !visionPoints.some(point => point.label === 1);
+}
+
+function updateTrackCorrectionButton() {
+  const button = $("vision-track-correct");
+  button.hidden = !sam2TrackCorrectionContext;
+  button.disabled = !sam2TrackCorrectionContext || !visionPoints.some(point => point.label === 1);
+}
+
+async function runSam2VideoTrack() {
+  const button = $("vision-track");
+  if (!visionSource || !visionPoints.some(point => point.label === 1)) {
+    $("vision-error").hidden = false;
+    $("vision-error").textContent = "先从视频导入目标帧，并添加正点。";
+    return;
+  }
+  button.disabled = true; button.textContent = "跟踪中…";
+  $("vision-error").hidden = true;
+  $("vision-score").textContent = "提交 SAM2 跟踪";
+  $("vision-note").textContent = "任务进入 GPU 队列；采样 4 FPS，最长 30 秒。";
+  try {
+    const task = await j("/api/vision/track", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body:JSON.stringify({source:visionSource, points:visionPoints})
+    });
+    sessionStorage.setItem("embodiedflow-sam2-track", JSON.stringify({job_id:task.job_id, id:task.id}));
+    await pollSam2Track(task.job_id, task.id);
+  } catch (error) {
+    $("vision-score").textContent = "跟踪失败";
+    $("vision-error").hidden = false; $("vision-error").textContent = error.message;
+  } finally {
+    button.textContent = "跟踪视频";
+    button.disabled = !visionSource;
+  }
+}
+
+function parseVisionBatchEpisodes() {
+  const raw = $("vision-batch-episodes").value.trim().toLowerCase();
+  const current = Number.parseInt($("vision-episode").value, 10);
+  if (!raw || raw === "current") return [current];
+  if (raw === "all") {
+    if (visionEpisodeIndices.length > 128) throw new Error("单批最多 128 个 Episode，请改用编号范围");
+    return [...visionEpisodeIndices];
+  }
+  const selected = new Set();
+  for (const token of raw.split(",")) {
+    const match = token.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);
+    if (!match) throw new Error("Episode 填当前、all 或 0-5,8");
+    const first = Number(match[1]), last = Number(match[2] || match[1]);
+    if (last < first || last - first > 127) throw new Error("单批最多 128 个 Episode");
+    for (let episode = first; episode <= last; episode++) selected.add(episode);
+  }
+  const episodes = [...selected].sort((a, b) => a - b);
+  if (!episodes.length || episodes.length > 128) throw new Error("单批最多 128 个 Episode");
+  const missing = episodes.filter(episode => !visionEpisodeIndices.includes(episode));
+  if (missing.length) throw new Error("Episode " + missing[0] + " 不在当前数据版本");
+  return episodes;
+}
+
+async function runSam2VideoBatch() {
+  const button = $("vision-batch-run");
+  if (!visionSource || !visionPoints.some(point => point.label === 1)) return;
+  button.disabled = true; button.textContent = "提交中…";
+  $("vision-batch-status").textContent = "提交批量 SAM2 任务…";
+  $("vision-error").hidden = true;
+  try {
+    const episodes = parseVisionBatchEpisodes();
+    const batch = await j("/api/vision/track-batches", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body:JSON.stringify({source:visionSource, episodes, points:visionPoints})
+    });
+    sessionStorage.setItem("embodiedflow-sam2-batch", batch.id);
+    await pollSam2VideoBatch(batch.id);
+  } catch (error) {
+    $("vision-batch-status").textContent = "批量标注失败";
+    $("vision-error").hidden = false; $("vision-error").textContent = error.message;
+  } finally {
+    button.textContent = "批量标注"; updateVisionBatchButton();
+  }
+}
+
+async function pollSam2VideoBatch(batchId) {
+  if (sam2BatchPollId === batchId) return;
+  sam2BatchPollId = batchId;
+  try {
+    while (true) {
+      const batch = await j("/api/vision/track-batches/" + encodeURIComponent(batchId));
+      renderSam2VideoBatch(batch);
+      if (batch.status !== "queued" && batch.status !== "running") {
+        sessionStorage.removeItem("embodiedflow-sam2-batch");
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 2500));
+    }
+  } finally { sam2BatchPollId = null; }
+}
+
+function renderSam2VideoBatch(batch) {
+  const root = $("vision-batch-results"); root.replaceChildren();
+  const counts = batch.progress || {};
+  const done = Number(counts.completed || 0) + Number(counts.failed || 0) +
+    Number(counts.cancelled || 0) + Number(counts.skipped || 0);
+  const total = (batch.items || []).length;
+  const status = batch.status === "completed" ? "完成" :
+    (batch.status === "failed" ? "失败" : (batch.status === "queued" ? "排队中" : "运行中"));
+  $("vision-batch-status").textContent = "批量 " + status + " · " + done + "/" + total +
+    " · 完成 " + Number(counts.completed || 0) + " · 需复核 " +
+    (batch.items || []).reduce((sum, item) => sum + Number(item.review_count || 0), 0);
+  (batch.items || []).forEach(item => {
+    const row = document.createElement("div"); row.className = "vision-batch-card";
+    const label = document.createElement("span");
+    const itemStatus = {queued:"排队",running:"运行",completed:"完成",failed:"失败",cancelled:"取消",skipped:"跳过"}[item.status] || item.status;
+    label.textContent = "Episode " + item.episode + " · " + itemStatus +
+      (item.frame_count ? " · " + item.frame_count + " 帧" : "") +
+      (item.review_count ? " · 复核 " + item.review_count : "") +
+      (item.reason ? " · " + item.reason : "");
+    row.append(label);
+    if (item.status === "completed" && item.track_id) {
+      const view = document.createElement("button"); view.className = "ghost"; view.type = "button"; view.textContent = "查看帧";
+      view.onclick = async () => {
+        try { renderSam2Track(await j("/api/vision/tracks/" + encodeURIComponent(item.track_id))); }
+        catch (error) { $("vision-error").hidden = false; $("vision-error").textContent = error.message; }
+      };
+      const download = document.createElement("a"); download.className = "ghost"; download.textContent = "下载";
+      download.href = PREFIX + item.download_url; download.download = "sam2_ep" + item.episode + ".zip";
+      row.append(view, download);
+    }
+    root.append(row);
+  });
+}
+
+function restoreSam2VideoBatch() {
+  const saved = sessionStorage.getItem("embodiedflow-sam2-batch");
+  if (!saved) return;
+  $("vision-batch-run").disabled = true;
+  $("vision-batch-run").textContent = "批量运行中…";
+  pollSam2VideoBatch(saved).catch(error => {
+    $("vision-batch-status").textContent = "批量任务读取失败";
+    $("vision-error").hidden = false; $("vision-error").textContent = error.message;
+  }).finally(() => { $("vision-batch-run").textContent = "批量标注"; updateVisionBatchButton(); });
+}
+
+async function pollSam2Track(jobId, runId) {
+  if (sam2TrackPollJobId === jobId) return;
+  sam2TrackPollJobId = jobId;
+  try {
+    while (true) {
+      const job = await j("/api/jobs/" + jobId);
+      if (job.status === "queued" || job.status === "running") {
+        const tail = String(job.log_tail || "").trim().slice(-220);
+        $("vision-score").textContent = job.status === "queued" ? "GPU 队列中" : "视频跟踪中";
+        $("vision-note").textContent = "任务 #" + jobId + (tail ? " · " + tail : " · 等待 GPU");
+        await new Promise(resolve => setTimeout(resolve, 2500));
+        continue;
+      }
+      if (job.status !== "completed") {
+        sessionStorage.removeItem("embodiedflow-sam2-track");
+        throw new Error(String(job.log_tail || job.error || job.status).slice(-700));
+      }
+      const result = await j("/api/vision/tracks/" + runId);
+      renderSam2Track(result);
+      sessionStorage.removeItem("embodiedflow-sam2-track");
+      return;
+    }
+  } finally { sam2TrackPollJobId = null; }
+}
+
+function renderSam2Track(result) {
+  sam2TrackResultVersion = Number(result.source.dataset_version_id);
+  sam2TrackCorrectionContext = null; updateTrackCorrectionButton();
+  const root = $("vision-track-results"); root.replaceChildren();
+  const header = document.createElement("div"); header.className = "flora-review-actions";
+  const title = document.createElement("span"); title.className = "tag ok";
+  const reviewCount = (result.frames || []).filter(frame => frame.review_suggested).length;
+  title.textContent = result.frame_count + " 帧 · " + result.fps + " FPS · " + result.device +
+    (result.corrections?.length ? " · 修正 " + result.corrections.length : "") +
+    (result.lost_frames ? " · 空/丢失 " + result.lost_frames : "") +
+    (reviewCount ? " · 建议复核 " + reviewCount : "");
+  const download = document.createElement("a"); download.className = "ghost";
+  download.textContent = "下载跟踪结果"; download.href = PREFIX + result.download_url;
+  download.download = "sam2_track_" + result.id.slice(0,8) + ".zip";
+  const reviewOnly = document.createElement("button"); reviewOnly.className = "ghost"; reviewOnly.type = "button";
+  reviewOnly.textContent = "仅看需复核";
+  header.append(title, reviewOnly, download); root.append(header);
+  const grid = document.createElement("div"); grid.className = "vision-track-results";
+  reviewOnly.onclick = () => {
+    const enabled = grid.dataset.reviewOnly !== "true";
+    grid.dataset.reviewOnly = String(enabled);
+    reviewOnly.classList.toggle("active", enabled);
+  };
+  result.frames.forEach(frame => {
+    const card = document.createElement("button"); card.type = "button"; card.className = "vision-track-item";
+    card.dataset.status = frame.status || (Number(frame.foreground_pixels || 0) > 0 ? "tracked" : "empty");
+    card.dataset.review = String(Boolean(frame.review_suggested));
+    const image = document.createElement("img"); image.src = PREFIX + frame.frame_url; image.alt = "Frame " + frame.index; image.loading = "lazy";
+    const overlay = document.createElement("img"); overlay.className = "overlay"; overlay.src = PREFIX + frame.overlay_url; overlay.alt = ""; overlay.loading = "lazy";
+    const time = document.createElement("time"); time.textContent = Number(frame.timestamp_s).toFixed(2) + " s" +
+      (card.dataset.status === "tracked" ? "" : " · " + (card.dataset.status === "empty" ? "空掩膜" : "丢失")) +
+      (frame.review_suggested ? " · 需复核" : "");
+    if (frame.review_reason) card.title = frame.review_reason;
+    card.append(image, overlay, time);
+    card.onclick = () => {
+      const source = {...result.source, timestamp_s:Number(frame.timestamp_s)};
+      const player = $("vision-video");
+      if (player.readyState >= 1) { player.currentTime = source.timestamp_s; player.pause(); }
+      setVisionImage(PREFIX + frame.frame_url, "track_frame_" + frame.index + ".jpg", source, true);
+      sam2TrackCorrectionContext = {run_id:result.id, source}; updateTrackCorrectionButton();
+      visionMaskImage = new Image(); visionMaskImage.onload = drawVisionCanvas;
+      visionMaskImage.src = PREFIX + frame.mask_url + "?t=" + Date.now();
+      $("vision-note").textContent = "Episode " + result.source.episode + " · " + Number(frame.timestamp_s).toFixed(2) + " 秒 · 帧 " + frame.index;
+    };
+    grid.append(card);
+  });
+  root.append(grid);
+  $("vision-score").textContent = "跟踪完成";
+  $("vision-note").textContent = "选中错误帧，添加正/负点后可从该关键帧重新传播";
+}
+
+async function correctSam2TrackKeyframe() {
+  const context = sam2TrackCorrectionContext, button = $("vision-track-correct");
+  if (!context || !visionPoints.some(point => point.label === 1)) return;
+  button.disabled = true; button.textContent = "重新传播中…";
+  $("vision-error").hidden = true;
+  $("vision-note").textContent = "保留关键帧之前的结果，从当前帧重新传播到视频末尾…";
+  try {
+    const task = await j("/api/vision/tracks/" + encodeURIComponent(context.run_id) + "/correct", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body:JSON.stringify({source:context.source, points:visionPoints})
+    });
+    sessionStorage.setItem("embodiedflow-sam2-track", JSON.stringify({job_id:task.job_id, id:task.id}));
+    await pollSam2Track(task.job_id, task.id);
+  } catch (error) {
+    $("vision-score").textContent = "关键帧修正失败";
+    $("vision-error").hidden = false; $("vision-error").textContent = error.message;
+  } finally {
+    button.textContent = "从关键帧修正"; updateTrackCorrectionButton();
+  }
+}
+
+function restoreSam2TrackJob() {
+  const saved = sessionStorage.getItem("embodiedflow-sam2-track");
+  if (!saved) return;
+  try {
+    const task = JSON.parse(saved), button = $("vision-track");
+    button.disabled = true; button.textContent = "跟踪中…";
+    pollSam2Track(task.job_id, task.id).catch(error => {
+      $("vision-score").textContent = "跟踪失败";
+      $("vision-error").hidden = false; $("vision-error").textContent = error.message;
+      sessionStorage.removeItem("embodiedflow-sam2-track");
+    }).finally(() => { button.textContent = "跟踪视频"; button.disabled = !visionSource; });
+  } catch { sessionStorage.removeItem("embodiedflow-sam2-track"); }
+}
+
+async function loadFloraHistory(versionId) {
+  const select=$("vision-flora-history");select.replaceChildren(new Option("选择任务",""));
+  if(!versionId)return;
+  try{
+    const data=await j("/api/vision/flora/jobs?dataset_version_id="+versionId);
+    if(Number($("ds").value)!==versionId)return;
+    (data.jobs||[]).forEach(job=>select.append(new Option("#"+job.job_id+" · "+job.status+" · "+job.episodes.length+" Episode"+(job.review_revision?" · r"+job.review_revision:""),String(job.job_id))));
+  }catch(e){select.replaceChildren(new Option("读取失败",""));}
+}
+$("vision-flora-history").onchange=()=>{
+  const jobId=Number($("vision-flora-history").value);
+  if(jobId){floraActiveJobId=jobId;sessionStorage.setItem("embodiedflow-flora-job",String(jobId));pollFloraJob(jobId);}
+};
+
+async function runFloraAnnotation() {
+  const vid = parseInt($("ds").value, 10), episode = parseInt($("vision-episode").value, 10);
+  const camera = $("vision-camera").value;
+  if (!floraReady || !vid || !camera || Number.isNaN(episode)) return;
+  clearTimeout(floraPollTimer);
+  const button = $("vision-flora-run"); button.disabled = true;
+  $("vision-flora-status").textContent = "提交中"; $("vision-flora-status").className = "tag run";
+  $("vision-flora-note").textContent = "提交 FLORA 任务…";
+  $("vision-flora-results").replaceChildren();
+  try {
+    const response = await j("/api/vision/flora/jobs", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body:JSON.stringify({
+        dataset_version_id:vid, episode, camera,
+        all_episodes:$("vision-flora-scope").value === "all",
+        profile:$("vision-flora-profile").value
+      })
+    });
+    floraActiveJobId = response.job_id;
+    sessionStorage.setItem("embodiedflow-flora-job", String(response.job_id));
+    $("vision-flora-note").textContent = "任务 #" + response.job_id + " · " + response.episodes.length + " Episode · " + response.camera_group;
+    pollFloraJob(response.job_id);
+  } catch (e) {
+    $("vision-flora-status").textContent = "提交失败"; $("vision-flora-status").className = "tag bad";
+    $("vision-flora-note").textContent = e.message; button.disabled = !floraReady;
+  }
+}
+
+async function pollFloraJob(jobId) {
+  clearTimeout(floraPollTimer);
+  try {
+    const job = await j("/api/jobs/" + jobId);
+    if (job.status === "queued" || job.status === "running") {
+      $("vision-flora-status").textContent = job.status === "queued" ? "排队中" : "运行中";
+      $("vision-flora-status").className = "tag run";
+      const tail = String(job.log_tail || "").trim().slice(-360);
+      $("vision-flora-note").textContent = "任务 #" + jobId + (tail ? " · " + tail : " · 等待 GPU");
+      $("vision-flora-run").disabled = true;
+      floraPollTimer = setTimeout(() => pollFloraJob(jobId), 4000);
+      return;
+    }
+    if (job.status === "completed") {
+      const result = await j("/api/vision/flora/jobs/" + jobId + "/result");
+      await renderFloraResults(result);
+      $("vision-flora-status").textContent = "标注完成"; $("vision-flora-status").className = "tag ok";
+      $("vision-flora-note").textContent = "任务 #" + jobId + " · " + result.annotations.length + " Episode";
+    } else {
+      $("vision-flora-status").textContent = job.status === "cancelled" ? "已取消" : "标注失败";
+      $("vision-flora-status").className = "tag bad";
+      $("vision-flora-note").textContent = String(job.log_tail || job.status).slice(-700);
+    }
+    sessionStorage.removeItem("embodiedflow-flora-job"); floraActiveJobId = null;
+    $("vision-flora-run").disabled = !floraReady;
+  } catch (e) {
+    $("vision-flora-status").textContent = "读取任务失败"; $("vision-flora-status").className = "tag bad";
+    $("vision-flora-note").textContent = e.message;
+    $("vision-flora-run").disabled = !floraReady;
+  }
+}
+
+async function renderFloraResults(result, savedReviewOverride = undefined) {
+  const root = $("vision-flora-results"); root.replaceChildren();
+  const exportLink = document.createElement("a");
+  exportLink.className = "ghost"; exportLink.textContent = "下载 FLORA JSON";
+  exportLink.href = base + "/api/vision/flora/jobs/" + result.job_id + "/download";
+  exportLink.download = "flora_job_" + result.job_id + ".zip";
+  root.append(exportLink);
+  floraReviewJobId = result.job_id;
+  let availableMasks=[];
+  try { availableMasks=(await j("/api/vision/flora/jobs/"+result.job_id+"/masks")).masks||[]; }
+  catch(e) { console.warn("Could not load SAM2 masks for review",e); }
+  let savedReview=savedReviewOverride === undefined ? null : savedReviewOverride;
+  if (savedReviewOverride === undefined) {
+    try { savedReview=await j("/api/vision/flora/jobs/"+result.job_id+"/review"); }
+    catch(e) { if (!String(e.message||e).includes("FLORA review revision not found")) console.warn("Could not load saved FLORA review",e); }
+  }
+  let reviewVersions=[];
+  try { reviewVersions=(await j("/api/vision/flora/jobs/"+result.job_id+"/review-versions")).versions||[]; } catch(e) {}
+  if (reviewVersions.length) {
+    const versionBar=document.createElement("div"); versionBar.className="flora-review-actions";
+    const versionLabel=document.createElement("span"); versionLabel.className="hint"; versionLabel.textContent="审核修订";
+    const versionSelect=document.createElement("select");
+    reviewVersions.forEach(version=>{const option=document.createElement("option");option.value=String(version.revision);option.textContent="r"+version.revision+" · "+version.segments+" 段";option.selected=Number(savedReview?.revision)===version.revision;versionSelect.append(option);});
+    versionSelect.onchange=async()=>{try{const selected=await j("/api/vision/flora/jobs/"+result.job_id+"/review?revision="+versionSelect.value);await renderFloraResults(result,selected);}catch(e){versionSelect.value=String(savedReview?.revision||"");}};
+    versionBar.append(versionLabel,versionSelect);
+    const previousRevision=reviewVersions.filter(version=>version.revision<Number(savedReview?.revision||1)).at(-1);
+    if(previousRevision){
+      const compare=document.createElement("button");compare.type="button";compare.className="ghost";compare.textContent="比较上一版";
+      const diffPanel=document.createElement("pre");diffPanel.hidden=true;diffPanel.style.whiteSpace="pre-wrap";
+      compare.onclick=async()=>{try{
+        const diff=await j("/api/vision/flora/jobs/"+result.job_id+"/review-diff?from_revision="+previousRevision.revision+"&to_revision="+savedReview.revision);
+        diffPanel.textContent=JSON.stringify(diff,null,2);diffPanel.hidden=!diffPanel.hidden;
+      }catch(e){diffPanel.textContent=e.message;diffPanel.hidden=false;}};
+      versionBar.append(compare);root.append(versionBar,diffPanel);
+    }else{root.append(versionBar);}
+  }
+  const savedByEpisode=new Map((savedReview?.annotations||[]).map(item=>[Number(item.episode),item]));
+  const list = document.createElement("div"); list.className = "flora-review";
+  (result.annotations || []).forEach(item => {
+    const episodeCard = document.createElement("section"); episodeCard.className = "flora-review-episode";
+    episodeCard.dataset.episode = String(item.episode);
+    const heading = document.createElement("h3"); heading.textContent = "Episode " + item.episode;
+    episodeCard.append(heading);
+    const savedEpisode=savedByEpisode.get(Number(item.episode));
+    const segments = savedEpisode ? (savedEpisode.segments||[]) : (item.annotation?.segments || []);
+    segments.forEach(segment => addFloraReviewSegment(episodeCard, segment));
+    const episodeMasks=availableMasks.filter(mask=>Number(mask.episode)===Number(item.episode));
+    if (episodeMasks.length) {
+      const maskList=document.createElement("div"); maskList.className="flora-mask-list";
+      const maskTitle=document.createElement("div"); maskTitle.className="hint"; maskTitle.textContent="关联 SAM2 Mask"; episodeCard.append(maskTitle);
+      const selectedMasks=new Set(savedEpisode?.mask_run_ids||[]);
+      episodeMasks.forEach(mask=>{
+        const label=document.createElement("label"); label.className="flora-mask-option";
+        const checkbox=document.createElement("input"); checkbox.type="checkbox"; checkbox.dataset.field="mask"; checkbox.value=mask.id;
+        checkbox.checked=selectedMasks.has(mask.id);
+        const preview=document.createElement("img"); preview.src=mask.preview_url||mask.mask_url; preview.alt="SAM2 Mask"; preview.loading="lazy";
+        const text=document.createElement("span"); text.textContent=(mask.kind==="video"?"视频帧":"图像")+" · "+(mask.camera||"相机")+" · "+Number(mask.timestamp_s).toFixed(2)+" 秒"+
+          (mask.review_suggested?" · 建议复核":"")+(mask.track_id?" · "+mask.track_id.slice(0,8):"");
+        label.append(checkbox,preview,text); maskList.append(label);
+      });
+      episodeCard.append(maskList);
+    }
+    const add = document.createElement("button"); add.type="button"; add.className="ghost"; add.textContent="添加片段";
+    add.onclick = () => addFloraReviewSegment(episodeCard, {start_s:0,end_s:1,caption:""});
+    episodeCard.append(add); list.append(episodeCard);
+  });
+  root.append(list);
+  const notes = document.createElement("textarea"); notes.className="flora-review-note"; notes.id="flora-review-notes";
+  notes.placeholder="审核备注（可选）"; notes.rows=2; notes.value=savedReview?.notes||""; root.append(notes);
+  const actions = document.createElement("div"); actions.className="flora-review-actions";
+  const save = document.createElement("button"); save.type="button"; save.className="ghost"; save.textContent="保存审核";
+  const derive = document.createElement("button"); derive.type="button"; derive.className="primary"; derive.textContent="生成标注数据版本"; derive.disabled=!savedReview;
+  const status = document.createElement("span"); status.className="hint"; status.id="flora-review-status";
+  save.onclick = async () => {
+    const annotations = [...list.querySelectorAll(".flora-review-episode")].map(card => ({
+      episode:Number(card.dataset.episode),
+      mask_run_ids:[...card.querySelectorAll("input[data-field=mask]:checked")].map(input=>input.value),
+      segments:[...card.querySelectorAll(".flora-review-segment")].map(row => ({
+        start_s:Number(row.querySelector("[data-field=start]").value),
+        end_s:Number(row.querySelector("[data-field=end]").value),
+        caption:row.querySelector("[data-field=caption]").value
+      }))
+    }));
+    save.disabled=true; status.textContent="保存中…";
+    try {
+      const saved=await j("/api/vision/flora/jobs/"+floraReviewJobId+"/review", {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({annotations,notes:notes.value})});
+      await renderFloraResults(result);
+      $("flora-review-status").textContent="已保存 r"+saved.revision+" · "+saved.segments+" 个标注片段";
+    } catch(e) { status.textContent="保存失败："+e.message; }
+    save.disabled=false;
+  };
+  derive.onclick = async () => {
+    derive.disabled=true; status.textContent="生成数据版本中…";
+    try {
+      const revisionQuery=savedReview?.revision ? "?revision="+savedReview.revision : "";
+      const created=await j("/api/vision/flora/jobs/"+floraReviewJobId+"/derive"+revisionQuery, {method:"POST"});
+      await loadDatasets("");
+      $("ds").value=String(created.dataset_version_id);
+      await loadVisionDataset();
+      status.textContent="已生成数据版本 #"+created.dataset_version_id+" · "+created.episodes+" Episode · "+created.segments+" 个片段，可直接用于训练";
+    } catch(e) { status.textContent="生成失败："+e.message; derive.disabled=false; }
+  };
+  actions.append(save,derive,status); root.append(actions);
+}
+
+function addFloraReviewSegment(card, segment) {
+  const row=document.createElement("div"); row.className="flora-review-segment";
+  const start=document.createElement("input"); start.type="number"; start.min="0"; start.step="0.1"; start.value=Number(segment.start_s||0).toFixed(1); start.dataset.field="start"; start.title="开始秒数";
+  const end=document.createElement("input"); end.type="number"; end.min="0"; end.step="0.1"; end.value=Number(segment.end_s||0).toFixed(1); end.dataset.field="end"; end.title="结束秒数";
+  const caption=document.createElement("input"); caption.type="text"; caption.maxLength=2000; caption.value=segment.caption||""; caption.placeholder="动作描述"; caption.dataset.field="caption";
+  const remove=document.createElement("button"); remove.type="button"; remove.className="ghost"; remove.textContent="删除"; remove.onclick=()=>row.remove();
+  row.append(start,end,caption,remove); card.insertBefore(row,card.lastElementChild);
+}
+
+function seekFloraSegment(episode, start) {
+  const video = $("vision-video");
+  const seek = () => { video.currentTime = Math.min(start, Math.max(0, video.duration || start)); video.pause(); };
+  if (Number($("vision-episode").value) !== episode) {
+    video.addEventListener("loadedmetadata", seek, {once:true});
+    $("vision-episode").value = String(episode);
+    loadVisionVideo();
+  } else if (video.readyState >= 1) seek();
+  else video.addEventListener("loadedmetadata", seek, {once:true});
+}
+$("vision-import-frame").onclick = () => {
+  const video = $("vision-video");
+  if (video.readyState < 2 || !video.videoWidth) {
+    $("vision-error").hidden = false; $("vision-error").textContent = "等待视频加载后再导入帧。"; return;
+  }
+  const vid = parseInt($("ds").value, 10), episode = Number($("vision-episode").value);
+  const camera = $("vision-camera").value, timestamp = Number(video.currentTime.toFixed(3));
+  const frame = document.createElement("canvas"); frame.width = video.videoWidth; frame.height = video.videoHeight;
+  frame.getContext("2d").drawImage(video, 0, 0, frame.width, frame.height);
+  const source = {dataset_version_id:vid, episode, camera, timestamp_s:timestamp};
+  setVisionImage(frame.toDataURL("image/png"), "episode_" + episode + "_" + camera + "_" + timestamp + ".png", source);
+  $("vision-source-hint").textContent = "已导入 Episode " + episode + " · " + camera + " · " + timestamp + " 秒";
+};
+
+$("vision-file").addEventListener("change", event => {
+  const file = event.target.files?.[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => setVisionImage(String(reader.result || ""), file.name);
+  reader.readAsDataURL(file);
+});
+
+$("vision-canvas").addEventListener("click", event => {
+  if (!visionImage || visionBoxMode) return;
+  const rect = event.currentTarget.getBoundingClientRect();
+  visionPoints.push({x:(event.clientX - rect.left) * event.currentTarget.width / rect.width,
+                     y:(event.clientY - rect.top) * event.currentTarget.height / rect.height,
+                     label:visionMode});
+  visionMaskImage = null; $("vision-download").hidden = true; $("vision-download-coco").hidden = true; drawVisionCanvas(); updateTrackCorrectionButton(); updateVisionBatchButton();
+});
+function visionCanvasPoint(event) {
+  const canvas = $("vision-canvas"), rect = canvas.getBoundingClientRect();
+  return {x:(event.clientX - rect.left) * canvas.width / rect.width,
+          y:(event.clientY - rect.top) * canvas.height / rect.height};
+}
+$("vision-canvas").addEventListener("pointerdown", event => {
+  if (!visionBoxMode || !visionImage) return;
+  event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId);
+  const point = visionCanvasPoint(event);
+  visionPendingBox = {x1:point.x,y1:point.y,x2:point.x,y2:point.y}; drawVisionCanvas();
+});
+$("vision-canvas").addEventListener("pointermove", event => {
+  if (!visionPendingBox || !visionBoxMode) return;
+  const point = visionCanvasPoint(event);
+  visionPendingBox.x2 = point.x; visionPendingBox.y2 = point.y; drawVisionCanvas();
+});
+$("vision-canvas").addEventListener("pointerup", event => {
+  if (!visionPendingBox || !visionBoxMode) return;
+  const point = visionCanvasPoint(event); visionPendingBox.x2 = point.x; visionPendingBox.y2 = point.y;
+  const box = {x1:Math.min(visionPendingBox.x1,visionPendingBox.x2), y1:Math.min(visionPendingBox.y1,visionPendingBox.y2),
+    x2:Math.max(visionPendingBox.x1,visionPendingBox.x2), y2:Math.max(visionPendingBox.y1,visionPendingBox.y2)};
+  visionPendingBox = null;
+  if (box.x2 - box.x1 >= 4 && box.y2 - box.y1 >= 4) {
+    const label = $("vision-gt-label").value.trim();
+    if (!label) { $("vision-gt-status").textContent = "填写目标类别后再画框"; drawVisionCanvas(); return; }
+    visionTruthBoxes.push({label, box});
+  }
+  drawVisionCanvas(); updateVisionGroundTruthControls();
+});
+$("vision-positive").onclick = () => setVisionMode(1);
+$("vision-negative").onclick = () => setVisionMode(0);
+$("vision-undo").onclick = () => {
+  if (visionBoxMode) visionTruthBoxes.pop(); else visionPoints.pop();
+  visionMaskImage = null; drawVisionCanvas(); updateTrackCorrectionButton(); updateVisionBatchButton(); updateVisionGroundTruthControls();
+};
+$("vision-clear").onclick = () => {
+  if (visionBoxMode) visionTruthBoxes = []; else visionPoints = [];
+  visionMaskImage = null; $("vision-download").hidden = true; $("vision-download-coco").hidden = true; drawVisionCanvas(); updateTrackCorrectionButton(); updateVisionBatchButton(); updateVisionGroundTruthControls();
+};
+async function runSam2Segment(box = null) {
+  box=box || (visionPoints.length ? null : visionSavedBox);
+  if (!visionDataUrl || (!box && !visionPoints.some(p => p.label === 1))) {
+    $("vision-error").hidden = false; $("vision-error").textContent = box ? "先选择图片。" : "选择图片并至少添加一个正点。"; return;
+  }
+  const button = $("vision-run"); button.disabled = true; button.textContent = "分割中…";
+  visionRuntimeUsed=true;
+  $("vision-error").hidden = true; $("vision-score").textContent = "GPU 推理中";
+  try {
+    const r = await fetch(PREFIX + "/workbench/api/vision/segment", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body:JSON.stringify({image_base64:visionDataUrl, filename:visionImageName, points:box ? [] : visionPoints, box, source:visionSource, parent_run_id:visionParentRunId, session_id:visionSessionId, label:visionInstanceLabel})
+    });
+    const d = await r.json(); if (!r.ok) throw new Error(d.detail || ("HTTP " + r.status));
+    visionParentRunId=d.id;visionSavedBox=box;
+    visionMaskImage = new Image();
+    visionMaskImage.onload = drawVisionCanvas;
+    visionMaskImage.src = PREFIX + d.mask_url + "?t=" + Date.now();
+    $("vision-score").textContent = "得分 " + Number(d.score).toFixed(3);
+    const origin = d.source ? " · Episode " + d.source.episode + " · " + d.source.camera + " · " + d.source.timestamp_s + " 秒" : " · 上传图片";
+    $("vision-note").textContent = d.width + " × " + d.height + " · " + d.foreground_pixels.toLocaleString() + " 像素" + origin + " · " + d.id.slice(0,8);
+    const link = $("vision-download"); link.href = PREFIX + d.mask_url; link.hidden = false;
+    const coco=$("vision-download-coco");coco.href=PREFIX+"/workbench/api/vision/runs/"+d.id+"/coco";coco.hidden=false;
+    loadMaskHistory(Number($("ds").value));
+  } catch (e) { $("vision-score").textContent = "分割失败"; $("vision-error").hidden = false; $("vision-error").textContent = e.message; }
+  finally { button.disabled = false; button.textContent = "分割并保存"; }
+}
+$("vision-run").onclick = () => runSam2Segment();
+$("vision-mask-visible").onchange=drawVisionCanvas;
+$("vision-mask-opacity").oninput=()=>{$("vision-mask-opacity-value").textContent=Math.round(Number($("vision-mask-opacity").value)*100)+"%";drawVisionCanvas();};
+$("vision-instance-label").oninput=()=>{visionInstanceLabel=$("vision-instance-label").value.trim()||"object";};
+
+loadTrainingCapabilities();
 loadDatasets();
+restoreSam2TrackJob();
+restoreSam2VideoBatch();
 
 const pageViews = {
-  "sec-overview": {title:"系统总览", eyebrow:"OVERVIEW", description:"查看数据、任务与算力资源的当前状态。", sections:["sec-overview"]},
-  "sec-dataset": {title:"数据集", eyebrow:"DATASETS", description:"选择数据版本，查看 Episode 与数据结构。", sections:["sec-data-picker","sec-dataset"]},
-  "sec-process": {title:"数据处理", eyebrow:"DATA PROCESSING", description:"对选中的数据版本运行质量检查。", sections:["sec-data-picker","sec-process"]},
-  "sec-train": {title:"模型训练", eyebrow:"TRAINING", description:"配置训练任务并跟踪实时运行日志。", sections:["sec-data-picker","sec-train-config","sec-train"]},
-  "sec-exp": {title:"实验记录", eyebrow:"EXPERIMENTS", description:"查看训练任务与关联的 MLflow 指标。", sections:["sec-exp"]},
-  "sec-eval": {title:"模型评测", eyebrow:"EVALUATION", description:"使用当前训练产物计算留出集指标。", sections:["sec-eval"]},
-  "sec-bench": {title:"仿真基准", eyebrow:"BENCHMARK", description:"在相同种子条件下比较 MuJoCo 策略。", sections:["sec-bench"]},
-  "sec-registry": {title:"模型仓库", eyebrow:"MODEL REGISTRY", description:"查看模型版本、权重与训练来源。", sections:["sec-registry"]},
-  "sec-deploy": {title:"模型部署", eyebrow:"DEPLOYMENT", description:"发布当前训练产物，并调用推理接口。", sections:["sec-deploy"]},
-  "sec-gpu": {title:"算力资源", eyebrow:"COMPUTE RESOURCES", description:"查看 GPU 占用、租约与任务记录。", sections:["sec-gpu"]},
-  "sec-robot": {title:"机器人设备", eyebrow:"ROBOT HUB", description:"查看设备台账与适配器状态。", sections:["sec-robot"]},
-  "sec-logs": {title:"系统日志", eyebrow:"SYSTEM LOGS", description:"按类型查看训练、评测和任务日志索引。", sections:["sec-logs"]}
+  "sec-overview": {title:"系统总览", eyebrow:"OVERVIEW", sections:["sec-overview"]},
+  "sec-dataset": {title:"数据集", eyebrow:"DATASETS", sections:["sec-data-picker","sec-dataset"]},
+  "sec-vision": {title:"视觉标注", eyebrow:"VISION INTELLIGENCE", sections:["sec-data-picker","sec-vision"]},
+  "sec-process": {title:"数据处理", eyebrow:"DATA PROCESSING", sections:["sec-data-picker","sec-process"]},
+  "sec-train": {title:"模型训练", eyebrow:"TRAINING", sections:["sec-data-picker","sec-train-config","sec-train"]},
+  "sec-exp": {title:"实验记录", eyebrow:"EXPERIMENTS", sections:["sec-exp"]},
+  "sec-eval": {title:"模型评测", eyebrow:"EVALUATION", sections:["sec-eval"]},
+  "sec-bench": {title:"仿真基准", eyebrow:"BENCHMARK", sections:["sec-bench"]},
+  "sec-registry": {title:"模型仓库", eyebrow:"MODEL REGISTRY", sections:["sec-registry"]},
+  "sec-deploy": {title:"模型部署", eyebrow:"DEPLOYMENT", sections:["sec-deploy"]},
+  "sec-gpu": {title:"算力资源", eyebrow:"COMPUTE RESOURCES", sections:["sec-gpu"]},
+  "sec-robot": {title:"机器人设备", eyebrow:"ROBOT HUB", sections:["sec-robot"]},
+  "sec-logs": {title:"系统日志", eyebrow:"SYSTEM LOGS", sections:["sec-logs"]}
 };
 
 let activePage = "sec-overview";
@@ -1242,12 +3297,17 @@ function toggleSidebar() {
 }
 
 function switchPage(key, loadData = true) {
+  if(activePage==="sec-vision" && key!=="sec-vision")releaseVisionSession();
   if (!pageViews[key]) key = "sec-overview";
   activePage = key;
   const view = pageViews[key];
   document.querySelectorAll(".content-stack > section").forEach(section => {
     section.hidden = !view.sections.includes(section.id);
   });
+  if (key !== "sec-robot") disconnectRobotCamera();
+  if (key !== "sec-vision") {
+    const video = $("vision-video"); video.pause(); video.removeAttribute("src"); video.load(); video.hidden = true;
+  }
   document.querySelectorAll(".wf-nav a[data-page]").forEach(link => {
     if (link.dataset.page === key) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
@@ -1255,8 +3315,9 @@ function switchPage(key, loadData = true) {
   document.getElementById("page-title").textContent = view.title;
   document.getElementById("breadcrumb-current").textContent = view.title;
   document.getElementById("page-eyebrow").textContent = view.eyebrow;
-  document.getElementById("page-desc").textContent = view.description;
   document.getElementById("refresh-current").hidden = ["sec-eval", "sec-bench", "sec-deploy"].includes(key);
+  if (["sec-train", "sec-process"].includes(key)) syncTrainingBackend();
+  else $("dataset-visualization").hidden = key === "sec-vision";
   document.title = view.title + " · EmbodiedFlow";
   closeMobileSidebar();
   if (loadData) refreshCurrent();
@@ -1265,6 +3326,7 @@ function switchPage(key, loadData = true) {
 function refreshCurrent() {
   if (activePage === "sec-overview") return loadOverview();
   if (activePage === "sec-dataset") return loadDatasetDetail();
+  if (activePage === "sec-vision") { loadVision(); return loadVisionDataset(); }
   if (activePage === "sec-exp") return loadExperiments();
   if (activePage === "sec-gpu") return loadGpu();
   if (activePage === "sec-registry") return loadRegistry();
@@ -1323,11 +3385,6 @@ document.getElementById("sidebar-backdrop").addEventListener("click", closeMobil
 document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
 document.getElementById("refresh-current").addEventListener("click", refreshCurrent);
 document.getElementById("nav-search").addEventListener("input", updateNavigationFilter);
-document.getElementById("backend").addEventListener("change", event => {
-  document.getElementById("backend-hint").textContent = event.target.value === "openpi"
-    ? "OpenPI 使用服务器上的 debug_pi05 调试配置，数据来源由该配置决定。"
-    : "BC 使用上方选择的数据版本进行训练。";
-});
 document.getElementById("nav-search").addEventListener("keydown", event => {
   if (event.key !== "Enter") return;
   const first = document.querySelector(".wf-nav a[data-page]:not([hidden])");
@@ -1347,13 +3404,14 @@ switchPage(location.hash.slice(1) || "sec-overview", Boolean(location.hash));
 updateSidebarButton();
 
 
-const LOGIN_KEY = "ef_user";
+let sessionUsername = "";
 
 function currentUser() {
-  try { return localStorage.getItem(LOGIN_KEY) || ""; } catch { return ""; }
+  return sessionUsername;
 }
 
 function applyLogin(name) {
+  sessionUsername = name || "";
   const gate = $("login-gate");
   if (name) {
     gate.classList.remove("show");
@@ -1375,7 +3433,6 @@ async function doLogin() {
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) { msg.textContent = d.detail || ("登录失败 " + r.status); return; }
-    localStorage.setItem(LOGIN_KEY, d.username);
     applyLogin(d.username);
     if (typeof loadOverview === "function") loadOverview();
   } catch (e) {
@@ -1388,10 +3445,23 @@ async function initLogin() {
   const btn = $("login-btn");
   btn.addEventListener("click", doLogin);
   $("login-user").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
-
-  const u = currentUser();
-  if (u) { applyLogin(u); return; }
-  gate.classList.add("show");
+  $("current-user").addEventListener("click", async () => {
+    try { await fetch("api/logout", {method: "POST"}); } catch {}
+    applyLogin("");
+    $("login-user").value = "";
+    $("login-user").focus();
+  });
+  try {
+    const sessionResponse = await fetch("api/session", {cache: "no-store"});
+    if (sessionResponse.ok) {
+      const session = await sessionResponse.json();
+      if (session.authenticated && session.username) {
+        applyLogin(session.username);
+        return;
+      }
+    }
+  } catch {}
+  applyLogin("");
   try {
     const r = await fetch("api/users");
     if (r.ok) {
@@ -1428,29 +3498,95 @@ async function loadCleanOps() {
   }
 }
 
-async function cleanPlan(apply) {
-  const vid = parseInt($("ds").value, 10);
-  const out = $("clean-out");
-  if (!vid) { out.style.display = "block"; out.textContent = "请先选择数据版本"; return; }
-  const ops = [...document.querySelectorAll("#clean-box input:checked")].map(x => x.value);
-  if (!ops.length) { out.style.display = "block"; out.textContent = "至少选择一种清洗方式"; return; }
+async function loadProjects() {
+  const select = $("proc-project");
+  if (!select) return;
   try {
-    const r = await fetch("api/processing/clean", {
+    const r = await fetch("api/projects");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const rows = await r.json();
+    select.replaceChildren(new Option("不关联项目", ""));
+    rows.forEach(p => select.add(new Option(p.name, String(p.id))));
+  } catch (e) {
+    select.replaceChildren(new Option("项目加载失败", ""));
+  }
+}
+
+async function createProcessProject() {
+  const name = prompt("项目名称");
+  if (!name || !name.trim()) return;
+  try {
+    const r = await fetch("api/projects", {
       method: "POST", headers: {"content-type": "application/json"},
-      body: JSON.stringify({dataset_version_id: vid, ops: ops, max_episodes: 200, apply: apply})
+      body: JSON.stringify({name: name.trim()})
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.detail || r.status);
+    await loadProjects();
+    $("proc-project").value = String(d.id);
+  } catch (e) { alert("项目创建失败：" + e.message); }
+}
+
+async function cleanPlan(apply) {
+  const vid = parseInt($("ds").value, 10);
+  const out = $("clean-out");
+  if (!vid) { out.style.display = "block"; out.textContent = "未选择数据集"; return; }
+  const ops = [...document.querySelectorAll("#clean-box input:checked")].map(x => x.value);
+  if (!ops.length) { out.style.display = "block"; out.textContent = "未选清洗方式"; return; }
+  try {
+    const payload = {dataset_version_id: vid, ops, max_episodes: 200,
+      apply: apply, project_id: parseInt($("proc-project").value, 10) || null};
+    let d, jobId = null;
+    if (apply) {
+      const created = await confirmedSubmit("processing_clean_submit", payload, "质量清洗");
+      if (!created) { out.style.display = "block"; out.textContent = "已取消"; return; }
+      jobId = created.job_id;
+      out.style.display = "block";
+      out.textContent = "Job #" + jobId + " · 排队中";
+      for (let i = 0; i < 900; i++) {
+        const state = await j("/api/processing/jobs/" + jobId);
+        if (["completed", "failed", "cancelled"].includes(state.status)) {
+          if (state.status !== "completed" || !state.report) {
+            throw new Error(state.error || "清洗任务未完成");
+          }
+          d = state.report;
+          break;
+        }
+        out.textContent = "Job #" + jobId + " · " +
+          (state.status === "queued" ? "排队中" : "运行中");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      if (!d) throw new Error("清洗任务未完成");
+    } else {
+      const r = await fetch("api/processing/clean", {
+        method: "POST", headers: {"content-type": "application/json"},
+        body: JSON.stringify(payload)
+      });
+      d = await r.json();
+      if (!r.ok) throw new Error(d.detail || r.status);
+    }
     const lines = [
       "检查 Episode: " + d.checked_episodes + "　发现项: " + d.findings,
+      "图像检查: " + (d.image_check && d.image_check.mode === "file_presence" ? "文件存在性（未解码视频）" : "抽样解码"),
       "声明 Episode: " + d.declared_episodes,
       "拟删除: " + d.dropped_episodes.length + "　保留: " + d.kept_episodes,
     ];
+    if (jobId) lines.unshift("Job #" + jobId + " 已完成");
+    if (d.project) lines.push("项目: " + d.project);
     if (d.dropped_episodes.length) lines.push("删除列表: " + d.dropped_episodes.join(", "));
     if (apply) {
       lines.push(d.new_version_id
         ? "已生成派生版本: " + d.new_version + "（id=" + d.new_version_id + "）"
-        : "没有可保留的 Episode，未生成新版本");
+        : d.kept_episodes === 0
+          ? "没有可保留的 Episode，未生成新版本"
+          : "没有 Episode 被移除，无需生成新版本");
+      if (d.new_version_id) {
+        await loadDatasets("");
+        $("ds").value = String(d.new_version_id);
+        await drawPreview();
+        await loadDatasetDetail();
+        lines.push("已切换到新版本；后续训练将只读取保留的 Episode。血缘可查 /api/datasets/" + d.new_version_id + "/lineage");
+      }
     }
     out.style.display = "block";
     out.textContent = lines.join("\n");
@@ -1461,12 +3597,13 @@ async function cleanPlan(apply) {
 }
 
 loadCleanOps();
+loadProjects();
 
 
 async function tsCheck() {
   const vid = parseInt($("ds").value, 10);
   const out = $("ts-box");
-  if (!vid) { out.style.display = "block"; out.textContent = "请先选择数据版本"; return; }
+  if (!vid) { out.style.display = "block"; out.textContent = "未选择数据集"; return; }
   out.style.display = "block";
   out.textContent = "检查中…";
   try {
@@ -1490,7 +3627,7 @@ async function tsCheck() {
 async function alignPlan() {
   const vid = parseInt($("ds").value, 10);
   const out = $("ts-box");
-  if (!vid) { out.style.display = "block"; out.textContent = "请先选择数据版本"; return; }
+  if (!vid) { out.style.display = "block"; out.textContent = "未选择数据集"; return; }
   const fps = parseFloat($("al-fps").value) || 30;
   out.style.display = "block";
   out.textContent = "计算中…";
@@ -1508,6 +3645,101 @@ async function alignPlan() {
                  "s → " + (e.target_frames ?? "-") + " 帧"));
     out.textContent = lines.join("\n");
   } catch (e) { out.textContent = "失败：" + e.message; }
+}
+
+async function materializeDataset() {
+  const vid = parseInt($("ds").value, 10);
+  const out = $("mat-out"), button = $("mat-run");
+  if (!vid) { out.style.display = "block"; out.textContent = "未选择数据集"; return; }
+  const rawEpisodes = $("mat-episodes").value.trim();
+  let episodeIndices = null;
+  if (rawEpisodes) {
+    episodeIndices = rawEpisodes.split(/[，,\s]+/).filter(Boolean).map(Number);
+    if (episodeIndices.some(x => !Number.isInteger(x) || x < 0)) {
+      out.style.display = "block"; out.textContent = "Episode 格式无效"; return;
+    }
+    episodeIndices = [...new Set(episodeIndices)].sort((a, b) => a - b);
+  }
+  const cropEnd = $("mat-end").value.trim();
+  const payload = {
+    dataset_version_id: vid,
+    episode_indices: episodeIndices,
+    crop_start_s: Number($("mat-start").value || 0),
+    crop_end_s: cropEnd ? Number(cropEnd) : null,
+    target_fps: Number($("al-fps").value || 15),
+    project_id: Number($("proc-project").value) || null
+  };
+  button.disabled = true;
+  out.style.display = "block"; out.textContent = "提交中…";
+  try {
+    const created = await confirmedSubmit("dataset_materialize", payload, "数据物化");
+    if (!created) {
+      out.textContent = "已取消提交";
+      button.disabled = false;
+      return;
+    }
+    out.textContent = "任务 #" + created.job_id + " · 正在物化…";
+    for (let i = 0; i < 2400; i++) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const state = await j("/api/processing/materialize/" + created.job_id);
+      if (state.status === "completed" && state.output_version_id) {
+        await loadDatasets("");
+        $("ds").value = String(state.output_version_id);
+        await drawPreview();
+        await loadDatasetDetail();
+        const summary = state.report || {};
+        out.textContent = "完成 · 数据版本 #" + state.output_version_id +
+          " · " + (summary.episode_count || 0) + " Episode · " +
+          (summary.frame_count || 0) + " 帧 · " +
+          ((summary.total_bytes || 0) / 1024 / 1024).toFixed(1) + " MB";
+        button.disabled = false;
+        return;
+      }
+      if (["failed", "cancelled"].includes(state.status)) {
+        out.textContent = "任务 " + state.status + (state.error ? " · " + state.error : "");
+        button.disabled = false;
+        return;
+      }
+      out.textContent = "任务 #" + created.job_id + " · " + state.status + "…";
+    }
+    out.textContent = "任务仍在后台运行 · #" + created.job_id;
+  } catch (e) {
+    out.textContent = "失败：" + e.message;
+  }
+  button.disabled = false;
+}
+
+
+async function loadResearch() {
+  const q = ($("rs-q") && $("rs-q").value || "").trim();
+  const out = $("rs-out");
+  out.textContent = "查询中…";
+  try {
+    const url = q ? "api/research/search?q=" + encodeURIComponent(q)
+                  : "api/research/sources?limit=50";
+    const r = await fetch(url);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.status);
+    const items = d.items || [];
+    $("rs-count").textContent = items.length + " 条";
+    out.innerHTML = items.length ? ("<table style=\"width:100%;border-collapse:collapse\">" +
+      "<tr><th align=left>证据ID</th><th align=left>标题</th><th align=left>类型</th>" +
+      "<th align=left>版本</th><th align=left>链接</th></tr>" +
+      items.map(x => "<tr><td><code>" + (x.id || "") + "</code></td><td>" +
+        (x.title || "") + "</td><td>" + (x.kind || "") + "</td><td>" +
+        (x.version || "-") + "</td><td>" +
+        (x.url ? "<a href=\"" + x.url + "\" target=_blank>链接</a>" : "-") +
+        "</td></tr>").join("") + "</table>") : "暂无数据";
+    if (q && d.items && d.items[0] && d.items[0].snip) {
+      out.innerHTML = "<p class=dim>片段：" + d.items[0].snip + "</p>" + out.innerHTML;
+    }
+  } catch (e) {
+    out.textContent = "失败：" + e.message;
+  }
+}
+
+function openResearchReport() {
+  window.open("api/research/report?format=html", "_blank");
 }
 
 initLogin();
