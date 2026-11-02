@@ -2996,3 +2996,76 @@ def agent_tools_version():
         "tools_sha256_12": digest[:12],
         "tools": names,
     }
+
+RESEARCH_DIR = settings.data_root / "research"
+RESEARCH_FILE = RESEARCH_DIR / "sources.jsonl"
+SOURCE_KINDS = {"paper", "docs", "github", "sdk", "blog", "dataset", "other"}
+
+
+class ResearchSourceIn(BaseModel):
+    topic: str
+    title: str
+    url: str | None = None
+    kind: str = "other"
+    version: str | None = None
+    published_at: str | None = None
+    note: str | None = None
+
+
+@router.post("/api/research/sources", status_code=201)
+def research_add_source(payload: ResearchSourceIn):
+    """登记一条研究来源与证据（课题/论文/文档/GitHub/SDK + 时间与版本）。"""
+    import json as _json
+    import uuid as _uuid
+
+    if payload.kind not in SOURCE_KINDS:
+        raise HTTPException(400, f"kind 需为 {sorted(SOURCE_KINDS)} 之一")
+    if not payload.topic.strip() or not payload.title.strip():
+        raise HTTPException(400, "topic 与 title 不能为空")
+
+    RESEARCH_DIR.mkdir(parents=True, exist_ok=True)
+    rec = {
+        "id": _uuid.uuid4().hex[:12],
+        "topic": payload.topic.strip(),
+        "title": payload.title.strip(),
+        "url": payload.url,
+        "kind": payload.kind,
+        "version": payload.version,
+        "published_at": payload.published_at,
+        "note": payload.note,
+        "recorded_at": __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc).isoformat(timespec="seconds"),
+    }
+    with RESEARCH_FILE.open("a", encoding="utf-8") as fh:
+        fh.write(_json.dumps(rec, ensure_ascii=False) + chr(10))
+    return rec
+
+
+@router.get("/api/research/sources")
+def research_list_sources(q: str | None = None, kind: str | None = None,
+                          topic: str | None = None, limit: int = 50):
+    """检索已登记的研究来源；q 对 title/note/url 做包含匹配。"""
+    import json as _json
+
+    if not RESEARCH_FILE.exists():
+        return {"count": 0, "items": []}
+    rows = []
+    for line in RESEARCH_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = _json.loads(line)
+        except Exception:
+            continue
+        if kind and rec.get("kind") != kind:
+            continue
+        if topic and rec.get("topic") != topic:
+            continue
+        if q:
+            hay = " ".join(str(rec.get(k) or "") for k in ("title", "note", "url"))
+            if q.lower() not in hay.lower():
+                continue
+        rows.append(rec)
+    rows.sort(key=lambda r: r.get("recorded_at") or "", reverse=True)
+    return {"count": len(rows), "items": rows[: max(1, min(limit, 200))]}
