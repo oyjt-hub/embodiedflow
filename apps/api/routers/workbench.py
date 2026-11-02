@@ -2881,11 +2881,15 @@ def links_model(model_version_id: int):
         mvrow = dict(row)
 
         out = {"model_version": mvrow, "job": None, "evaluations": [], "deployments": []}
-        for col in ("job_id", "job", "source_job_id"):
-            if col in mv and mvrow.get(col):
-                jr = conn.execute("SELECT * FROM jobs WHERE id=?", (mvrow[col],)).fetchone()
+        # model_versions.attempt_id -> job_attempts.job_id -> jobs
+        attempt_id = mvrow.get("attempt_id")
+        if attempt_id:
+            ar = conn.execute("SELECT job_id FROM job_attempts WHERE id=?",
+                              (attempt_id,)).fetchone()
+            out["attempt_id"] = attempt_id
+            if ar and ar["job_id"]:
+                jr = conn.execute("SELECT * FROM jobs WHERE id=?", (ar["job_id"],)).fetchone()
                 out["job"] = dict(jr) if jr else None
-                break
 
         ev = _cols(conn, "evaluations")
         for col in ("model_version_id", "model_version"):
