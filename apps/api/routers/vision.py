@@ -2790,3 +2790,35 @@ def compare_vision_benchmarks(dataset_version_id: int | None = None,
             "filters": {"dataset_version_id": dataset_version_id,
                         "annotation_run_id": annotation_run_id},
             "rows": rows}
+
+class MaskIoUIn(BaseModel):
+    gt: dict
+    pred: dict
+    sample: bool = False
+
+
+@router.post("/mask-iou")
+def mask_iou_eval(payload: MaskIoUIn):
+    """两份 RLE Mask 的形状评测（IoU/precision/recall）。
+
+    sample=true 表示用的是示例数据，仅验证链路，不能当作模型质量。
+    """
+    from services.mask_eval import mask_iou, rle_decode
+    gt = rle_decode(payload.gt)
+    pred = rle_decode(payload.pred)
+    if not gt or not pred:
+        raise HTTPException(400, "gt/pred 的 RLE 为空或 size=0")
+    out = mask_iou(gt, pred)
+    out["gt_pixels"] = sum(gt)
+    out["pred_pixels"] = sum(pred)
+    out["sample"] = payload.sample
+    if payload.sample:
+        out["note"] = "示例数据，仅验证计算链路，不代表真实模型质量"
+    return out
+
+
+@router.get("/mask-iou/selftest")
+def mask_iou_selftest():
+    """算法自检：用可手算的矩形用例验证 IoU 与 RLE 实现。"""
+    from services.mask_eval import selftest
+    return selftest()
