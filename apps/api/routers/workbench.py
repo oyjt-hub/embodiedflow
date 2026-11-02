@@ -2911,3 +2911,57 @@ def links_model(model_version_id: int):
         return out
     finally:
         conn.close()
+
+CAPABILITY_SOURCES = (
+    ("training", "训练能力", "/workbench/api/training/capabilities"),
+    ("vision", "视觉能力", "/workbench/api/vision/capabilities"),
+    ("processing", "数据处理选项", "/workbench/api/processing/clean-options"),
+    ("agents", "Agent 确认", "/workbench/api/agent/workflows"),
+    ("assets", "视觉资产", "/workbench/api/vision/assets"),
+)
+
+
+@router.get("/api/capabilities")
+def unified_capabilities():
+    """统一能力描述：把各模块已有的能力接口聚合成一个对象。
+
+    不在本函数里重新推导任何 schema，只做转发与包裹，
+    避免出现第二份事实来源。
+    """
+    import httpx
+
+    base = "http://127.0.0.1:18080"
+    services = []
+    for sid, name, path in CAPABILITY_SOURCES:
+        entry = {"id": sid, "name": name, "path": path,
+                 "ok": False, "version": None, "summary": None}
+        try:
+            with httpx.Client(timeout=8.0) as client:
+                r = client.get(base + path)
+            entry["ok"] = r.status_code == 200
+            entry["status"] = r.status_code
+            if entry["ok"]:
+                body = r.json()
+                if isinstance(body, dict):
+                    entry["version"] = body.get("version") or body.get("schema")
+                    if "operations" in body and isinstance(body["operations"], list):
+                        entry["summary"] = f"{len(body['operations'])} 个操作"
+                    elif "models" in body and isinstance(body["models"], list):
+                        entry["summary"] = f"{len(body['models'])} 个模型"
+                    elif "count" in body:
+                        entry["summary"] = f"{body['count']} 项"
+                    elif "profiles" in body and isinstance(body["profiles"], list):
+                        entry["summary"] = f"{len(body['profiles'])} 个画像"
+        except Exception as exc:
+            entry["error"] = type(exc).__name__
+        services.append(entry)
+
+    ready = sum(1 for s in services if s["ok"])
+    return {
+        "schema": "embodiedflow.capabilities/1",
+        "version": "1.0.0",
+        "generated_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(timespec="seconds"),
+        "ready": ready,
+        "total": len(services),
+        "services": services,
+    }
