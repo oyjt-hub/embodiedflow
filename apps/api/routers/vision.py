@@ -2822,3 +2822,78 @@ def mask_iou_selftest():
     """算法自检：用可手算的矩形用例验证 IoU 与 RLE 实现。"""
     from services.mask_eval import selftest
     return selftest()
+
+class MaskAnnotationIn(BaseModel):
+    dataset_version_id: int
+    episode_index: int = 0
+    camera: str = "front"
+    frame_index: int = 0
+    label: str | None = None
+    rle: dict
+    reviewer: str | None = None
+
+
+def _mask_run(s, dataset_version_id: int, create: bool):
+    from sqlalchemy import select
+    from persistence.models import AnnotationRun
+    run = s.scalars(select(AnnotationRun).where(
+        AnnotationRun.kind == "mask_gt",
+        AnnotationRun.dataset_version_id == dataset_version_id)).first()
+    if run is None and create:
+        run = AnnotationRun(dataset_version_id=dataset_version_id, kind="mask_gt",
+                            status="ready", episode_count=0, annotation_count=0)
+        s.add(run)
+        s.flush()
+    return run
+
+
+@router.post("/mask-annotations", status_code=201)
+def mask_annotations_create(payload: MaskAnnotationIn):
+    """保存一条 mask 标注（RLE），归入该数据版本的 mask_gt 标注集。"""
+    from persistence.models import Annotation
+
+    if not payload.rle or not payload.rle.get("counts"):
+        raise HTTPException(400, "rle.counts 不能为空")
+    with session_scope() as s:
+        run = _mask_run(s, payload.dataset_version_id, create=True)
+        row = Annotation(
+            run_id=run.id, dataset_version_id=payload.dataset_version_id,
+            episode_index=payload.episode_index, kind="mask_gt",
+            payload={"camera": payload.camera, "frame_index": payload.frame_index,
+                     "label": payload.label, "rle": payload.rle},
+            confidence=None, status="ready", reviewer=payload.reviewer)
+        s.add(row)
+        s.flush()
+        run.annotation_count = (run.annotation_count or 0) + 1
+        return {"id": row.id, "run_id": run.id, "status": "created"}
+
+
+@router.get("/mask-annotations/{run_id}")
+def mask_annotations_list(run_id: int, limit: int = 200):
+    from sqlalchemy import select
+    from persistence.models import Annotation
+    with session_scope() as s:
+        rows = s.scalars(select(Annotation).where(Annotation.run_id == run_id)
+                         .limit(max(1, min(limit, 1000)))).all()
+        items = [{"id": r.id, "episode": r.episode_index,
+                  "camera": (r.payload or {}).get("camera"),
+                  "frame_index": (r.payload or {}).get("frame_index"),
+                  "label": (r.payload or {}).get("label"),
+                  "size": ((r.payload or {}).get("rle") or {}).get("size")} for r in rows]
+        return {"run_id": run_id, "count": len(items), "items": items}
+
+
+@router.get("/mask-annotations/{run_id}/export")
+def mask_annotations_export(run_id: int):
+    """导出 mask 标注集：JSON（含 RLE），可直接用于 Mask IoU 评测。"""
+    from sqlalchemy import select
+    from persistence.models import Annotation, AnnotationRun
+    with session_scope() as s:
+        run = s.get(AnnotationRun, run_id)
+        if run is None or run.kind != "mask_gt":
+            raise HTTPException(404, "mask 标注集不存在")
+        rows = s.scalars(select(Annotation).where(Annotation.run_id == run_id)).all()
+        items = [{"episode": r.episode_index, **(r.payload or {})} for r in rows]
+        return {"schema": "embodiedflow.mask_gt/1", "run_id": run_id,
+                "dataset_version_id": run.dataset_version_id,
+                "count": len(items), "items": items}
