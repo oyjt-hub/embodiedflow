@@ -2897,3 +2897,52 @@ def mask_annotations_export(run_id: int):
         return {"schema": "embodiedflow.mask_gt/1", "run_id": run_id,
                 "dataset_version_id": run.dataset_version_id,
                 "count": len(items), "items": items}
+
+class PoseIn(BaseModel):
+    translation: list[float] = [0.0, 0.0, 0.0]
+    quaternion: list[float] = [0.0, 0.0, 0.0, 1.0]
+    format: str = "quaternion"
+
+
+@router.get("/pose/selftest")
+def pose_selftest():
+    """6D Pose 数学层自检（四元数/欧拉/复合/基座映射/坐标轴）。"""
+    from services.pose6d import selftest
+    return selftest()
+
+
+@router.post("/pose/convert")
+def pose_convert(payload: PoseIn):
+    """位姿表示转换：四元数 <-> 旋转矩阵；附坐标轴端点与相机->基座映射结果。"""
+    from services.pose6d import matrix_to_quat, pose_axes, quat_to_matrix
+    q = payload.quaternion
+    R = quat_to_matrix(q)
+    return {"quaternion": matrix_to_quat(R), "rotation_matrix": R,
+            "axes": pose_axes(payload.translation, q)}
+
+
+class PoseComposeIn(BaseModel):
+    a: PoseIn
+    b: PoseIn
+
+
+@router.post("/pose/compose")
+def pose_compose_endpoint(payload: PoseComposeIn):
+    from services.pose6d import compose
+    return compose(payload.a.translation, payload.a.quaternion,
+                   payload.b.translation, payload.b.quaternion)
+
+
+class PoseToBaseIn(BaseModel):
+    point_camera: list[float]
+    camera_translation: list[float]
+    camera_quaternion: list[float] = [0.0, 0.0, 0.0, 1.0]
+
+
+@router.post("/pose/to-base")
+def pose_to_base(payload: PoseToBaseIn):
+    """相机系点 -> 机器人基座坐标（给定相机在基座中的位姿）。"""
+    from services.pose6d import camera_to_base
+    return {"point_base": camera_to_base(payload.point_camera,
+                                         payload.camera_translation,
+                                         payload.camera_quaternion)}
