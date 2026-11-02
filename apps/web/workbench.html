@@ -858,7 +858,15 @@ body.sidebar-collapsed .workspace { margin-left: 0; }
       <div>空闲显存<b id="gpu-free">-</b></div>
     </div>
     <pre id="gpu-out" style="max-height:230px;margin-top:10px">-</pre>
-  </section>
+  
+  <div style="margin-top:18px">
+    <div class="hint">系统信息</div>
+    <div class="row" style="margin-top:8px">
+      <div><label>&nbsp;</label><button type="button" class="ghost" onclick="loadSystemInfo()">读取</button></div>
+    </div>
+    <pre id="sys-out" style="display:none;margin-top:10px"></pre>
+  </div>
+</section>
 <section hidden class="card" id="sec-registry">
     <h2>模型仓库 <span class="tag" id="rg-tag">加载中</span></h2>
     <h3 style="margin:18px 0 6px;font-size:14px">本机模型与训练环境</h3>
@@ -3856,6 +3864,49 @@ async function loadQualityGate() {
     (d.rejected_sample || []).slice(0, 5).forEach(x => {
       lines.push("  拒绝 score=" + x.score + " area=" + x.area + " label=" + (x.label || "-"));
     });
+    out.textContent = lines.join("
+");
+  } catch (e) {
+    out.textContent = "失败：" + e.message;
+  }
+}
+
+async function loadSystemInfo() {
+  const out = $("sys-out");
+  out.style.display = "block";
+  out.textContent = "读取中…";
+  const lines = [];
+  try {
+    const [cap, tools, hw] = await Promise.all([
+      fetch("api/capabilities").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("api/agent/tools").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("api/vision/hardware").then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+
+    if (cap) {
+      lines.push("能力描述 " + cap.schema + " v" + cap.version +
+                 "　就绪 " + cap.ready + "/" + cap.total);
+      (cap.services || []).forEach(s =>
+        lines.push("  " + (s.id || "").padEnd(11) + " " + (s.ok ? "OK " : "NG ") +
+                   (s.summary || "")));
+    } else { lines.push("能力描述: 读取失败"); }
+
+    if (tools) {
+      lines.push("");
+      lines.push("MCP 工具 " + tools.tool_count + " 个　指纹 " + tools.tools_sha256_12);
+      lines.push("  " + (tools.tools || []).slice(0, 8).join(", ") + " …");
+    } else { lines.push("MCP 工具: 读取失败"); }
+
+    if (hw) {
+      const cpu = hw.cpu || {};
+      lines.push("");
+      lines.push("主机 " + (hw.host || "-") + "　CPU " + (cpu.model || "-") +
+                 " x" + (cpu.cores || "-") + "　内存 " +
+                 Math.round((hw.memory_mb || 0) / 1024) + " GiB");
+      (hw.gpus || []).forEach(g =>
+        lines.push("  GPU" + g.index + " " + g.name + " " + g.memory_mb + " MB  driver " + g.driver));
+    } else { lines.push("硬件画像: 读取失败"); }
+
     out.textContent = lines.join("
 ");
   } catch (e) {
